@@ -18,7 +18,7 @@ STILLS = {"snare_open": 0.0, "snare_closed": snare.CLOSE_TIME + 1.0, "snare_seat
 
 
 def main() -> None:
-    model = scene.build_model()
+    model = scene.build_model(meshes=False)  # stand-in shapes, so the snare is visible
     data = mujoco.MjData(model)
     # Start 6 cm off-centre so the centring action is visible.
     scene.reset(model, data, standoff=-0.28, lateral=(0.06, 0.0))

@@ -24,7 +24,10 @@ The project is simulation only. It is a reasoned study of a real operation, not 
 | 1 | Zero-g scene | Done (2026-10-10) | Arm and vehicle load, momentum is conserved, arm tracks commands |
 | 2 | Snare mechanism | Done (2026-10-10) | A closing mechanism holds the pin against a pull-out force |
 | 3 | Approach and capture | Done (2026-10-10) | A controller completes a capture from a nominal start |
-| 4 | Trial harness | Next | One command runs N trials and reports success rate and failure types |
+| R1 | Realism: real 3D models | Done (2026-10-10) | Arm and vehicle use the Canadian Space Agency models; arm joints placed from them |
+| R2 | Realism: sourced parameters | Next | Snare and capture numbers taken from the published papers where they give them |
+| R3 | Realism: 10 m capture point | Planned | The attempt starts with the vehicle at the real capture distance |
+| 4 | Trial harness | Planned | One command runs N trials and reports success rate and failure types |
 | 5 | Experiment A: capture envelope | Planned | Success map over misalignment, drift, and tumble |
 | 6 | Experiment B: parameter sensitivity | Planned | Matched trials showing the effect of friction, compliance, and delay |
 | 7 | Experiment C: second engine | Planned | Scene exported to USD and rerun in Newton, results compared |
@@ -47,14 +50,21 @@ The project is simulation only. It is a reasoned study of a real operation, not 
 | 2026-10-10 | Leave roll about the pin axis uncontrolled | The modelled pin is symmetric; the real fixture has alignment cams that this model omits |
 | 2026-10-10 | Arm freezes when the snare fires | Simple and close to stopping the arm at capture; means any remaining drift is absorbed by the snare and the joint servos |
 | 2026-10-10 | Controller reads the true pin pose and velocity | Sensing error and delay become explicit parameters in experiment B instead of being hidden in a perception model |
+| 2026-10-10 | Insert a realism pass before the trial harness | The experiments are only as credible as the model they run on |
+| 2026-10-10 | Fetch the 3D models with a script; do not store them in the repository | The Canadian Space Agency permits non-commercial reproduction with credit; fetching from the source avoids redistributing the files |
+| 2026-10-10 | Rebuild the arm's joints from the CSA model's separate parts | The model shows Canadarm2's offset joints, which the first straight-line arm did not have |
+| 2026-10-10 | Meshes are appearance only; collisions keep simple shapes | Keeps contact fast and predictable, and the simulation runs without the downloaded files |
+| 2026-10-10 | Move the grapple pin to the service module | The Cygnus model has a small fixture there |
 | 2026-10-10 | Treat the station as fixed and the arm as rigid | The station is about 60 times heavier than the vehicle; arm flexibility is left out to keep the first version simple |
 
 ## Assumptions to verify
 
 These are placeholders, chosen to be plausible. Each needs a source or an explicit "approximate" label in the write-up.
 
-- Arm: 17.6 m reach, 7 joints, about 1,500 kg. Segment lengths and mass split are guesses.
-- Vehicle: 3.07 m diameter, 6.4 m long, 7,000 kg. Grapple fixture position on the hull is a guess.
+- Arm joint positions: measured from the bounding boxes of the parts in the CSA 1:100 model, good to a few centimetres at best. Each boom is 7.04 m between pitch axes.
+- How the two boom halves mate at the elbow (which side boom B sits on) is a guess.
+- Arm link masses and inertias: invented, totalling about 1,400 kg of moving mass against the published 1,497 kg.
+- Vehicle: collision shape is two cylinders fitted to the CSA Cygnus model; mass 7,000 kg split by guess. The grapple pin sits where the model shows a small fixture on the service module, which is probably the grapple fixture but is not confirmed.
 - Grapple pin: 0.3 m long, 2 cm radius. End-effector cavity: 0.2 m inner radius, 0.5 m deep.
 - Joint gains, damping, and reflected inertia are invented for stable tracking. No torque or speed limits yet.
 - Controller: 3 cm/s insertion speed, 0.03 rad/s joint rate cap, gains of 0.8 per second. All invented; real capture operations and their rate limits still to look up.
@@ -62,12 +72,13 @@ These are placeholders, chosen to be plausible. Each needs a source or an explic
 - Snare: bar radius 6 mm, closing time 2 s, drive force limit 1,500 N, carriage force limit 1,000 N, friction 0.6. All invented.
 - Pin tip knob: 3.5 cm radius, 3 cm long. The real fixture's shaft and cam geometry is not reproduced.
 - Capture limits: a NASA report on this end-effector design gives ±0.1 m lateral and 0.1 m axial misalignment tolerance. Angular limits and limits on relative velocity still to find.
-- Which free 3D models exist to replace the primitive shapes.
+- Station: still a grey box. NASA's free station model is low-detail and placing the arm on it correctly needs a real attachment point; not done.
 
 ## Risks
 
 - **Snare modelling.** Resolved for now with rigid bars (milestone 2). The bars cannot stretch or wrap like cables, which may matter for angular misalignment.
 - **The task may be too easy as modelled.** With perfect sensing and generous joint rates the controller succeeds across everything tried so far. The experiments need realistic limits (sensing noise and delay, rate and torque limits) or the envelope will be uninformative.
+- **Off-axis loads.** With the pin now 2.5 m from the vehicle's centre of mass, a force through the centre of mass levers the fixture sideways. The seated plate held by a 1,000 N pull-in cannot resist that; the real end effector adds latches after pull-in. Affects what counts as a rigid capture.
 - **Contact tuning.** Stiff contact in zero gravity may need a smaller timestep or solver tuning.
 - **Newton on macOS.** Supported in CPU-only mode but untested here.
 
@@ -76,3 +87,18 @@ These are placeholders, chosen to be plausible. Each needs a source or an explic
 - NASA, Shuttle remote manipulator end effector report (misalignment tolerances): https://ntrs.nasa.gov/api/citations/19820015473/downloads/19820015473.pdf
 - Canadian Space Agency, Canadarm2's Latching End Effector: https://www.asc-csa.gc.ca/eng/multimedia/search/image/9362
 - Grapple fixture overview: https://en.wikipedia.org/wiki/Grapple_fixture
+- Canadian Space Agency, Canadarm comparative table: https://www.asc-csa.gc.ca/eng/iss/canadarm2/c1-c2.asp
+- Cygnus dimensions and masses: https://en.wikipedia.org/wiki/Cygnus_(spacecraft)
+- Cygnus capture procedure (10 m capture point, free drift): https://www.astronomy.com/space-exploration/cygnus-arrives-at-the-international-space-station/
+- NASA 3D Resources, ISS models: https://science.nasa.gov/3d-resources/international-space-station-iss-b/
+- CSA printable models of Canadarm2 and Cygnus: https://www.asc-csa.gc.ca/eng/multimedia/search/image/10186
+
+Prior work, not yet read:
+
+- Real-time simulation of cable-based end effectors (ECCOMAS Multibody 2023): https://multibody2023.tecnico.ulisboa.pt/prog_MULTIBODY_WEB/MULTBODY2023_ABSTRACTS/ID_243_327_ECCOMAS_MBD_2023_accepted_rev.pdf
+- JAXA, contact dynamics between the end effector and a floating target: https://jaxa.repo.nii.ac.jp/records/7383
+- Snare-type end-effector cable dynamics: https://link.springer.com/article/10.1007/s11771-013-1825-z
+- On-orbit operations simulator for telerobotic training: https://arxiv.org/pdf/2002.10594
+- mjorbit: https://arxiv.org/pdf/2609.08010
+- SmallSatSim: https://arxiv.org/html/2603.14598v1
+- NASA Johnson robotics open source: https://github.com/NASA-JSC-Robotics

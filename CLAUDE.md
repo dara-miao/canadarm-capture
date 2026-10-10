@@ -17,6 +17,8 @@ Do this as part of every piece of work, not at the end:
 - Tests: `.venv/bin/python -m pytest`
 - Renders: `.venv/bin/python scripts/render_scene.py`
 - Plan diagram: `.venv/bin/python scripts/plan_diagram.py`
+- Fetch 3D models (git-ignored, needed for mesh renders): `.venv/bin/python scripts/fetch_assets.py`
+- Interactive viewer: `.venv/bin/mjpython scripts/view.py`
 
 ## Constraints
 

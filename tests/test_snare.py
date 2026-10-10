@@ -20,7 +20,7 @@ def model():
 
 
 def run(model, lateral=(0.0, 0.0), grapple=True, pull=0.0, stop_after=None):
-    """Run the grapple sequence, then pull the vehicle straight out with `pull` newtons."""
+    """Run the grapple sequence, then pull the pin straight out with `pull` newtons."""
     data = mujoco.MjData(model)
     scene.reset(model, data, standoff=INSERTED, lateral=lateral)
     vid = model.body("vehicle").id
@@ -30,10 +30,12 @@ def run(model, lateral=(0.0, 0.0), grapple=True, pull=0.0, stop_after=None):
         t = i * dt
         if grapple:
             scene.set_snare(model, data, *snare.grapple_command(t))
-        data.xfrc_applied[vid] = 0
-        if t > snare.SEQUENCE_TIME + 2.0:
+        data.qfrc_applied[:] = 0
+        if pull and t > snare.SEQUENCE_TIME + 2.0:
+            # Pull along the pin, through the pin. A force through the vehicle's centre
+            # of mass would also lever the fixture sideways; that is a separate question.
             out = data.site("lee_mouth").xmat.reshape(3, 3)[:, 2]
-            data.xfrc_applied[vid, :3] = pull * out
+            mujoco.mj_applyFT(model, data, pull * out, np.zeros(3), data.site("pin_tip").xpos, vid, data.qfrc_applied)
         mujoco.mj_step(model, data)
     return data
 

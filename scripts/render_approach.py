@@ -29,7 +29,7 @@ def main() -> None:
 
     cam = mujoco.MjvCamera()
     cam.lookat[:] = data.site("lee_mouth").xpos + [0, 0, 0.15]
-    cam.distance, cam.azimuth, cam.elevation = 2.6, 90.0, -8.0
+    cam.distance, cam.azimuth, cam.elevation = 7.0, 60.0, -10.0
 
     frames = []
     next_frame = [0.0]

@@ -5,7 +5,11 @@ from pathlib import Path
 import mujoco
 import numpy as np
 
-BASE_XML = Path(__file__).resolve().parent.parent / "models" / "capture_base.xml"
+from . import geometry
+
+ROOT = Path(__file__).resolve().parent.parent
+BASE_XML = ROOT / "models" / "capture_base.xml"
+MESH_DIR = ROOT / "assets" / "processed"
 
 ARM_JOINTS = (
     "shoulder_roll",
@@ -17,8 +21,10 @@ ARM_JOINTS = (
     "wrist_roll",
 )
 
-# Arm bent at the elbow with the end effector pointing straight away from the station.
-READY_POSE = np.array([0.0, 0.0, 0.7, -1.4, 0.7, 0.0, 0.0])
+# End-effector mouth 9 m above the arm's base, pointing straight away from the station.
+# Found by inverse kinematics, choosing the best-conditioned of 29 solutions.
+READY_POSE = np.array([1.036931, -1.523612, -0.684771, 0.951583, 2.874781, 0.047185, 2.982912])
+READY_MOUTH = np.array([1.5, 1.0, 9.0])
 
 # End-effector cavity, in the `lee` body frame (z is the approach axis).
 CAVITY_Z0, CAVITY_Z1 = 0.5, 1.0
@@ -38,7 +44,7 @@ def _add_cavity_wall(spec: mujoco.MjSpec) -> None:
 
     MuJoCo collides convex shapes, so one mesh cannot represent a cavity.
     """
-    lee = spec.body("lee")
+    lee = spec.body("lee_tool")
     r_mid = CAVITY_RADIUS + WALL_THICKNESS / 2
     # Half-width chosen so neighbouring boxes overlap at the inner radius.
     half_w = (CAVITY_RADIUS + WALL_THICKNESS) * np.tan(np.pi / WALL_SEGMENTS)
@@ -57,9 +63,42 @@ def _add_cavity_wall(spec: mujoco.MjSpec) -> None:
         )
 
 
-def build_model() -> mujoco.MjModel:
+def meshes_available() -> bool:
+    names = list(geometry.ARM_MESHES.values()) + list(geometry.VEHICLE_MESHES)
+    return all((MESH_DIR / f"{n}.stl").exists() for n in names)
+
+
+def _use_meshes(spec: mujoco.MjSpec) -> None:
+    """Show the downloaded models in place of the stand-in shapes.
+
+    Appearance only: collisions still use the simple shapes, now hidden,
+    and masses are unchanged.
+    """
+    visual = dict(type=mujoco.mjtGeom.mjGEOM_MESH, contype=0, conaffinity=0, density=0)
+    for geom in spec.geoms:
+        # arm stand-ins, the end-effector shell, and the vehicle hull
+        if geom.name.startswith(("v_", "lee_", "hull_")):
+            geom.rgba[3] = 0.0
+    for body, mesh in geometry.ARM_MESHES.items():
+        spec.add_mesh(name=mesh, file=str(MESH_DIR / f"{mesh}.stl"))
+        spec.body(body).add_geom(name=f"mesh_{mesh}", meshname=mesh, rgba=[0.93, 0.93, 0.91, 1], **visual)
+    for mesh, rgba in geometry.VEHICLE_MESHES.items():
+        spec.add_mesh(name=mesh, file=str(MESH_DIR / f"{mesh}.stl"))
+        spec.body("vehicle").add_geom(name=f"mesh_{mesh}", meshname=mesh, rgba=list(rgba), **visual)
+
+
+def build_model(meshes: bool | None = None) -> mujoco.MjModel:
+    """Build the scene.
+
+    meshes: show the downloaded 3D models. Defaults to using them when they have
+            been fetched (scripts/fetch_assets.py). The physics is the same either way.
+    """
     spec = mujoco.MjSpec.from_file(str(BASE_XML))
     _add_cavity_wall(spec)
+    if meshes is None:
+        meshes = meshes_available()
+    if meshes:
+        _use_meshes(spec)
     return spec.compile()
 
 

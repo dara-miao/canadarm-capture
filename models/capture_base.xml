@@ -1,12 +1,15 @@
 <!--
   Free-flyer capture scene: a 7-joint station arm and a drifting cargo vehicle.
 
-  Dimensions and masses are round-number approximations of Canadarm2 and a
-  Cygnus-class vehicle, not engineering data. See docs/PLAN.md for sources and
-  open questions.
+  Arm joint positions come from the Canadian Space Agency's 1:100 Canadarm2
+  model (see capture/geometry.py). Masses, inertias, gains, and the grapple
+  fixture are approximations. See docs/PLAN.md for sources and open questions.
 
-  The hollow end-effector wall is added in capture/scene.py, because a cavity
-  has to be assembled from convex pieces. The snare inside it is defined here.
+  Every arm body sits at the origin of the arm's assembly frame; each joint is
+  placed by its own pos and axis. In the zero pose the arm is folded.
+
+  Shapes here are stand-ins. capture/scene.py adds the hollow end-effector
+  wall and, when the downloaded models are present, swaps in real meshes.
 -->
 <mujoco model="canadarm2_capture">
   <compiler angle="radian" autolimits="true"/>
@@ -25,9 +28,9 @@
     <default class="armjoint">
       <joint range="-4.71 4.71" armature="500" damping="50"/>
     </default>
-    <!-- Arm links are visual only for now; only the end effector collides. -->
+    <!-- Arm link shapes are visual only; link masses are given explicitly. -->
     <default class="link">
-      <geom contype="0" conaffinity="0" rgba="0.92 0.92 0.9 1"/>
+      <geom type="cylinder" size="0.21" contype="0" conaffinity="0" density="0" rgba="0.92 0.92 0.9 1"/>
     </default>
     <default class="lee">
       <geom contype="1" conaffinity="1" rgba="0.85 0.72 0.3 1" friction="0.6 0.005 0.0001"/>
@@ -46,47 +49,77 @@
   <worldbody>
     <geom name="truss" type="box" size="5 1 0.5" pos="0 0 -0.5" rgba="0.45 0.45 0.5 1" contype="0" conaffinity="0"/>
 
-    <body name="sr" childclass="link">
-      <joint name="shoulder_roll" class="armjoint" axis="0 0 1"/>
-      <geom type="cylinder" fromto="0 0 0 0 0 0.5" size="0.18" mass="110"/>
-      <body name="sy" pos="0 0 0.5">
-        <joint name="shoulder_yaw" class="armjoint" axis="0 1 0"/>
-        <geom type="cylinder" fromto="0 0 0 0 0 0.5" size="0.18" mass="110"/>
-        <body name="sp" pos="0 0 0.5">
-          <joint name="shoulder_pitch" class="armjoint" axis="1 0 0"/>
-          <geom type="capsule" fromto="0 0 0 0 0 7.3" size="0.17" mass="300"/>
-          <body name="ep" pos="0 0 7.3">
-            <joint name="elbow_pitch" class="armjoint" axis="1 0 0"/>
-            <geom type="capsule" fromto="0 0 0 0 0 7.3" size="0.17" mass="300"/>
-            <body name="wp" pos="0 0 7.3">
-              <joint name="wrist_pitch" class="armjoint" axis="1 0 0"/>
-              <geom type="cylinder" fromto="0 0 0 0 0 0.5" size="0.18" mass="110"/>
-              <body name="wy" pos="0 0 0.5">
-                <joint name="wrist_yaw" class="armjoint" axis="0 1 0"/>
-                <geom type="cylinder" fromto="0 0 0 0 0 0.5" size="0.18" mass="110"/>
-                <body name="lee" pos="0 0 0.5" childclass="lee">
-                  <joint name="wrist_roll" class="armjoint" axis="0 0 1"/>
-                  <geom name="lee_base" type="cylinder" fromto="0 0 0 0 0 0.5" size="0.25" mass="200"/>
-                  <!-- cavity wall: z = 0.5 to 1.0, inner radius 0.2 (added in scene.py) -->
-                  <site name="lee_mouth" pos="0 0 1.0" size="0.02" rgba="0 1 0 1"/>
-                  <!-- Snare: a carriage that slides along the approach axis, carrying three bars
-                       that close inward. Open, the bars form the triangle inscribed in the
-                       cavity (inradius 0.1 m). They do not collide with each other, so they
-                       cross freely as the triangle shrinks. -->
-                  <body name="carriage" pos="0 0 0.8">
-                    <joint name="carriage_slide" type="slide" axis="0 0 -1" range="0 0.1" damping="200"/>
-                    <geom type="cylinder" size="0.19 0.005" pos="0 0 -0.18" mass="10" contype="0" conaffinity="0" rgba="0.3 0.3 0.3 1"/>
-                    <body name="snare_0" pos="0.1 0 0" euler="0 0 0" childclass="snare">
-                      <joint name="snare_0" axis="-1 0 0"/>
-                      <geom fromto="0 -0.1732 0 0 0.1732 0"/>
-                    </body>
-                    <body name="snare_1" pos="-0.05 0.0866 0" euler="0 0 2.0944" childclass="snare">
-                      <joint name="snare_1" axis="-1 0 0"/>
-                      <geom fromto="0 -0.1732 0 0 0.1732 0"/>
-                    </body>
-                    <body name="snare_2" pos="-0.05 -0.0866 0" euler="0 0 4.1888" childclass="snare">
-                      <joint name="snare_2" axis="-1 0 0"/>
-                      <geom fromto="0 -0.1732 0 0 0.1732 0"/>
+    <!-- Places the base end effector's tip at the world origin, pointing down into the station. -->
+    <body name="arm_root" pos="-3.81 0.04 1.23" quat="0.7071068 -0.7071068 0 0" childclass="link">
+      <geom name="v_lee_a" fromto="3.81 0.14 -0.04 3.81 1.23 -0.04" size="0.225"/>
+
+      <body name="sr">
+        <joint name="shoulder_roll" class="armjoint" pos="3.81 0 -0.04" axis="0 1 0"/>
+        <inertial pos="3.7 -0.07 -0.04" mass="100" diaginertia="6 6 6"/>
+        <geom name="v_sr_0" fromto="3.81 -0.29 -0.04 3.81 0.14 -0.04"/>
+        <geom name="v_sr_1" fromto="3.3 -0.07 -0.04 3.81 -0.07 -0.04"/>
+
+        <body name="sy">
+          <joint name="shoulder_yaw" class="armjoint" pos="3.3 -0.07 -0.04" axis="1 0 0"/>
+          <inertial pos="3.09 -0.25 -0.04" mass="100" diaginertia="6 6 6"/>
+          <geom name="v_sy_0" fromto="2.88 -0.07 -0.04 3.3 -0.07 -0.04"/>
+          <geom name="v_sy_1" fromto="3.09 -0.58 -0.04 3.09 -0.08 -0.04"/>
+
+          <body name="sp">
+            <joint name="shoulder_pitch" class="armjoint" pos="3.09 -0.6 -0.04" axis="0 1 0"/>
+            <inertial pos="-0.4 -0.8 -0.05" mass="350" diaginertia="8 1450 1450"/>
+            <geom name="v_sp_0" fromto="3.09 -1.01 -0.04 3.09 -0.58 -0.04"/>
+            <geom name="v_sp_1" type="capsule" fromto="-3.8 -0.795 -0.05 3.0 -0.795 -0.05" size="0.17"/>
+            <geom name="v_sp_2" fromto="-3.95 -1.23 -0.045 -3.95 -0.6 -0.045" size="0.25"/>
+
+            <body name="ep">
+              <joint name="elbow_pitch" class="armjoint" pos="-3.95 -1.23 -0.045" axis="0 1 0"/>
+              <inertial pos="-0.37 -1.44 -0.07" mass="350" diaginertia="8 1450 1450"/>
+              <geom name="v_ep_0" fromto="-3.95 -1.63 -0.045 -3.95 -1.23 -0.045" size="0.25"/>
+              <geom name="v_ep_1" type="capsule" fromto="-3.8 -1.445 -0.05 3.0 -1.445 -0.05" size="0.17"/>
+              <geom name="v_ep_2" fromto="3.09 -1.53 -0.04 3.09 -1.23 -0.04"/>
+
+              <body name="wp">
+                <joint name="wrist_pitch" class="armjoint" pos="3.09 -1.6 -0.04" axis="0 1 0"/>
+                <inertial pos="3.09 -1.91 -0.04" mass="100" diaginertia="6 6 6"/>
+                <geom name="v_wp_0" fromto="3.09 -2.16 -0.04 3.09 -1.66 -0.04"/>
+                <geom name="v_wp_1" fromto="2.87 -2.17 -0.04 3.3 -2.17 -0.04"/>
+
+                <body name="wy">
+                  <joint name="wrist_yaw" class="armjoint" pos="3.3 -2.17 -0.04" axis="1 0 0"/>
+                  <inertial pos="3.63 -2.17 -0.04" mass="100" diaginertia="6 6 6"/>
+                  <geom name="v_wy_0" fromto="3.3 -2.17 -0.04 3.8 -2.17 -0.04"/>
+                  <geom name="v_wy_1" fromto="3.81 -2.17 -0.26 3.81 -2.17 0.17"/>
+
+                  <body name="lee">
+                    <joint name="wrist_roll" class="armjoint" pos="3.81 -2.17 0.17" axis="0 0 1"/>
+                    <inertial pos="3.81 -2.17 0.6" mass="50" diaginertia="5 5 2"/>
+
+                    <!-- Collision model of the end effector. z is the approach axis; the mouth is at z = 1. -->
+                    <body name="lee_tool" pos="3.81 -2.17 0.26" childclass="lee">
+                      <geom name="lee_base" type="cylinder" fromto="0 0 0 0 0 0.5" size="0.25" mass="200"/>
+                      <!-- cavity wall: z = 0.5 to 1.0, inner radius 0.2 (added in scene.py) -->
+                      <site name="lee_mouth" pos="0 0 1.0" size="0.02" rgba="0 1 0 1"/>
+                      <!-- Snare: a carriage that slides along the approach axis, carrying three bars
+                           that close inward. Open, the bars form the triangle inscribed in the
+                           cavity (inradius 0.1 m). They do not collide with each other, so they
+                           cross freely as the triangle shrinks. -->
+                      <body name="carriage" pos="0 0 0.8">
+                        <joint name="carriage_slide" type="slide" axis="0 0 -1" range="0 0.1" damping="200"/>
+                        <geom type="cylinder" size="0.19 0.005" pos="0 0 -0.18" mass="10" contype="0" conaffinity="0" rgba="0.3 0.3 0.3 1"/>
+                        <body name="snare_0" pos="0.1 0 0" euler="0 0 0" childclass="snare">
+                          <joint name="snare_0" axis="-1 0 0"/>
+                          <geom fromto="0 -0.1732 0 0 0.1732 0"/>
+                        </body>
+                        <body name="snare_1" pos="-0.05 0.0866 0" euler="0 0 2.0944" childclass="snare">
+                          <joint name="snare_1" axis="-1 0 0"/>
+                          <geom fromto="0 -0.1732 0 0 0.1732 0"/>
+                        </body>
+                        <body name="snare_2" pos="-0.05 -0.0866 0" euler="0 0 4.1888" childclass="snare">
+                          <joint name="snare_2" axis="-1 0 0"/>
+                          <geom fromto="0 -0.1732 0 0 0.1732 0"/>
+                        </body>
+                      </body>
                     </body>
                   </body>
                 </body>
@@ -97,14 +130,17 @@
       </body>
     </body>
 
-    <body name="vehicle" pos="0 0 25" childclass="vehicle">
+    <!-- Body frame: hull axis along z, grapple fixture pointing along +x. The fixture sits on
+         the service module, where the Cygnus model shows a small fixture. -->
+    <body name="vehicle" pos="0 0 30" childclass="vehicle">
       <freejoint name="vehicle_free"/>
-      <geom name="hull" type="cylinder" size="1.535 3.2" mass="7000" rgba="0.8 0.8 0.82 1"/>
-      <geom name="gf_plate" type="cylinder" fromto="1.535 0 0 1.585 0 0" size="0.25" mass="10" rgba="0.2 0.2 0.2 1"/>
-      <geom name="gf_pin" type="capsule" fromto="1.585 0 0 1.885 0 0" size="0.02" mass="2" rgba="0.9 0.9 0.9 1"/>
+      <geom name="hull_cargo" type="cylinder" size="1.52 2.63" pos="0 0 1.105" mass="5500" rgba="0.8 0.8 0.82 1"/>
+      <geom name="hull_service" type="cylinder" size="1.3 0.74" pos="0 0 -2.26" mass="1500" rgba="0.7 0.7 0.72 1"/>
+      <geom name="gf_plate" type="cylinder" fromto="1.42 -0.41 -2.085 1.47 -0.41 -2.085" size="0.25" mass="10" rgba="0.2 0.2 0.2 1"/>
+      <geom name="gf_pin" type="capsule" fromto="1.47 -0.41 -2.085 1.77 -0.41 -2.085" size="0.02" mass="2" rgba="0.9 0.9 0.9 1"/>
       <!-- Flat-backed knob: the closed snare catches behind it without being wedged open. -->
-      <geom name="gf_tip" type="cylinder" fromto="1.870 0 0 1.900 0 0" size="0.035" mass="0.5" rgba="0.9 0.9 0.9 1"/>
-      <site name="pin_tip" pos="1.885 0 0" size="0.02" rgba="1 0 0 1"/>
+      <geom name="gf_tip" type="cylinder" fromto="1.755 -0.41 -2.085 1.785 -0.41 -2.085" size="0.035" mass="0.5" rgba="0.9 0.9 0.9 1"/>
+      <site name="pin_tip" pos="1.77 -0.41 -2.085" size="0.02" rgba="1 0 0 1"/>
     </body>
   </worldbody>
 

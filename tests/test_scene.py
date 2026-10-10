@@ -24,11 +24,32 @@ def test_zero_gravity_and_layout(model):
     assert model.nq == 7 + 4 + 7
 
 
-def test_arm_reach_matches_canadarm2(model):
+def test_arm_geometry_matches_the_csa_model(model):
     data = mujoco.MjData(model)
-    mujoco.mj_forward(model, data)  # all joints zero: arm straight
-    reach = data.site("lee_mouth").xpos[2]
-    assert reach == pytest.approx(17.6, abs=0.3)
+    mujoco.mj_forward(model, data)  # all joints zero: arm folded
+    anchor = {j: data.joint(j).xanchor for j in scene.ARM_JOINTS}
+    axis = {j: data.joint(j).xaxis for j in scene.ARM_JOINTS}
+    # the two booms are the same length, shoulder pitch to elbow and elbow to wrist pitch
+    def boom(a, b):
+        along = anchor[a] - anchor[b]
+        return np.linalg.norm(along - (along @ axis[b]) * axis[b])
+    assert boom("shoulder_pitch", "elbow_pitch") == pytest.approx(7.04, abs=0.01)
+    assert boom("wrist_pitch", "elbow_pitch") == pytest.approx(7.04, abs=0.01)
+    # the three pitch axes are parallel; each roll and yaw axis is perpendicular to its neighbour
+    assert abs(axis["shoulder_pitch"] @ axis["elbow_pitch"]) == pytest.approx(1.0)
+    assert abs(axis["wrist_pitch"] @ axis["elbow_pitch"]) == pytest.approx(1.0)
+    assert axis["shoulder_yaw"] @ axis["shoulder_pitch"] == pytest.approx(0.0, abs=1e-9)
+    assert axis["wrist_yaw"] @ axis["wrist_roll"] == pytest.approx(0.0, abs=1e-9)
+    # the base end effector's tip sits on the station, at the world origin
+    assert model.body("arm_root").pos + np.array([3.81, -0.04, -1.23]) == pytest.approx(0.0, abs=1e-9)
+
+
+def test_ready_pose_points_away_from_the_station(model):
+    data = mujoco.MjData(model)
+    scene.reset(model, data)
+    mouth = data.site("lee_mouth")
+    assert mouth.xpos == pytest.approx(scene.READY_MOUTH, abs=1e-4)
+    assert mouth.xmat.reshape(3, 3)[:, 2] == pytest.approx([0, 0, 1], abs=1e-4)
 
 
 def test_pin_is_aligned_with_cavity(model):
@@ -63,7 +84,9 @@ def test_free_vehicle_conserves_momentum(model):
     v1, L1 = momenta()
 
     assert data.ncon == 0
-    assert np.linalg.norm(v1 - v0) / np.linalg.norm(v0) < 1e-6
+    # the body origin sits about 2 m from the centre of mass, which costs
+    # the integrator a little accuracy on a tumbling body
+    assert np.linalg.norm(v1 - v0) / np.linalg.norm(v0) < 1e-4
     assert np.linalg.norm(L1 - L0) / np.linalg.norm(L0) < 1e-3
 
 
@@ -87,3 +110,14 @@ def test_arm_tracks_a_step_command(model):
     assert data.qpos[adr] == pytest.approx(target, abs=5e-3)
     dof = [model.joint(n).dofadr[0] for n in scene.ARM_JOINTS]
     assert np.abs(data.qvel[dof]).max() < 1e-3
+
+
+@pytest.mark.skipif(not scene.meshes_available(), reason="3D models not fetched")
+def test_meshes_do_not_change_the_physics():
+    plain, meshed = scene.build_model(meshes=False), scene.build_model(meshes=True)
+    assert meshed.nmesh > 0 and plain.nmesh == 0
+    assert meshed.body_mass == pytest.approx(plain.body_mass)
+    assert meshed.body_inertia == pytest.approx(plain.body_inertia)
+    assert meshed.body_ipos == pytest.approx(plain.body_ipos)
+    collides = lambda m: int(((m.geom_contype != 0) | (m.geom_conaffinity != 0)).sum())
+    assert collides(meshed) == collides(plain)

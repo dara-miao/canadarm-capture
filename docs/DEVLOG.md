@@ -150,3 +150,93 @@ Each trial takes under one second of computer time for about 38 simulated second
 - Only a handful of start conditions tried; no systematic sweep.
 
 **Next.** Milestone 4: a trial harness that samples start conditions, runs many attempts, and classifies each outcome.
+
+## 2026-10-10 · Realism audit and prior work
+
+Before building the trial harness, checked the model against public sources and looked for earlier work on the same problem.
+
+**What matches public data.**
+
+| Item | Public figure | Model |
+|---|---|---|
+| Arm joints | 7: three shoulder, one elbow, three wrist | Same layout |
+| Joint range | ±270 degrees | ±270 degrees |
+| Arm length | 17 m (CSA); 17.6 m in other sources | 17.6 m |
+| Arm mass | 1,497 kg | 1,500 kg |
+| Cygnus diameter | 3.07 m | 3.07 m |
+| Cygnus length (Enhanced) | 6.39 m | 6.4 m |
+| Cygnus mass | up to 8,050 kg loaded | 7,000 kg |
+| Capture method | Vehicle in free drift, thrusters off; three snares close, then rigidize | Same sequence |
+| Lateral capture tolerance | ±0.1 m | 0.1 m snare opening |
+
+**What does not.**
+
+- *Appearance.* Everything is cylinders, capsules, and boxes. No NASA or CSA 3D model is used. The station is a grey box.
+- *Arm internals.* Segment lengths, mass split, and joint offsets are guesses. The real arm flexes; this one is rigid.
+- *Grapple fixture.* Cygnus carries a power and video grapple fixture with a shaft, cam arms, and a target. The model has a rod with a knob, at a guessed position on the hull.
+- *Snare.* Rigid bars, not cables. No latches or umbilical after rigidizing. All forces and speeds invented.
+- *Control.* Real captures are flown by an operator using camera views of a target. The model is autonomous with perfect knowledge of the pin, and its speeds are unverified.
+- *Scenario.* The real capture point is about 10 m from the station. The model starts with the end effector 0.6 m from the pin. No orbital mechanics, lighting, or cameras.
+- *Validation.* None against flight or test data.
+
+**Prior work found (three searches, not exhaustive, papers not yet read).**
+
+- Professional and academic simulation of this exact mechanism exists and models the snares as flexible cables: a 2023 multibody dynamics conference paper on real-time simulation of cable-based end effectors, a JAXA study of contact between the snare wires and the HTV grapple fixture, and journal papers on snare-type end-effector cable dynamics.
+- An on-orbit operations simulator for Canadarm2 track-and-capture training (arXiv 2002.10594).
+- MuJoCo-based space robotics tools: mjorbit (arXiv 2609.08010), SmallSatSim (arXiv 2603.14598), and NASA Johnson's open MuJoCo and ROS 2 tooling.
+- No open-source MuJoCo study of Canadarm2 free-flyer capture turned up.
+
+**Takeaway.** The idea is not new and professionals model it at far higher fidelity. What this project can offer is a small, open, reproducible study that runs on a laptop, with its assumptions listed. The cable-snare papers are the obvious place to get realistic parameters and something to compare against.
+
+**Also added.** `scripts/view.py`, an interactive viewer that replays a capture.
+
+## 2026-10-10 · Realism pass, step 1: real 3D models
+
+**Why.** The audit above showed the scene was plain shapes with guessed proportions. Decided to fix realism in three steps before running any experiments: real models, sourced parameters, then the real 10 m starting distance.
+
+**What was available.**
+
+| Source | Model | Used? |
+|---|---|---|
+| Canadian Space Agency | Canadarm2, two boom halves, 1:100 printable | Yes |
+| Canadian Space Agency | Cygnus (Enhanced) body and one solar array, 1:100 printable | Yes |
+| NASA 3D Resources | International Space Station, several versions | Not yet |
+| NASA 3D Resources | Canadarm2 | Does not exist there (only the Shuttle arm) |
+
+The CSA allows non-commercial reproduction with credit and no implied endorsement. To avoid redistributing the files, `scripts/fetch_assets.py` downloads them from the CSA site into a git-ignored folder and converts them. Without them, the simulation falls back to plain shapes.
+
+**The useful surprise.** Each CSA boom file is made of about 40 separate solid pieces: the boom tube, each joint housing, the end effector, the cameras. That meant two things were possible:
+
+1. Assign pieces to moving links, so the arm articulates with the real model's shapes.
+2. Read the joint positions off the pieces. The housings are cylinders, and a cylinder's axis is the joint's axis.
+
+Doing that showed the first arm was wrong in kind, not just in detail. It was a straight chain with every joint on one line. The real arm has offset joints: at each end the pitch housing sticks out sideways from the boom, the yaw housing runs along the boom direction 0.72 m off its centreline, and the roll housing and end effector sit another 0.72 m further out. The two booms lie side by side when folded.
+
+**Rebuilt.**
+
+- `models/capture_base.xml`: the arm, with every joint placed from the measured positions. All arm bodies share one assembly frame and each joint has its own position and axis, which avoids chaining seven hand-computed transforms.
+- `capture/geometry.py`: the measured offsets.
+- `scene.py`: `build_model(meshes=...)` swaps the meshes in for the stand-in shapes. A new ready pose, found by inverse kinematics.
+- Vehicle: collision shape is now two cylinders matching the cargo and service modules, and the grapple pin moved to the service module where the model shows a small fixture.
+
+![Scene with real models](media/scene_wide.png)
+![End effector approaching the grapple pin](media/scene_closeup.png)
+![Approach and capture, 4x speed](media/approach_capture.gif)
+
+**Kept simple on purpose.** The meshes are appearance only. Collisions still use the cylinder-and-box shapes, now hidden. A test confirms the masses, inertias, and number of colliding shapes are identical with and without meshes.
+
+**What the new geometry broke, and what that showed.**
+
+1. *The pull-out test failed.* It pulled the vehicle through its centre of mass. With the pin now on the service module, 2.5 m from the centre of mass, a 500 N pull is also a 1,200 N m lever on the fixture. The seated plate, held by a 1,000 N pull-in on a 0.24 m rim, cannot resist that, and the vehicle pried itself loose. This is physically right, and the real end effector has latches for exactly this after pull-in. The test now pulls along the pin, which is what it was meant to check. The lever effect is recorded as a risk for defining a rigid capture.
+2. *The momentum check needed a looser tolerance* for linear momentum (1e-4 instead of 1e-6), because the vehicle's body origin is now 2 m from its centre of mass.
+3. *The reach test no longer made sense* for a folded zero pose. Replaced with checks on boom length, axis directions, and the ready pose.
+
+The approach and capture tests passed unchanged on the new arm.
+
+**Checks.** 21 pass.
+
+**Not done in this step.**
+
+- The station is still a grey box. NASA's free station model loads, but it is low-detail and untextured, and attaching the arm to it properly needs a real attachment point.
+- The solar arrays and the arm's links do not collide with anything.
+- Joint positions come from bounding boxes of a simplified printable model, not from engineering drawings.

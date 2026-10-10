@@ -15,15 +15,15 @@ OUT = ROOT / "docs" / "media"
 
 VIEWS = {
     # name: (lookat, distance, azimuth, elevation)
-    "scene_wide": ((0.0, 2.0, 9.0), 34.0, 20.0, -8.0),
-    "scene_closeup": (None, 3.2, 35.0, -15.0),
+    "scene_wide": ((0.5, 1.0, 6.5), 30.0, 35.0, -12.0),
+    "scene_closeup": (None, 6.0, 60.0, -10.0),
 }
 
 
 def main() -> None:
     model = scene.build_model()
     data = mujoco.MjData(model)
-    scene.reset(model, data, standoff=0.5)
+    scene.reset(model, data, standoff=0.6)
 
     OUT.mkdir(parents=True, exist_ok=True)
     with mujoco.Renderer(model, height=1080, width=1920) as renderer:
