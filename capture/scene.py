@@ -88,17 +88,30 @@ def pin_offset(model: mujoco.MjModel, data: mujoco.MjData) -> np.ndarray:
     return mouth.xmat.reshape(3, 3).T @ (data.site("pin_tip").xpos - mouth.xpos)
 
 
+def _rot_x(a: float) -> np.ndarray:
+    c, s = np.cos(a), np.sin(a)
+    return np.array([[1, 0, 0], [0, c, -s], [0, s, c]])
+
+
+def _rot_y(a: float) -> np.ndarray:
+    c, s = np.cos(a), np.sin(a)
+    return np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]])
+
+
 def place_vehicle(
     model: mujoco.MjModel,
     data: mujoco.MjData,
     standoff: float = 0.5,
     lateral: tuple[float, float] = (0.0, 0.0),
+    tilt: tuple[float, float] = (0.0, 0.0),
 ) -> None:
     """Place the vehicle so its grapple pin faces the end-effector mouth.
 
     standoff: distance from the mouth to the pin tip along the approach axis [m].
               Negative puts the tip inside the cavity.
     lateral:  pin offset from the approach axis, in the end-effector x/y [m].
+    tilt:     pin axis rotation about the end-effector x and y axes [rad],
+              pivoting about the pin tip.
 
     Uses the arm's current pose. Vehicle velocity is left unchanged.
     """
@@ -108,7 +121,7 @@ def place_vehicle(
     x_l, y_l, z_l = R_l[:, 0], R_l[:, 1], R_l[:, 2]
 
     # The pin runs along vehicle +x and must point into the cavity, i.e. along -z_l.
-    R_v = np.column_stack([-z_l, y_l, x_l])
+    R_v = R_l @ _rot_x(tilt[0]) @ _rot_y(tilt[1]) @ R_l.T @ np.column_stack([-z_l, y_l, x_l])
     tip_world = mouth.xpos + standoff * z_l + lateral[0] * x_l + lateral[1] * y_l
     tip_local = model.site("pin_tip").pos
     pos = tip_world - R_v @ tip_local
@@ -120,14 +133,47 @@ def place_vehicle(
     data.qpos[adr + 3 : adr + 7] = quat
 
 
+def set_vehicle_velocity(
+    model: mujoco.MjModel,
+    data: mujoco.MjData,
+    drift: tuple[float, float, float] = (0.0, 0.0, 0.0),
+    tumble: tuple[float, float, float] = (0.0, 0.0, 0.0),
+) -> None:
+    """Give the vehicle a drift and a tumble, both expressed in the end-effector mouth frame.
+
+    drift:  velocity of the vehicle's centre of mass [m/s].
+    tumble: angular velocity [rad/s].
+    """
+    mujoco.mj_kinematics(model, data)
+    mujoco.mj_comPos(model, data)
+    R_l = data.site("lee_mouth").xmat.reshape(3, 3)
+    body = data.body("vehicle")
+    w_world = R_l @ np.asarray(tumble, dtype=float)
+    v_com = R_l @ np.asarray(drift, dtype=float)
+    # Free-joint velocities are the body origin's linear velocity (world frame)
+    # and the angular velocity in the body frame.
+    v_origin = v_com + np.cross(w_world, body.xpos - body.xipos)
+    dof = model.joint("vehicle_free").dofadr[0]
+    data.qvel[dof : dof + 3] = v_origin
+    data.qvel[dof + 3 : dof + 6] = body.xmat.reshape(3, 3).T @ w_world
+
+
+def pin_axis_error(model: mujoco.MjModel, data: mujoco.MjData) -> float:
+    """Angle between the pin axis and the approach axis [rad]. Zero when aligned."""
+    z_l = data.site("lee_mouth").xmat.reshape(3, 3)[:, 2]
+    pin = data.body("vehicle").xmat.reshape(3, 3)[:, 0]
+    return float(np.arccos(np.clip(-pin @ z_l, -1.0, 1.0)))
+
+
 def reset(
     model: mujoco.MjModel,
     data: mujoco.MjData,
     standoff: float = 0.5,
     lateral: tuple[float, float] = (0.0, 0.0),
+    tilt: tuple[float, float] = (0.0, 0.0),
 ) -> None:
     """Arm at the ready pose, vehicle at rest in front of the end effector."""
     mujoco.mj_resetData(model, data)
     set_arm(model, data, READY_POSE)
-    place_vehicle(model, data, standoff, lateral)
+    place_vehicle(model, data, standoff, lateral, tilt)
     mujoco.mj_forward(model, data)

@@ -23,8 +23,8 @@ The project is simulation only. It is a reasoned study of a real operation, not 
 |---|---|---|---|
 | 1 | Zero-g scene | Done (2026-10-10) | Arm and vehicle load, momentum is conserved, arm tracks commands |
 | 2 | Snare mechanism | Done (2026-10-10) | A closing mechanism holds the pin against a pull-out force |
-| 3 | Approach and capture | Next | A controller completes a capture from a nominal start |
-| 4 | Trial harness | Planned | One command runs N trials and reports success rate and failure types |
+| 3 | Approach and capture | Done (2026-10-10) | A controller completes a capture from a nominal start |
+| 4 | Trial harness | Next | One command runs N trials and reports success rate and failure types |
 | 5 | Experiment A: capture envelope | Planned | Success map over misalignment, drift, and tumble |
 | 6 | Experiment B: parameter sensitivity | Planned | Matched trials showing the effect of friction, compliance, and delay |
 | 7 | Experiment C: second engine | Planned | Scene exported to USD and rerun in Newton, results compared |
@@ -43,6 +43,10 @@ The project is simulation only. It is a reasoned study of a real operation, not 
 | 2026-10-10 | Open snare is the triangle inscribed in the cavity (inradius 0.1 m) | Matches the published lateral capture tolerance of ±0.1 m for this end-effector design |
 | 2026-10-10 | Flat-backed knob on the pin tip, not a ball | A ball wedged the bars apart under load and the pin slipped out |
 | 2026-10-10 | Stiff, high-force snare drive | The real drive is geared and is not pushed back open by load on the pin |
+| 2026-10-10 | Resolved-rate control through the damped Jacobian pseudo-inverse | Standard for redundant arms; needs no trajectory planner for a short approach |
+| 2026-10-10 | Leave roll about the pin axis uncontrolled | The modelled pin is symmetric; the real fixture has alignment cams that this model omits |
+| 2026-10-10 | Arm freezes when the snare fires | Simple and close to stopping the arm at capture; means any remaining drift is absorbed by the snare and the joint servos |
+| 2026-10-10 | Controller reads the true pin pose and velocity | Sensing error and delay become explicit parameters in experiment B instead of being hidden in a perception model |
 | 2026-10-10 | Treat the station as fixed and the arm as rigid | The station is about 60 times heavier than the vehicle; arm flexibility is left out to keep the first version simple |
 
 ## Assumptions to verify
@@ -53,6 +57,8 @@ These are placeholders, chosen to be plausible. Each needs a source or an explic
 - Vehicle: 3.07 m diameter, 6.4 m long, 7,000 kg. Grapple fixture position on the hull is a guess.
 - Grapple pin: 0.3 m long, 2 cm radius. End-effector cavity: 0.2 m inner radius, 0.5 m deep.
 - Joint gains, damping, and reflected inertia are invented for stable tracking. No torque or speed limits yet.
+- Controller: 3 cm/s insertion speed, 0.03 rad/s joint rate cap, gains of 0.8 per second. All invented; real capture operations and their rate limits still to look up.
+- The controller has perfect knowledge of the pin. Real systems estimate it from a camera target.
 - Snare: bar radius 6 mm, closing time 2 s, drive force limit 1,500 N, carriage force limit 1,000 N, friction 0.6. All invented.
 - Pin tip knob: 3.5 cm radius, 3 cm long. The real fixture's shaft and cam geometry is not reproduced.
 - Capture limits: a NASA report on this end-effector design gives ±0.1 m lateral and 0.1 m axial misalignment tolerance. Angular limits and limits on relative velocity still to find.
@@ -61,6 +67,7 @@ These are placeholders, chosen to be plausible. Each needs a source or an explic
 ## Risks
 
 - **Snare modelling.** Resolved for now with rigid bars (milestone 2). The bars cannot stretch or wrap like cables, which may matter for angular misalignment.
+- **The task may be too easy as modelled.** With perfect sensing and generous joint rates the controller succeeds across everything tried so far. The experiments need realistic limits (sensing noise and delay, rate and torque limits) or the envelope will be uninformative.
 - **Contact tuning.** Stiff contact in zero gravity may need a smaller timestep or solver tuning.
 - **Newton on macOS.** Supported in CPU-only mode but untested here.
 

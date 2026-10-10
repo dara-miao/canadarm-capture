@@ -2,11 +2,13 @@
 
 A MuJoCo simulation of a space station arm capturing a free-floating cargo vehicle, built to study how much error the capture tolerates and which physical parameters decide it.
 
-**Status:** early. The scene and the snare mechanism work: a pin placed inside the end effector is centred, pulled in, and held. The arm does not yet approach a moving vehicle. See the [plan](docs/PLAN.md) and the [build log](docs/DEVLOG.md).
+**Status:** in progress. The arm approaches a drifting, tumbling vehicle, inserts the grapple pin, and captures it. The systematic experiments have not been run yet. See the [plan](docs/PLAN.md) and the [build log](docs/DEVLOG.md).
 
 ![Project plan](docs/media/plan.svg)
 
-![Grapple sequence](docs/media/snare_capture.gif)
+![Approach and capture, 4x speed](docs/media/approach_capture.gif)
+
+![Grapple sequence inside the end effector](docs/media/snare_capture.gif)
 
 ## Run it
 
@@ -14,7 +16,7 @@ A MuJoCo simulation of a space station arm capturing a free-floating cargo vehic
 python3 -m venv .venv
 .venv/bin/pip install -e ".[dev]"
 .venv/bin/python -m pytest
-.venv/bin/python scripts/render_capture.py
+.venv/bin/python scripts/render_approach.py
 ```
 
 Runs on CPU. Developed on an Apple Silicon Mac with MuJoCo 3.15.

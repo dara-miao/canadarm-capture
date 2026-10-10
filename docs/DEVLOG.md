@@ -107,3 +107,46 @@ I also put the three bars in one plane. They had been stacked 14 mm apart so the
 - No angular misalignment has been tested, only lateral.
 
 **Next.** Milestone 3: move the arm to a drifting vehicle and trigger the grapple.
+
+## 2026-10-10 · Milestone 3: approach and capture
+
+**Built.**
+
+- `capture/controller.py`: a three-phase controller.
+  1. *Align.* Hold 0.4 m in front of the pin until the end effector is within 1 cm and 1 degree of the pin axis for one second.
+  2. *Insert.* Advance along the pin axis at 3 cm/s, still tracking, until the pin tip is 0.25 m inside the cavity.
+  3. *Grapple.* Freeze the arm and run the snare sequence from milestone 2.
+- `capture/trial.py`: runs one attempt and reports success, the phase reached, the trigger time, and the final pin position and relative speed.
+- `scene.py`: the vehicle's start can now be tilted, and given a drift and a tumble.
+- `tests/test_capture.py`: five checks. `scripts/render_approach.py`: an animation.
+
+![Approach and capture, 4x speed](media/approach_capture.gif)
+
+**How the tracking works.** Each step computes where the end-effector mouth should be (on the pin axis, at the commanded standoff, facing the pin) and how fast that point is moving. The error plus the target's own velocity gives a desired end-effector velocity. The damped pseudo-inverse of the arm's Jacobian turns that into joint rates, which are integrated into joint position commands. The arm has 7 joints and the task uses 5 degrees of freedom, because roll about the pin axis is left free.
+
+**One detail that mattered.** The joint servos damp joint velocity, so a steadily moving command lags by the ratio of damping gain to position gain, about one second for the large joints. The controller leads each command by exactly that amount, which turns the servo into one that tracks a velocity reference.
+
+**Success means** the controller finished, the pin tip is within 1 cm of the seated depth and 1 cm of the axis, and the pin is moving less than 2 mm/s relative to the end effector.
+
+**Checks (all pass, 19 in total).**
+
+| Start condition | Result |
+|---|---|
+| At rest, aligned, 0.6 m away | Captured; snare fired at 27 s, finished at 38 s |
+| 5.8 cm off-axis, tilted 2.5 degrees, drifting 7 mm/s, tumbling 0.1 deg/s | Captured; final relative speed 0.2 mm/s |
+| Leaving at 30 cm/s | Never grappled; the controller is still approaching at the 60 s limit |
+| Tilt and drift setters | Produce exactly the requested pin angle and centre-of-mass velocity |
+
+Each trial takes under one second of computer time for about 38 simulated seconds.
+
+**Observed but not yet tested: a first failure type.** With the vehicle receding at 3 cm/s, the snare fires and catches the pin, but the capture does not seat. At the end the pin is 3 cm short of seated, 3 cm off-axis, and still moving at 5.5 mm/s. The 7-tonne vehicle's momentum keeps pulling on the frozen arm. Call this *caught but not rigid*. Milestone 4 should classify it separately from a clean miss.
+
+**A concern.** With perfect knowledge of the pin and generous joint rates, the controller succeeds on everything short of that case. The experiments will need realistic limits, such as sensing noise and delay and joint rate limits, or the capture envelope will show nothing interesting.
+
+**Not done yet.**
+
+- No sensing model. The controller reads the true state.
+- Controller gains, speeds, and limits are invented.
+- Only a handful of start conditions tried; no systematic sweep.
+
+**Next.** Milestone 4: a trial harness that samples start conditions, runs many attempts, and classifies each outcome.

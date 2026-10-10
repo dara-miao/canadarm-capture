@@ -13,8 +13,8 @@ OUT = Path(__file__).resolve().parent.parent / "docs" / "media" / "plan.svg"
 STAGES = [
     ("1 · ZERO-G WORLD", "Build the scene", "7-joint arm · drifting vehicle", "Grapple pin · hollow end effector", "done"),
     ("2 · GRAPPLE MECHANISM", "Model the snare", "Closing mechanism on the pin", "Contact friction + compliance", "done"),
-    ("3 · CLOSED LOOP", "Approach and capture", "Track the pin · trigger the snare", "Actuator limits + delay", "next"),
-    ("4 · REPEATABLE TRIALS", "Measure outcomes", "Success criteria · failure types", "Logs · plots · video", "planned"),
+    ("3 · CLOSED LOOP", "Approach and capture", "Track the pin · trigger the snare", "Arm tracks a drifting pin", "done"),
+    ("4 · REPEATABLE TRIALS", "Measure outcomes", "Success criteria · failure types", "Logs · plots · video", "next"),
 ]
 EXPERIMENTS = [
     ("5 · EXPERIMENT A", "Capture envelope", "Sweep misalignment, drift, tumble", "Map where capture succeeds", "planned"),
