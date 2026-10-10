@@ -21,10 +21,16 @@ ARM_JOINTS = (
     "wrist_roll",
 )
 
-# End-effector mouth 9 m above the arm's base, pointing straight away from the station.
-# Found by inverse kinematics, choosing the best-conditioned of 29 solutions.
-READY_POSE = np.array([1.036931, -1.523612, -0.684771, 0.951583, 2.874781, 0.047185, 2.982912])
-READY_MOUTH = np.array([1.5, 1.0, 9.0])
+# Free-flying vehicles are captured about 10 m from the station. Here that is the
+# distance from the surface the arm stands on to the tip of the grapple pin.
+CAPTURE_DISTANCE = 10.0
+# How far the end effector waits from the pin before it starts. Not sourced.
+HOVER_DISTANCE = 2.0
+
+# End-effector mouth at the hover point, pointing straight away from the station.
+# Found by inverse kinematics from the best-conditioned of 29 solutions.
+READY_POSE = np.array([1.039915, -1.514656, -0.644822, 0.795967, 2.990447, 0.056141, 2.985896])
+READY_MOUTH = np.array([1.5, 1.0, CAPTURE_DISTANCE - HOVER_DISTANCE])
 
 # End-effector cavity, in the `lee` body frame (z is the approach axis).
 CAVITY_Z0, CAVITY_Z1 = 0.5, 1.0
@@ -143,7 +149,7 @@ def _rot_y(a: float) -> np.ndarray:
 def place_vehicle(
     model: mujoco.MjModel,
     data: mujoco.MjData,
-    standoff: float = 0.5,
+    standoff: float = HOVER_DISTANCE,
     lateral: tuple[float, float] = (0.0, 0.0),
     tilt: tuple[float, float] = (0.0, 0.0),
 ) -> None:
@@ -210,11 +216,15 @@ def pin_axis_error(model: mujoco.MjModel, data: mujoco.MjData) -> float:
 def reset(
     model: mujoco.MjModel,
     data: mujoco.MjData,
-    standoff: float = 0.5,
+    standoff: float = HOVER_DISTANCE,
     lateral: tuple[float, float] = (0.0, 0.0),
     tilt: tuple[float, float] = (0.0, 0.0),
 ) -> None:
-    """Arm at the ready pose, vehicle at rest in front of the end effector."""
+    """Arm at the ready pose, vehicle at rest in front of the end effector.
+
+    With the defaults the grapple pin's tip is at the capture point, CAPTURE_DISTANCE
+    from the station.
+    """
     mujoco.mj_resetData(model, data)
     set_arm(model, data, READY_POSE)
     place_vehicle(model, data, standoff, lateral, tilt)

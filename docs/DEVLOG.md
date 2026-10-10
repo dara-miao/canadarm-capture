@@ -120,7 +120,7 @@ I also put the three bars in one plane. They had been stacked 14 mm apart so the
 - `scene.py`: the vehicle's start can now be tilted, and given a drift and a tumble.
 - `tests/test_capture.py`: five checks. `scripts/render_approach.py`: an animation.
 
-![Approach and capture, 4x speed](media/approach_capture.gif)
+![Approach and capture, sped up](media/approach_capture.gif)
 
 **How the tracking works.** Each step computes where the end-effector mouth should be (on the pin axis, at the commanded standoff, facing the pin) and how fast that point is moving. The error plus the target's own velocity gives a desired end-effector velocity. The damped pseudo-inverse of the arm's Jacobian turns that into joint rates, which are integrated into joint position commands. The arm has 7 joints and the task uses 5 degrees of freedom, because roll about the pin axis is left free.
 
@@ -221,7 +221,7 @@ Doing that showed the first arm was wrong in kind, not just in detail. It was a 
 
 ![Scene with real models](media/scene_wide.png)
 ![End effector approaching the grapple pin](media/scene_closeup.png)
-![Approach and capture, 4x speed](media/approach_capture.gif)
+![Approach and capture, sped up](media/approach_capture.gif)
 
 **Kept simple on purpose.** The meshes are appearance only. Collisions still use the cylinder-and-box shapes, now hidden. A test confirms the masses, inertias, and number of colliding shapes are identical with and without meshes.
 
@@ -313,3 +313,45 @@ The 1982 paper is about the Shuttle arm's end effector, not Canadarm2's. Canadar
 **Checks.** 25 pass, including three new ones tied to published figures: the bending moment and the capture velocity in three directions.
 
 **Still invented.** Listed in `PLAN.md` under "Assumptions still unsourced". The main ones are link masses, servo gains, snare cable tension and friction, and the absence of arm flexibility.
+
+## 2026-10-10 · Realism pass, step 3: the 10 m capture point
+
+**Goal.** Start each attempt the way a real capture starts: the vehicle holding at the capture point, and the arm reaching out to it.
+
+**What is published.** Cygnus stops at a capture point about 10 m from the station (12 m for the larger Cygnus XL), switches its thrusters off, and drifts while the arm grapples it. Nothing I could access gives the distance the arm waits from the grapple fixture beforehand, or the vehicle's leftover drift rates. The one operations paper on Canadarm2's first free-flyer capture (Lucier and Smith, 2010) is restricted.
+
+**Built.**
+
+- `scene.CAPTURE_DISTANCE = 10.0`: the grapple pin's tip starts 10 m from the surface the arm stands on.
+- `scene.HOVER_DISTANCE = 2.0`: the end effector starts 2 m short of the pin. This is an assumption.
+- A new ready pose for the hover point, and `reset()` now defaults to this start.
+- The controller is unchanged. Its first phase already moves the end effector to 0.4 m from the pin before aligning; it now has 1.6 m to cover first.
+
+![Approach and capture, sped up](media/approach_capture.gif)
+
+**Results.** An attempt now takes 60 simulated seconds (41 s to the snare firing), up from 46 s, and 1.2 s of computer time.
+
+| Start condition | Result |
+|---|---|
+| At rest, aligned | Captured |
+| Off-axis, tilted 2.5°, drifting 7 mm/s, tumbling | Captured |
+| Moving at 0.031 m/s: receding, approaching, sideways | Captured |
+| Tilted 10° | Captured |
+| Tilted 15° and 8 cm off-axis | Captured |
+| Tumbling at 0.6°/s | Captured |
+
+**What this confirms.** The concern from milestone 3 stands. Everything succeeds, because the controller knows the pin's exact position and velocity and simply lines the arm up with it. A 15° tilt is no test of the snare when the arm removes the tilt before inserting. The experiments will only be informative once sensing is imperfect: noise, delay, and limits on how fast the arm can follow.
+
+**Also read.** Freer et al. (2020), the Canadarm2 training simulator found earlier, is a Unity tool for studying operator workload. It has no contact physics, and a grapple there means coming within 1 m. It does give ground-control latency of 0.3 to 0.5 s each way, which sets a realistic range for the sensing-delay parameter.
+
+**Realism pass summary.**
+
+| Step | Outcome |
+|---|---|
+| 1. Real 3D models | Arm, Cygnus, and station from CSA and NASA models; arm rebuilt with offset joints |
+| 2. Sourced parameters | Pull-in force, timings, limp arm, speed cap; two faults found and fixed |
+| 3. Capture point | Pin starts 10 m from the station; arm starts 2 m short |
+
+**Checks.** 26 pass.
+
+**Next.** Milestone 4, the trial harness. It needs an out-of-reach abort and outcome labels: captured, missed, caught but not rigid, never reached.

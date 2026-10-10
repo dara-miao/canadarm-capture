@@ -15,21 +15,21 @@ from capture.controller import CaptureController  # noqa: E402
 from capture.trial import run_trial  # noqa: E402
 
 OUT = ROOT / "docs" / "media"
-SIM_SECONDS_PER_FRAME = 0.4
-PLAYBACK_FPS = 10  # 4x real time
+SIM_SECONDS_PER_FRAME = 0.6
+PLAYBACK_FPS = 10  # 6x real time
 
 
 def main() -> None:
     model = scene.build_model()
     data = mujoco.MjData(model)
     # Exaggerated start so the alignment is easy to see.
-    scene.reset(model, data, standoff=0.7, lateral=(0.09, -0.05), tilt=np.radians((5.0, -4.0)))
+    scene.reset(model, data, lateral=(0.09, -0.05), tilt=np.radians((5.0, -4.0)))
     scene.set_vehicle_velocity(model, data, drift=(0.006, -0.004, 0.004), tumble=np.radians((0.08, -0.1, 0.04)))
     controller = CaptureController(model)
 
     cam = mujoco.MjvCamera()
-    cam.lookat[:] = data.site("lee_mouth").xpos + [0, 0, 0.15]
-    cam.distance, cam.azimuth, cam.elevation = 7.0, 60.0, -10.0
+    cam.lookat[:] = data.site("lee_mouth").xpos + [0, 0, 1.2]
+    cam.distance, cam.azimuth, cam.elevation = 10.0, 60.0, -8.0
 
     frames = []
     next_frame = [0.0]

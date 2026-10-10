@@ -10,7 +10,7 @@ A MuJoCo simulation of a space station arm capturing a free-floating cargo vehic
 
 ![Arm on the forward node](docs/media/scene_wide.png)
 
-![Approach and capture, 4x speed](docs/media/approach_capture.gif)
+![Approach and capture, sped up](docs/media/approach_capture.gif)
 
 ![Grapple sequence inside the end effector](docs/media/snare_capture.gif)
 

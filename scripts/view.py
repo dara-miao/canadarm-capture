@@ -37,12 +37,12 @@ def main() -> None:
     steps_per_frame = max(1, int(round(args.speed * FRAME_TIME / model.opt.timestep)))
 
     with mujoco.viewer.launch_passive(model, data) as viewer:
-        scene.reset(model, data, standoff=0.7)
-        viewer.cam.lookat[:] = data.site("lee_mouth").xpos + [0, 0, 0.3]
-        viewer.cam.distance, viewer.cam.azimuth, viewer.cam.elevation = 5.0, 60.0, -10.0
+        scene.reset(model, data)
+        viewer.cam.lookat[:] = data.site("lee_mouth").xpos + [0, 0, 1.2]
+        viewer.cam.distance, viewer.cam.azimuth, viewer.cam.elevation = 10.0, 60.0, -8.0
 
         while viewer.is_running():
-            scene.reset(model, data, standoff=0.7, lateral=(0.09, -0.05), tilt=np.radians((5.0, -4.0)))
+            scene.reset(model, data, lateral=(0.09, -0.05), tilt=np.radians((5.0, -4.0)))
             scene.set_vehicle_velocity(model, data, drift=(0.006, -0.004, 0.004), tumble=np.radians((0.08, -0.1, 0.04)))
             controller.reset(data)
             hold_until = None  # keep showing the result for a few seconds

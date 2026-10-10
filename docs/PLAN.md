@@ -26,8 +26,8 @@ The project is simulation only. It is a reasoned study of a real operation, not 
 | 3 | Approach and capture | Done (2026-10-10) | A controller completes a capture from a nominal start |
 | R1 | Realism: real 3D models | Done (2026-10-10) | Arm, vehicle, and station use Canadian Space Agency and NASA models; arm joints placed from them |
 | R2 | Realism: sourced parameters | Done (2026-10-10) | Snare and capture numbers taken from the published papers where they give them |
-| R3 | Realism: 10 m capture point | Next | The attempt starts with the vehicle at the real capture distance |
-| 4 | Trial harness | Planned | One command runs N trials and reports success rate and failure types |
+| R3 | Realism: 10 m capture point | Done (2026-10-10) | The attempt starts with the vehicle at the real capture distance |
+| 4 | Trial harness | Next | One command runs N trials and reports success rate and failure types |
 | 5 | Experiment A: capture envelope | Planned | Success map over misalignment, drift, and tumble |
 | 6 | Experiment B: parameter sensitivity | Planned | Matched trials showing the effect of friction, compliance, and delay |
 | 7 | Experiment C: second engine | Planned | Scene exported to USD and rerun in Newton, results compared |
@@ -61,6 +61,7 @@ The project is simulation only. It is a reasoned study of a real operation, not 
 | 2026-10-10 | Arm goes limp during pull-in, except wrist roll | The paper says angular misalignment is removed against a limped arm |
 | 2026-10-10 | Arm keeps tracking until the snare has closed | Stopping at the trigger failed at the paper's 0.031 m/s relative velocity |
 | 2026-10-10 | Cap tip speed at 0.37 m/s | Canadarm2's published unloaded speed |
+| 2026-10-10 | Every attempt starts with the pin at the 10 m capture point and the arm hovering 2 m short | Matches the published capture distance; the hover distance is an assumption |
 | 2026-10-10 | Treat the station as fixed and the arm as rigid | The station is about 60 times heavier than the vehicle; arm flexibility is left out to keep the first version simple |
 
 ## Sourced values
@@ -82,7 +83,8 @@ The project is simulation only. It is a reasoned study of a real operation, not 
 | Limp arm during rigidization | all joints except wrist roll | Daniell and Sachdev | Implemented |
 | Snare drive | ring turns through 80° | Daniell and Sachdev | Not modelled; bars slide instead |
 | Cygnus | 3.07 m diameter, 6.39 m long, up to 8,050 kg loaded | Public data | Collision shape; 7,000 kg |
-| Capture point | about 10 m from the station (12 m for Cygnus XL) | NASA reports | Realism step 3 |
+| Capture point | about 10 m from the station (12 m for Cygnus XL) | NASA reports | The grapple pin's tip starts 10 m from the surface the arm stands on |
+| Ground-control latency | 0.3 to 0.5 s each way | Freer et al. (2020) | Range for the sensing-delay parameter in experiment B |
 
 Daniell and Sachdev (1982) describes the Shuttle arm's end effector: 0.34 m in diameter, 0.46 m long, 29.5 kg. Canadarm2's is a larger descendant with added latches, so these values are indicative for it, not exact.
 
@@ -96,6 +98,8 @@ Daniell and Sachdev (1982) describes the Shuttle arm's end effector: 0.34 m in d
 - Vehicle: collision shape is two cylinders fitted to the CSA Cygnus model; mass split by guess. The grapple pin sits where the model shows a small fixture on the service module, which is probably the grapple fixture but is not confirmed.
 - Grapple pin: 0.3 m long, 2 cm radius, with a flat-backed knob. The real fixture has a shaft with cam arms, which are not modelled.
 - Snare: three rigid bars, 6 mm radius, drive force limit 1,500 N, friction 0.6. Cable tension and friction are not sourced.
+- Hover distance: the end effector starts 2 m from the pin. No source found for the real pre-capture distance.
+- Which point the published 10 m is measured from is not stated; here it is the module surface under the arm's base.
 - Controller: gains, 3 cm/s insertion speed, alignment tolerances. Real captures are flown by an operator; the controller here has perfect knowledge of the pin.
 - Station: NASA's model (B), scaled by 2.35. Low-detail, untextured, US modules about 15% narrow. The arm's mounting position on the forward node is approximate.
 
@@ -124,7 +128,8 @@ Prior work:
 - Arbatani, Kövecses, and Teichmann, "Real-time Simulation of Cable-Based Robotic End Effectors", ECCOMAS Multibody 2023 (read): https://multibody2023.tecnico.ulisboa.pt/prog_MULTIBODY_WEB/MULTBODY2023_ABSTRACTS/ID_243_327_ECCOMAS_MBD_2023_accepted_rev.pdf
 - Uyama et al., contact dynamics between the end effector and a floating target, JAXA workshop, 2009 (abstract only; full text not public): https://jaxa.repo.nii.ac.jp/records/7383
 - Snare-type end-effector cable dynamics (paywalled; not read): https://link.springer.com/article/10.1007/s11771-013-1825-z
-- On-orbit operations simulator for telerobotic training: https://arxiv.org/pdf/2002.10594
+- Freer et al., "On-Orbit Operations Simulator for Workload Measurement during Telerobotic Training", 2020 (read; a Unity simulator for operator workload studies, with no contact physics): https://arxiv.org/pdf/2002.10594
+- Lucier and Smith, "Cosmic Catch: Canadarm2's First Capture of a Free-Flying Vehicle", IAC 2010 (abstract only; full paper restricted): https://iafastro.directory/iac/archive/browse/IAC-10/B6/1/7030/
 - mjorbit: https://arxiv.org/pdf/2609.08010
 - SmallSatSim: https://arxiv.org/html/2603.14598v1
 - NASA Johnson robotics open source: https://github.com/NASA-JSC-Robotics

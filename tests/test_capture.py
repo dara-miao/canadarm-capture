@@ -14,7 +14,7 @@ def model():
     return scene.build_model()
 
 
-def attempt(model, standoff=0.6, lateral=(0, 0), tilt_deg=(0, 0), drift=(0, 0, 0), tumble_deg=(0, 0, 0), **kw):
+def attempt(model, standoff=scene.HOVER_DISTANCE, lateral=(0, 0), tilt_deg=(0, 0), drift=(0, 0, 0), tumble_deg=(0, 0, 0), **kw):
     data = mujoco.MjData(model)
     scene.reset(model, data, standoff=standoff, lateral=lateral, tilt=np.radians(tilt_deg))
     scene.set_vehicle_velocity(model, data, drift, np.radians(tumble_deg))
@@ -40,6 +40,14 @@ def test_drift_is_the_centre_of_mass_velocity(model):
     assert v_com == pytest.approx([0.01, -0.02, 0.005], abs=1e-9)
 
 
+def test_default_start_puts_the_pin_at_the_capture_point(model):
+    data = mujoco.MjData(model)
+    scene.reset(model, data)
+    tip = data.site("pin_tip").xpos
+    assert tip[2] == pytest.approx(scene.CAPTURE_DISTANCE, abs=1e-3)  # 10 m from the mounting surface
+    assert scene.pin_offset(model, data) == pytest.approx([0, 0, scene.HOVER_DISTANCE], abs=1e-3)
+
+
 def test_captures_a_vehicle_at_rest(model):
     result = attempt(model)
     assert result.success
@@ -55,7 +63,7 @@ def test_captures_a_drifting_tumbling_misaligned_vehicle(model):
         tumble_deg=(0.06, -0.08, 0.03),
     )
     assert result.success
-    assert result.t_trigger < 60.0
+    assert result.t_trigger < 90.0
     assert result.rel_speed < 1e-3
 
 
