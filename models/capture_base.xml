@@ -25,23 +25,29 @@
   </asset>
 
   <default>
+    <!-- frictionloss is the torque needed to back-drive a joint. The end effector's test rig
+         used a 156 N side load "derived from the theoretical force to back drive the closest
+         arm joint" (Walker and Vandersluis, 1995); at the 1.3 m from the wrist axes to the tip
+         that is about 200 N m. Applied to every joint for want of anything better. -->
     <default class="armjoint">
-      <joint range="-4.71 4.71" armature="500" damping="50"/>
+      <joint range="-4.71 4.71" armature="500" damping="50" frictionloss="200"/>
     </default>
     <!-- Arm link shapes are visual only; link masses are given explicitly. -->
     <default class="link">
       <geom type="cylinder" size="0.21" contype="0" conaffinity="0" density="0" rgba="0.92 0.92 0.9 1"/>
     </default>
+    <!-- Sliding friction 0.3 is the static value Honda et al. (2014) chose for the shaft and
+         snare wire. scene.build_model can override it for sensitivity runs. -->
     <default class="lee">
-      <geom contype="1" conaffinity="1" rgba="0.85 0.72 0.3 1" friction="0.6 0.005 0.0001"/>
+      <geom contype="1" conaffinity="1" rgba="0.85 0.72 0.3 1" friction="0.3 0.005 0.0001"/>
     </default>
     <!-- conaffinity 3: the vehicle collides with the end effector (bit 1) and the snare (bit 2). -->
     <default class="vehicle">
-      <geom contype="1" conaffinity="3" friction="0.6 0.005 0.0001"/>
+      <geom contype="1" conaffinity="3" friction="0.3 0.005 0.0001"/>
     </default>
     <!-- Snare bars touch only the vehicle, never each other or the cavity wall. -->
     <default class="snare">
-      <geom type="capsule" size="0.006" contype="2" conaffinity="0" mass="0.5" rgba="0.9 0.2 0.2 1" friction="0.6 0.005 0.0001"/>
+      <geom type="capsule" size="0.006" contype="2" conaffinity="0" mass="0.5" rgba="0.9 0.2 0.2 1" friction="0.3 0.005 0.0001"/>
       <joint type="slide" range="0 0.08" damping="20" armature="5"/>
     </default>
   </default>
@@ -136,11 +142,15 @@
       <freejoint name="vehicle_free"/>
       <geom name="hull_cargo" type="cylinder" size="1.52 2.63" pos="0 0 1.105" mass="5500" rgba="0.8 0.8 0.82 1"/>
       <geom name="hull_service" type="cylinder" size="1.3 0.74" pos="0 0 -2.26" mass="1500" rgba="0.7 0.7 0.72 1"/>
-      <geom name="gf_plate" type="cylinder" fromto="1.42 -0.41 -2.085 1.47 -0.41 -2.085" size="0.25" mass="10" rgba="0.2 0.2 0.2 1"/>
-      <geom name="gf_pin" type="capsule" fromto="1.47 -0.41 -2.085 1.77 -0.41 -2.085" size="0.02" mass="2" rgba="0.9 0.9 0.9 1"/>
-      <!-- Flat-backed knob: the closed snare catches behind it without being wedged open. -->
-      <geom name="gf_tip" type="cylinder" fromto="1.755 -0.41 -2.085 1.785 -0.41 -2.085" size="0.035" mass="0.5" rgba="0.9 0.9 0.9 1"/>
-      <site name="pin_tip" pos="1.77 -0.41 -2.085" size="0.02" rgba="1 0 0 1"/>
+      <!-- The grapple fixture is its own body so that scene.build_model can mount it on a
+           spring. By default it has no joint and is rigid on the hull. -->
+      <body name="fixture">
+        <geom name="gf_plate" type="cylinder" fromto="1.42 -0.41 -2.085 1.47 -0.41 -2.085" size="0.25" mass="10" rgba="0.2 0.2 0.2 1"/>
+        <geom name="gf_pin" type="capsule" fromto="1.47 -0.41 -2.085 1.77 -0.41 -2.085" size="0.02" mass="2" rgba="0.9 0.9 0.9 1"/>
+        <!-- Flat-backed knob: the closed snare catches behind it without being wedged open. -->
+        <geom name="gf_tip" type="cylinder" fromto="1.755 -0.41 -2.085 1.785 -0.41 -2.085" size="0.035" mass="0.5" rgba="0.9 0.9 0.9 1"/>
+        <site name="pin_tip" pos="1.77 -0.41 -2.085" size="0.02" rgba="1 0 0 1"/>
+      </body>
     </body>
   </worldbody>
 
@@ -159,8 +169,8 @@
     <position name="a_wrist_yaw"      joint="wrist_yaw"      kp="5e4" kv="3e4"/>
     <position name="a_wrist_roll"     joint="wrist_roll"     kp="5e4" kv="3e4"/>
     <position name="a_snare"    joint="snare_0"        kp="1e5" kv="1500" forcerange="-1500 1500"/>
-    <!-- Pull-in force limit: the Shuttle arm's end effector signals "rigidized" at about
-         3,560 N in the grapple shaft (Daniell and Sachdev, 1982). -->
-    <position name="a_carriage" joint="carriage_slide" kp="4e5" kv="8000" forcerange="-3560 3560"/>
+    <!-- Pull-in force limit: Canadarm2's end effector rigidizes to a 4,893 N preload
+         (Walker and Vandersluis, 1995). -->
+    <position name="a_carriage" joint="carriage_slide" kp="4e5" kv="8000" forcerange="-4893 4893"/>
   </actuator>
 </mujoco>

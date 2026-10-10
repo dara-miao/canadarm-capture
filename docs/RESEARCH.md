@@ -247,6 +247,18 @@ The four unread documents at the top of the table in section 3 are the most like
 
 This section came out of a critique of the plan (see the log). The points below were checked against the sources where they rest on one.
 
+### This is a case study, not a solution to a problem
+
+Canadarm2 already captures cargo vehicles. The Canadian Space Agency reports successful captures as routine, and the 50th free-flyer capture is reported for 6 August 2024. The operation does not need this simulation, and the agencies have their own simulators for training and preparation (NASA's on-board trainer and its track-and-capture scoring tool are reported, not read).
+
+So the honest reason for the project is this: an established capture operation is a concrete case for learning contact-rich robotics and simulation. The project looks at how a simplified model produces successful and failed captures, and how sensitive those predictions are to its own physical and control assumptions.
+
+Three things follow.
+
+- **A failure in the model is not a weakness in Canadarm2.** When the model fails at four times the tested drift and tumble, that is a failure regime of this mechanism, this controller, and these assumptions.
+- **"I cannot find a public answer" is not "the field has no answer."** The real limits may be fully characterised in requirements, tests, and procedures that are not public.
+- **No gap needs declaring in advance.** If the experiments turn up something reproducible and useful, such as an outcome boundary that moves a lot under a seemingly minor approximation, that finding is the contribution. Until then the project stands as an engineering study with a transparent model, careful experiments, clear failure analysis, and stated limits.
+
 ### The gap is narrower than "nobody has done this"
 
 Open MuJoCo tools for contact-rich space robotics now exist: SmallSatSim and mjorbit, both from 2026. A capture demonstration in MuJoCo is therefore not new. What the existing work leaves open is more specific:
@@ -319,28 +331,28 @@ A perfect-knowledge baseline that always succeeds is still a result: it establis
 
 ## 8. What this means for the model
 
-Nothing here has been applied yet. These are the changes the research points to.
+Applied on 2026-10-10 unless marked otherwise. The build log has the details and the test results.
 
-| Finding | Current model | Suggested change |
+| Finding | Before | Now |
 |---|---|---|
-| LEE rigidize preload is 4,893 N | 3,560 N, the Shuttle value | Use 4,893 N |
-| Four latches add 64,054 N after rigidizing | No latches. The seated joint lets go above about 850 N m | Add a latch stage. This is what carries large bending loads in reality |
-| Whole sequence must fit in 30 s; snare within 3 s; latch about 6 s | Snare 2 s, pause 2 s, pull-in 10 s | Keep the snare; fit pull-in and a latch stage inside 30 s |
-| Tested worst case: 4 in offset, 15° pitch/yaw, 10° roll | Roll is uncontrolled and untested | Add roll misalignment to scenarios |
-| Arm back-drive resistance: 156 N side load, 448 N axial average | Limp arm has zero servo torque | Give the limp arm a back-drive resistance of this size |
-| Published friction input is 0.3 static, 0.1 dynamic | 0.6 | Use 0.3 as the baseline and treat friction as a sensitivity parameter |
-| Honda et al. model the wires as rigid rotating rods | Rigid sliding bars | Supports the simplification. Worth saying so in the write-up |
-| Fixture base stiffness strongly affects early capture | Fixture is rigid on the hull | Candidate parameter for experiment B |
-| A person flies the arm, in Manual mode | Autonomous controller | State plainly that the model studies an automated capture |
-| Capture takes 2 to 3 minutes | 41 s to the snare firing | Not wrong, but the model's approach is brisk. Note it |
-| Honda et al. fix shoulder roll when solving the arm's pose | All seven joints move | Optional. Would make poses more comparable to theirs |
-| Success should include retention | "Captured" means seated and at rest | Add a retention check: after seating, apply a stated disturbance and require the joint to hold. Say whether the load is literature-derived or exploratory |
-| Engagement is a distinct stage | Not recorded | Record whether the snare closed on the pin, separately from seating |
-| Capture is a race between closing and escaping | Timing is not recorded | Log, per attempt, how long the pin stayed catchable against how long the snare took, so failures can be explained by their margin |
-| Drift and tumble were varied together | One "wide" batch scaled both | In experiment A, sweep each separately with matched trials |
-| "Compliance" has several meanings | Unspecified in the plan | Name the one varied in experiment B (now done in the plan) |
-| Teleoperation latency is not sensor delay | Delay range cited to Freer et al. | Describe observation delay as an exploratory stress test (now done in the plan) |
-| Zero gravity holds for short horizons | Zero gravity throughout | Keep, and state the timescale assumption. A later check with orbital corrections is optional |
+| LEE rigidize preload is 4,893 N | 3,560 N, the Shuttle value | 4,893 N |
+| Four latches add 64,054 N after rigidizing | No latches. The seated joint let go above about 850 N m | Latch stage added: 64,054 N as four forces at the rim, engaging only on a seated fixture |
+| Whole sequence must fit in 30 s; snare within 3 s; latch about 6 s | Snare 2 s, pause 2 s, pull-in 10 s | Latch 6 s added. 20 s in total |
+| Tested worst case: 4 in offset, 15° pitch/yaw, 10° roll | No roll | Roll about the pin axis added to scenarios, up to 10° |
+| Arm back-drive resistance: 156 N side load, 448 N axial average | Limp arm had no resistance | 200 N m of joint friction, from 156 N at 1.3 m |
+| Published friction input is 0.3 static, 0.1 dynamic | 0.6 | 0.3, with a build option for sensitivity runs. MuJoCo has one coefficient, so the dynamic value is not represented |
+| Honda et al. model the wires as rigid rotating rods | Rigid sliding bars | No change. Noted as precedent |
+| Fixture base stiffness strongly affects early capture | Fixture rigid on the hull | Optional sprung mount. Limited to 5e4 N m/rad by the timestep, so their 1e8 starting value cannot be reproduced |
+| A person flies the arm, in Manual mode | Automatic controller | No change. Stated in the plan and README |
+| Capture takes 2 to 3 minutes | 41 s to the snare firing | No change. Noted |
+| Honda et al. fix shoulder roll when solving the arm's pose | All seven joints move | Optional, off by default |
+| Success should include retention | "Captured" meant seated and at rest | "Captured" needs seated, latched, and retained under 1,627 N m for 5 s with under 3° of tilt. The load is borrowed from the Shuttle end effector |
+| Engagement is a distinct stage | Not recorded | Recorded per attempt |
+| Capture is a race between closing and escaping | Timing not recorded | Recorded: how long after firing the pin stayed catchable, up to the snare's 2 s closing time |
+| Drift and tumble were varied together | One "wide" batch scaled both | `matched_sweep` varies one quantity with everything else, including the random seed, held fixed. To be used in experiment A |
+| "Compliance" has several meanings | Unspecified | Named in the plan |
+| Teleoperation latency is not sensor delay | Delay range cited to Freer et al. | Relabelled exploratory in the plan and code |
+| Zero gravity holds for short horizons | Zero gravity throughout | No change. Timescale assumption stated in the plan |
 
 ## 9. Research log
 
@@ -359,3 +371,7 @@ Nothing here has been applied yet. These are the changes the research points to.
 **2026-10-10, session 4 (Dara, via Perplexity).** Further reading on why capture fails and on what ground tests can and cannot show: Christidi-Loumpasefski et al. (2024) on contact time under mass uncertainty; Li et al. (2021) on air-bearing supports changing measured vibration; a 1993 NASA report and an ESA presentation on planar testbeds; a lead on snare capture strategy. Main ideas: capture is a race between engagement and separation; there are two kinds of uncertainty; there is no single tolerance number.
 
 **2026-10-10, session 4 (Claude).** Downloaded and read the Christidi-Loumpasefski manuscript; the reported numbers matched. Could not open Li et al. (a browser check blocked it), so it stays Reported, as do the NASA report, the ESA presentation, and the snare-strategy lead. Added the "capture is a race" idea to section 2, four subsections to section 7, and one row to section 8.
+
+**2026-10-10, session 5 (Dara, via Perplexity).** Dara objected that Canadarm2 already captures spacecraft, so the project cannot be motivated as solving that. Perplexity agreed and revised its assessment: the earlier framing overstated a mission need. The project is a case study for learning and for testing a model's assumptions. Whether it becomes research with a new finding is open.
+
+**2026-10-10, session 5 (Claude).** Agreed and adopted. Added the first subsection of section 7 and revised the plan's "Why this project" and the README to match. The operational facts cited (routine captures, agency training simulators) are recorded as reported.

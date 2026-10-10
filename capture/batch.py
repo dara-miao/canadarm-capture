@@ -13,7 +13,7 @@ import multiprocessing as mp
 import os
 import time
 from collections import Counter
-from dataclasses import asdict, dataclass, fields
+from dataclasses import asdict, dataclass, fields, replace
 from pathlib import Path
 
 import mujoco
@@ -34,6 +34,7 @@ class Scenario:
     lateral_y: float = 0.0
     tilt_x: float = 0.0  # pin axis tilt [rad]
     tilt_y: float = 0.0
+    roll: float = 0.0  # vehicle rotation about its pin axis [rad]
     drift_x: float = 0.0  # vehicle centre-of-mass velocity [m/s]
     drift_y: float = 0.0
     drift_z: float = 0.0
@@ -50,12 +51,15 @@ class Scenario:
 class Ranges:
     """Limits for random scenarios. Each quantity is drawn uniformly inside its limit.
 
-    Defaults follow the Shuttle end effector's stated capture limits (Daniell and
-    Sachdev, 1982) for offset, tilt, and relative velocity. The tumble limit is not sourced.
+    Defaults for offset, tilt, and roll follow the worst case Canadarm2's end effector
+    was tested at (Walker and Vandersluis, 1995). The drift default is the Shuttle end
+    effector's capture velocity requirement (Daniell and Sachdev, 1982): a mechanism
+    requirement, not a verified limit on a visiting vehicle. The tumble limit is not sourced.
     """
 
     lateral: float = 0.10  # [m], radius of a disc
     tilt: float = np.radians(15.0)  # [rad], radius of a disc
+    roll: float = np.radians(10.0)  # [rad], plus or minus
     drift: float = 0.031  # [m/s], radius of a ball
     tumble: float = np.radians(0.5)  # [rad/s], radius of a ball
     sensor_delay: float = 0.0
@@ -82,7 +86,7 @@ def sample(n: int, ranges: Ranges | None = None, seed: int = 0) -> list[Scenario
             Scenario(
                 seed=seed * 1_000_003 + i,
                 lateral_x=lateral[0], lateral_y=lateral[1],
-                tilt_x=tilt[0], tilt_y=tilt[1],
+                tilt_x=tilt[0], tilt_y=tilt[1], roll=rng.uniform(-ranges.roll, ranges.roll),
                 drift_x=drift[0], drift_y=drift[1], drift_z=drift[2],
                 tumble_x=tumble[0], tumble_y=tumble[1], tumble_z=tumble[2],
                 sensor_delay=ranges.sensor_delay, sensor_rate=ranges.sensor_rate,
@@ -92,10 +96,43 @@ def sample(n: int, ranges: Ranges | None = None, seed: int = 0) -> list[Scenario
     return scenarios
 
 
+# Vector quantities whose size can be swept while each scenario keeps its direction.
+_VECTORS = {
+    "lateral": ("lateral_x", "lateral_y"),
+    "tilt": ("tilt_x", "tilt_y"),
+    "drift": ("drift_x", "drift_y", "drift_z"),
+    "tumble": ("tumble_x", "tumble_y", "tumble_z"),
+}
+
+
+def with_value(s: Scenario, quantity: str, value: float) -> Scenario:
+    """A copy of a scenario with one quantity changed and everything else, including the seed, kept.
+
+    For "lateral", "tilt", "drift", or "tumble" the vector is rescaled to the given size,
+    keeping its direction. Any other name is a Scenario field and is set directly.
+    """
+    if quantity not in _VECTORS:
+        return replace(s, **{quantity: value})
+    names = _VECTORS[quantity]
+    vector = np.array([getattr(s, n) for n in names])
+    size = np.linalg.norm(vector)
+    if size == 0:
+        raise ValueError(f"scenario has no {quantity} direction to scale")
+    return replace(s, **dict(zip(names, vector * (value / size))))
+
+
+def matched_sweep(base: list[Scenario], quantity: str, values: list[float]) -> list[Scenario]:
+    """Every base scenario at every value of one quantity, so that only that quantity differs.
+
+    Returned in order: all base scenarios at values[0], then at values[1], and so on.
+    """
+    return [with_value(s, quantity, v) for v in values for s in base]
+
+
 def run_scenario(model: mujoco.MjModel, s: Scenario, max_time: float = 180.0) -> dict:
     """Run one scenario and return a flat row: the scenario's fields plus the result."""
     data = mujoco.MjData(model)
-    scene.reset(model, data, lateral=(s.lateral_x, s.lateral_y), tilt=(s.tilt_x, s.tilt_y))
+    scene.reset(model, data, lateral=(s.lateral_x, s.lateral_y), tilt=(s.tilt_x, s.tilt_y), roll=s.roll)
     scene.set_vehicle_velocity(
         model, data, drift=(s.drift_x, s.drift_y, s.drift_z), tumble=(s.tumble_x, s.tumble_y, s.tumble_z)
     )
@@ -107,6 +144,12 @@ def run_scenario(model: mujoco.MjModel, s: Scenario, max_time: float = 180.0) ->
     r = run_trial(model, data, CaptureController(model, sensor=sensor), max_time=max_time)
     return asdict(s) | {
         "outcome": r.outcome.value,
+        "engaged": int(r.engaged),
+        "seated": int(r.seated),
+        "latched": int(r.latched),
+        "retained": int(r.retained),
+        "catchable_time": r.catchable_time,
+        "retention_tilt": r.retention_tilt,
         "duration": r.duration,
         "t_trigger": "" if r.t_trigger is None else r.t_trigger,
         "final_lateral": float(np.linalg.norm(r.offset[:2])),

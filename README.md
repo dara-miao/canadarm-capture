@@ -1,10 +1,10 @@
 # canadarm-capture
 
-A MuJoCo study of how robust a simulated spacecraft capture is. A simplified model of a space station arm catches a free-drifting cargo vehicle; the project maps where that fails, in which ways, and how much the answers depend on the model's own assumptions.
+A MuJoCo case study of a spacecraft capture. A simplified model of a space station arm catches a free-drifting cargo vehicle; the project looks at how that model succeeds and fails, and how much the answers depend on its own assumptions.
 
-Inspired by Canadarm2 capturing Cygnus. It does not reproduce that system's flight limits.
+Inspired by Canadarm2 capturing Cygnus, which the real arm does routinely. This project does not reproduce that system's flight limits, and a failure here is a failure of this model.
 
-**Status:** in progress. The arm captures a drifting, tumbling vehicle from the 10 m capture point, with delayed and noisy sensing. A batch runner labels how each attempt ends. The systematic experiments have not been run yet. See the [research notes](docs/RESEARCH.md), the [plan](docs/PLAN.md), and the [build log](docs/DEVLOG.md).
+**Status:** in progress. The arm approaches a drifting, tumbling vehicle from the 10 m capture point, snares its grapple pin, pulls it in, and latches, with delayed and noisy sensing. A batch runner records how each attempt ends and at which stage it failed. The systematic experiments have not been run yet. See the [research notes](docs/RESEARCH.md), the [plan](docs/PLAN.md), and the [build log](docs/DEVLOG.md).
 
 ![Project plan](docs/media/plan.svg)
 

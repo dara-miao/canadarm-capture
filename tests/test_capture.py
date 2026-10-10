@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 from capture import scene
-from capture.controller import CaptureController, Phase
+from capture.controller import CaptureController, ControllerConfig, Phase
 from capture.trial import Outcome, run_trial
 
 
@@ -79,3 +79,19 @@ def test_captures_at_the_specified_relative_velocity(model, drift):
     """The Shuttle arm's end effector had to capture a payload moving at up to
     0.031 m/s relative to the Orbiter (Daniell and Sachdev, 1982)."""
     assert attempt(model, drift=drift).success
+
+
+def test_capture_works_with_the_shoulder_roll_joint_locked(model):
+    data = mujoco.MjData(model)
+    scene.reset(model, data, lateral=(0.05, -0.03), tilt=np.radians((2.0, -1.5)))
+    scene.set_vehicle_velocity(model, data, drift=(0.005, -0.003, 0.004))
+    start = data.joint("shoulder_roll").qpos[0]
+    result = run_trial(model, data, CaptureController(model, ControllerConfig(lock_shoulder_roll=True)))
+    assert result.success
+    assert data.joint("shoulder_roll").qpos[0] == pytest.approx(start, abs=np.radians(0.5))
+
+
+def test_capture_works_with_a_sprung_fixture_mount():
+    model = scene.build_model(meshes=False, fixture_stiffness=2.0e4)
+    result = attempt(model, lateral=(0.05, -0.03), tilt_deg=(2.0, -1.5), drift=(0.005, -0.003, 0.004))
+    assert result.engaged and result.seated

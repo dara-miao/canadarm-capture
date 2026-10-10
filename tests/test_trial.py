@@ -10,7 +10,8 @@ from capture import batch, scene
 from capture.batch import Ranges, Scenario
 from capture.controller import Phase
 from capture.sensing import PinSensor, SensorConfig
-from capture.trial import Outcome, classify
+from capture import snare
+from capture.trial import Outcome, classify, is_seated
 
 
 @pytest.fixture(scope="module")
@@ -21,20 +22,42 @@ def model():
 SEATED = np.array([0.001, 0.0, -0.30])
 
 
+OUTSIDE = np.array([0.0, 0.0, 0.5])
+HELD_UNSEATED = np.array([0.03, 0.0, -0.27])
+
+
 @pytest.mark.parametrize(
-    "phase, fired, offset, rel_speed, expected",
+    "phase, fired, offset, engaged, seated, latched, retained, expected",
     [
-        (Phase.DONE, True, SEATED, 0.0002, Outcome.CAPTURED),
-        (Phase.DONE, True, SEATED, 0.02, Outcome.CAUGHT_NOT_RIGID),  # seated but still moving
-        (Phase.DONE, True, np.array([0.03, 0.0, -0.27]), 0.0, Outcome.CAUGHT_NOT_RIGID),  # held, not seated
-        (Phase.DONE, True, np.array([0.0, 0.0, 0.5]), 0.03, Outcome.MISSED),  # pin outside the cavity
-        (Phase.GRAPPLE, True, SEATED, 0.0, Outcome.CAUGHT_NOT_RIGID),  # ran out of time mid-sequence
-        (Phase.ABORTED, False, np.array([0.0, 0.0, 3.0]), 0.3, Outcome.OUT_OF_REACH),
-        (Phase.ALIGN, False, np.array([0.0, 0.0, 0.4]), 0.0, Outcome.TIMED_OUT),
+        (Phase.DONE, True, SEATED, True, True, True, True, Outcome.CAPTURED),
+        (Phase.DONE, True, SEATED, True, True, True, False, Outcome.CAUGHT_NOT_RIGID),  # failed the retention check
+        (Phase.DONE, True, SEATED, True, True, False, False, Outcome.CAUGHT_NOT_RIGID),  # latches never engaged
+        (Phase.DONE, True, HELD_UNSEATED, True, False, False, False, Outcome.CAUGHT_NOT_RIGID),
+        (Phase.DONE, True, OUTSIDE, True, False, False, False, Outcome.LOST),  # snared, then pulled out
+        (Phase.DONE, True, OUTSIDE, True, True, True, False, Outcome.LOST),  # levered out during the retention check
+        (Phase.DONE, True, OUTSIDE, False, False, False, False, Outcome.MISSED),  # the snare closed on nothing
+        (Phase.GRAPPLE, True, SEATED, True, False, False, False, Outcome.CAUGHT_NOT_RIGID),  # ran out of time
+        (Phase.ABORTED, False, np.array([0.0, 0.0, 3.0]), False, False, False, False, Outcome.OUT_OF_REACH),
+        (Phase.ALIGN, False, np.array([0.0, 0.0, 0.4]), False, False, False, False, Outcome.TIMED_OUT),
     ],
 )
-def test_classify(phase, fired, offset, rel_speed, expected):
-    assert classify(phase, fired, offset, rel_speed) is expected
+def test_classify(phase, fired, offset, engaged, seated, latched, retained, expected):
+    assert classify(phase, fired, offset, engaged, seated, latched, retained) is expected
+
+
+def test_seated_needs_the_trial_finished_and_the_pin_at_rest():
+    assert is_seated(Phase.DONE, SEATED, 0.0002)
+    assert not is_seated(Phase.DONE, SEATED, 0.02)  # still moving
+    assert not is_seated(Phase.GRAPPLE, SEATED, 0.0)
+    assert not is_seated(Phase.DONE, HELD_UNSEATED, 0.0)
+
+
+def test_a_clean_capture_passes_every_stage(model):
+    row = batch.run_scenario(model, Scenario(lateral_x=0.04, tilt_y=0.05, roll=0.15, drift_x=0.01))
+    assert row["outcome"] == Outcome.CAPTURED.value
+    assert (row["engaged"], row["seated"], row["latched"], row["retained"]) == (1, 1, 1, 1)
+    assert row["catchable_time"] == pytest.approx(snare.CLOSE_TIME, abs=0.01)  # catchable throughout closing
+    assert row["retention_tilt"] < np.radians(0.5)
 
 
 def test_a_fleeing_vehicle_ends_out_of_reach_with_the_arm_under_control(model):
@@ -97,6 +120,7 @@ def test_sampling_is_repeatable_and_inside_its_limits():
         assert np.hypot(s.tilt_x, s.tilt_y) <= ranges.tilt
         assert np.linalg.norm([s.drift_x, s.drift_y, s.drift_z]) <= ranges.drift
         assert np.linalg.norm([s.tumble_x, s.tumble_y, s.tumble_z]) <= ranges.tumble
+        assert abs(s.roll) <= ranges.roll
         assert s.sensor_delay == 0.4
     assert len({s.seed for s in a}) == 200
 
@@ -112,3 +136,17 @@ def test_batch_rows_round_trip_through_csv(tmp_path):
     assert [r["outcome"] for r in back] == [r["outcome"] for r in rows]
     assert float(back[1]["drift_z"]) == 0.5
     assert "captured" in batch.summarise(rows)
+
+
+def test_matched_sweep_changes_only_the_named_quantity():
+    base = batch.sample(5, seed=3)
+    swept = batch.matched_sweep(base, "drift", [0.01, 0.05])
+    assert len(swept) == 10
+    for original, slow, fast in zip(base, swept[:5], swept[5:]):
+        direction = np.array([original.drift_x, original.drift_y, original.drift_z])
+        direction /= np.linalg.norm(direction)
+        assert np.array([slow.drift_x, slow.drift_y, slow.drift_z]) == pytest.approx(0.01 * direction)
+        assert np.array([fast.drift_x, fast.drift_y, fast.drift_z]) == pytest.approx(0.05 * direction)
+        for other in ("seed", "lateral_x", "tilt_y", "roll", "tumble_z", "sensor_delay"):
+            assert getattr(slow, other) == getattr(fast, other) == getattr(original, other)
+    assert batch.with_value(base[0], "sensor_delay", 0.4).sensor_delay == 0.4

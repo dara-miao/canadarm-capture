@@ -4,8 +4,9 @@ The arm tracks the grapple pin in three phases:
 
   ALIGN    hold a standoff in front of the pin until the end effector is lined up
   INSERT   advance along the pin axis until the pin tip is past the snare
-  GRAPPLE  run the snare sequence: keep tracking while the snare closes, stop,
-           go limp while the pin is pulled in, then hold position again
+  GRAPPLE  run the end effector's sequence: keep tracking while the snare closes,
+           stop, go limp while the pin is pulled in and the latches engage, then
+           hold position again. The latches engage only if pull-in seated the fixture.
 
 Tracking is resolved-rate control: a desired end-effector velocity is mapped to
 joint velocities through the damped pseudo-inverse of the Jacobian, then
@@ -70,6 +71,16 @@ class ControllerConfig:
     # The Shuttle arm's end effector removes angular misalignment "against a limped arm":
     # joints with low resistance to being back-driven, except wrist roll.
     limp_during_pull_in: bool = True
+    # Honda et al. (2014) hold the base-side shoulder roll joint fixed when solving the
+    # arm's pose for a capture. Off by default; on makes poses comparable to theirs.
+    lock_shoulder_roll: bool = False
+
+
+# The pin can be snared while its tip is past the snare plane and short of the cavity floor.
+CATCH_DEPTH = (0.221, 0.31)  # [m] inside the mouth
+CATCH_LATERAL = 0.09  # [m]
+# The latches engage only on a fixture that pull-in has seated.
+SEATED_DEPTH, SEATED_TOL, SEATED_ANGLE = 0.30, 0.01, np.radians(1.0)
 
 
 def _clamp_norm(v: np.ndarray, limit: float) -> np.ndarray:
@@ -104,6 +115,12 @@ class CaptureController:
         self.t_trigger = None
         self.holding_after_pull_in = False
         self.conditioning = np.inf  # smallest Jacobian singular value seen while tracking
+        # Records for analysis, read from the true state. Only `latched` affects control,
+        # standing in for the end effector's own position switches.
+        self.engaged: bool | None = None  # was the pin inside the snare when it finished closing
+        self.latched: bool | None = None  # did the latches engage
+        self.catchable_time = 0.0  # how long after firing the pin stayed catchable, up to CLOSE_TIME [s]
+        self._left_catch_zone = False
         self.sensor.reset(data)
         self.estimate: PinObservation | None = None
         self.last_measurement: PinObservation | None = None
@@ -147,6 +164,8 @@ class CaptureController:
                 self.phase = Phase.DONE
 
         since = None if self.t_trigger is None else data.time - self.t_trigger
+        if since is not None:
+            self._record(data, since)
         # Keep following the pin until the snare has closed on it; stopping at the trigger
         # lets a receding pin back out of the snare before it shuts.
         closing = self.phase is Phase.GRAPPLE and since < snare.CLOSE_TIME
@@ -173,6 +192,27 @@ class CaptureController:
                 limp = data.qpos[self.qadr] + self.lead * data.qvel[self.dof]
                 data.ctrl[: self.n - 1] = limp[:-1]
             scene.set_snare(model, data, *snare.grapple_command(since))
+            if self.latched:
+                scene.apply_latch(model, data, snare.latch_command(since))
+
+    def _record(self, data: mujoco.MjData, since: float) -> None:
+        """Note, from the true state, how the grapple is going."""
+        true = scene.pin_offset(self.model, data)
+        depth, lateral = -true[2], float(np.linalg.norm(true[:2]))
+        if since < snare.CLOSE_TIME:
+            catchable = CATCH_DEPTH[0] <= depth <= CATCH_DEPTH[1] and lateral < CATCH_LATERAL
+            if catchable and not self._left_catch_zone:
+                self.catchable_time = since
+            else:
+                self._left_catch_zone = True
+        elif self.engaged is None:
+            self.engaged = bool(depth >= CATCH_DEPTH[0] - 0.006 and lateral < 0.03)
+        if since >= snare.PULL_IN_END and self.latched is None:
+            self.latched = bool(
+                abs(depth - SEATED_DEPTH) < SEATED_TOL
+                and lateral < SEATED_TOL
+                and scene.pin_axis_error(self.model, data) < SEATED_ANGLE
+            )
 
     def _update_estimate(self, measurement: PinObservation, dt: float) -> PinObservation:
         """Smooth the sensor's measurements into a running estimate of the pin."""
@@ -211,6 +251,8 @@ class CaptureController:
         jacr = np.empty((3, model.nv))
         mujoco.mj_jacSite(model, data, jacp, jacr, self.mouth_id)
         J = np.vstack([jacp[:, self.dof], jacr[:, self.dof]])
+        if cfg.lock_shoulder_roll:
+            J[:, 0] = 0.0  # no motion is assigned to a joint the task cannot see
         twist = np.concatenate([v, w])
         dq = J.T @ np.linalg.solve(J @ J.T + cfg.dls_damping**2 * np.eye(6), twist)
 

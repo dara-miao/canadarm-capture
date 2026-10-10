@@ -6,7 +6,7 @@
   <rect width="1600" height="860" fill="#0f1b2d"/>
   <text x="60" y="70" fill="#b9e36b" font-size="18" font-weight="700" letter-spacing="1">THE PLAN</text>
   <text x="60" y="130" fill="#ffffff" font-size="46" font-weight="700">One capture model. Three robustness experiments.</text>
-  <text x="60" y="168" fill="#f2b84b" font-size="17" font-weight="600">Stages 1 to 4 are built.  Now: research review and model update, before any experiment.</text>
+  <text x="60" y="168" fill="#f2b84b" font-size="17" font-weight="600">Stages 1 to 4 built and updated from the research review.  Next: experiment A.</text>
 
   <rect x="60" y="200" width="340" height="190" rx="14" fill="#1b2a40" stroke="#7fd36b" stroke-width="2"/>
   <text x="82" y="240" fill="#b9e36b" font-size="15" font-weight="700" letter-spacing="0.5">1 · ZERO-G WORLD</text>
@@ -47,13 +47,13 @@
   <line x1="990" y1="455" x2="990" y2="514" stroke="#8fd3e8" stroke-width="3" marker-end="url(#b)"/>
   <line x1="1370" y1="455" x2="1370" y2="514" stroke="#8fd3e8" stroke-width="3" marker-end="url(#b)"/>
 
-  <rect x="440" y="520" width="340" height="190" rx="14" fill="#1b2a40" stroke="#2b3d57" stroke-width="1"/>
+  <rect x="440" y="520" width="340" height="190" rx="14" fill="#1b2a40" stroke="#f2b84b" stroke-width="2"/>
   <text x="462" y="560" fill="#b9e36b" font-size="15" font-weight="700" letter-spacing="0.5">5 · EXPERIMENT A</text>
   <text x="462" y="602" fill="#ffffff" font-size="27" font-weight="700">Closed-loop envelope</text>
   <text x="462" y="638" fill="#a9b7c9" font-size="17">Separate sweeps: drift, tumble, offset</text>
   <text x="462" y="664" fill="#a9b7c9" font-size="17">Map where and how it fails</text>
-  <rect x="681" y="672" width="83" height="24" rx="12" fill="#6f8098"/>
-  <text x="722.5" y="689" fill="#0f1b2d" font-size="12" font-weight="700" text-anchor="middle" letter-spacing="0.5">PLANNED</text>
+  <rect x="708" y="672" width="56" height="24" rx="12" fill="#f2b84b"/>
+  <text x="736.0" y="689" fill="#0f1b2d" font-size="12" font-weight="700" text-anchor="middle" letter-spacing="0.5">NEXT</text>
 
   <rect x="820" y="520" width="340" height="190" rx="14" fill="#1b2a40" stroke="#2b3d57" stroke-width="1"/>
   <text x="842" y="560" fill="#b9e36b" font-size="15" font-weight="700" letter-spacing="0.5">6 · EXPERIMENT B</text>

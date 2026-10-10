@@ -44,6 +44,15 @@ WALL_MASS = 40.0
 SNARE_TRAVEL = 0.08
 CARRIAGE_TRAVEL = 0.1
 
+# Canadarm2's end effector has four latches that clamp the interface after pull-in,
+# with 64,054 N in total (Walker and Vandersluis, 1995). Modelled as four forces
+# pressing the fixture plate onto the rim, at this radius from the approach axis.
+LATCH_FORCE = 64054.0
+LATCH_RADIUS = 0.2
+
+# Stiffest fixture mount the 2 ms timestep can integrate stably [N m/rad].
+MAX_FIXTURE_STIFFNESS = 5.0e4
+
 
 def _add_cavity_wall(spec: mujoco.MjSpec) -> None:
     """Approximate a hollow cylinder with a ring of boxes.
@@ -96,14 +105,46 @@ def _use_meshes(spec: mujoco.MjSpec) -> None:
         spec.worldbody.add_geom(name=f"mesh_{mesh}", meshname=mesh, rgba=list(rgba), **visual)
 
 
-def build_model(meshes: bool | None = None) -> mujoco.MjModel:
+def _set_friction(spec: mujoco.MjSpec, friction: float) -> None:
+    for geom in spec.geoms:
+        if geom.contype or geom.conaffinity:
+            geom.friction[0] = friction
+
+
+def _mount_fixture_on_spring(spec: mujoco.MjSpec, stiffness: float) -> None:
+    """Let the grapple fixture rock on its base against a rotational spring."""
+    if not 0 < stiffness <= MAX_FIXTURE_STIFFNESS:
+        raise ValueError(f"fixture stiffness must be in (0, {MAX_FIXTURE_STIFFNESS:g}] N m/rad")
+    inertia = 0.25  # fixture about its base, roughly [kg m^2]
+    spec.body("fixture").add_joint(
+        name="fixture_mount",
+        type=mujoco.mjtJoint.mjJNT_BALL,
+        pos=[1.42, -0.41, -2.085],  # centre of the plate's base
+        stiffness=stiffness,
+        damping=2 * 0.05 * np.sqrt(stiffness * inertia),  # 5% of critical
+    )
+
+
+def build_model(
+    meshes: bool | None = None,
+    friction: float | None = None,
+    fixture_stiffness: float | None = None,
+) -> mujoco.MjModel:
     """Build the scene.
 
-    meshes: show the downloaded 3D models. Defaults to using them when they have
-            been fetched (scripts/fetch_assets.py). The physics is the same either way.
+    meshes:   show the downloaded 3D models. Defaults to using them when they have
+              been fetched (scripts/fetch_assets.py). The physics is the same either way.
+    friction: sliding friction for every contact. Defaults to the model file's 0.3.
+    fixture_stiffness: mount the grapple fixture on a rotational spring of this
+              stiffness [N m/rad] instead of rigidly. Honda et al. (2014) found the
+              fixture base's stiffness strongly affects early capture.
     """
     spec = mujoco.MjSpec.from_file(str(BASE_XML))
     _add_cavity_wall(spec)
+    if friction is not None:
+        _set_friction(spec, friction)
+    if fixture_stiffness is not None:
+        _mount_fixture_on_spring(spec, fixture_stiffness)
     if meshes is None:
         meshes = meshes_available()
     if meshes:
@@ -125,6 +166,31 @@ def set_snare(model: mujoco.MjModel, data: mujoco.MjData, close: float, retract:
     """Command the snare. Both arguments run from 0 (open / extended) to 1 (closed / retracted)."""
     data.ctrl[model.actuator("a_snare").id] = close * SNARE_TRAVEL
     data.ctrl[model.actuator("a_carriage").id] = retract * CARRIAGE_TRAVEL
+
+
+def apply_latch(model: mujoco.MjModel, data: mujoco.MjData, fraction: float) -> None:
+    """Add the latches' clamping force to data.qfrc_applied.
+
+    fraction runs from 0 (released) to 1 (full force). Four equal forces pull the
+    vehicle onto the end effector, and the end effector onto the vehicle, at points
+    spaced around the rim. The caller clears data.qfrc_applied each step.
+    """
+    if fraction <= 0:
+        return
+    mouth = data.site("lee_mouth")
+    R_l = mouth.xmat.reshape(3, 3)
+    pull = 0.25 * fraction * LATCH_FORCE * R_l[:, 2]
+    vehicle, tool = model.body("vehicle").id, model.body("lee_tool").id
+    zero = np.zeros(3)
+    for dx, dy in ((1, 0), (0, 1), (-1, 0), (0, -1)):
+        point = mouth.xpos + LATCH_RADIUS * (dx * R_l[:, 0] + dy * R_l[:, 1])
+        mujoco.mj_applyFT(model, data, -pull, zero, point, vehicle, data.qfrc_applied)
+        mujoco.mj_applyFT(model, data, pull, zero, point, tool, data.qfrc_applied)
+
+
+def pin_axis(data: mujoco.MjData) -> np.ndarray:
+    """Unit vector along the grapple pin, base to tip, in the world frame."""
+    return data.body("fixture").xmat.reshape(3, 3)[:, 0]
 
 
 def pin_offset(model: mujoco.MjModel, data: mujoco.MjData) -> np.ndarray:
@@ -152,6 +218,7 @@ def place_vehicle(
     standoff: float = HOVER_DISTANCE,
     lateral: tuple[float, float] = (0.0, 0.0),
     tilt: tuple[float, float] = (0.0, 0.0),
+    roll: float = 0.0,
 ) -> None:
     """Place the vehicle so its grapple pin faces the end-effector mouth.
 
@@ -160,6 +227,9 @@ def place_vehicle(
     lateral:  pin offset from the approach axis, in the end-effector x/y [m].
     tilt:     pin axis rotation about the end-effector x and y axes [rad],
               pivoting about the pin tip.
+    roll:     rotation of the vehicle about its own pin axis [rad]. The pin is
+              symmetric, so this moves the hull and its mass around the pin
+              without changing where the pin points.
 
     Uses the arm's current pose. Vehicle velocity is left unchanged.
     """
@@ -169,7 +239,7 @@ def place_vehicle(
     x_l, y_l, z_l = R_l[:, 0], R_l[:, 1], R_l[:, 2]
 
     # The pin runs along vehicle +x and must point into the cavity, i.e. along -z_l.
-    R_v = R_l @ _rot_x(tilt[0]) @ _rot_y(tilt[1]) @ R_l.T @ np.column_stack([-z_l, y_l, x_l])
+    R_v = R_l @ _rot_x(tilt[0]) @ _rot_y(tilt[1]) @ R_l.T @ np.column_stack([-z_l, y_l, x_l]) @ _rot_x(roll)
     tip_world = mouth.xpos + standoff * z_l + lateral[0] * x_l + lateral[1] * y_l
     tip_local = model.site("pin_tip").pos
     pos = tip_world - R_v @ tip_local
@@ -196,11 +266,12 @@ def set_vehicle_velocity(
     mujoco.mj_comPos(model, data)
     R_l = data.site("lee_mouth").xmat.reshape(3, 3)
     body = data.body("vehicle")
+    com = data.subtree_com[model.body("vehicle").id]  # hull and fixture together
     w_world = R_l @ np.asarray(tumble, dtype=float)
     v_com = R_l @ np.asarray(drift, dtype=float)
     # Free-joint velocities are the body origin's linear velocity (world frame)
     # and the angular velocity in the body frame.
-    v_origin = v_com + np.cross(w_world, body.xpos - body.xipos)
+    v_origin = v_com + np.cross(w_world, body.xpos - com)
     dof = model.joint("vehicle_free").dofadr[0]
     data.qvel[dof : dof + 3] = v_origin
     data.qvel[dof + 3 : dof + 6] = body.xmat.reshape(3, 3).T @ w_world
@@ -209,8 +280,7 @@ def set_vehicle_velocity(
 def pin_axis_error(model: mujoco.MjModel, data: mujoco.MjData) -> float:
     """Angle between the pin axis and the approach axis [rad]. Zero when aligned."""
     z_l = data.site("lee_mouth").xmat.reshape(3, 3)[:, 2]
-    pin = data.body("vehicle").xmat.reshape(3, 3)[:, 0]
-    return float(np.arccos(np.clip(-pin @ z_l, -1.0, 1.0)))
+    return float(np.arccos(np.clip(-pin_axis(data) @ z_l, -1.0, 1.0)))
 
 
 def reset(
@@ -219,6 +289,7 @@ def reset(
     standoff: float = HOVER_DISTANCE,
     lateral: tuple[float, float] = (0.0, 0.0),
     tilt: tuple[float, float] = (0.0, 0.0),
+    roll: float = 0.0,
 ) -> None:
     """Arm at the ready pose, vehicle at rest in front of the end effector.
 
@@ -227,5 +298,5 @@ def reset(
     """
     mujoco.mj_resetData(model, data)
     set_arm(model, data, READY_POSE)
-    place_vehicle(model, data, standoff, lateral, tilt)
+    place_vehicle(model, data, standoff, lateral, tilt, roll)
     mujoco.mj_forward(model, data)

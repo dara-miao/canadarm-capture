@@ -121,3 +121,30 @@ def test_meshes_do_not_change_the_physics():
     assert meshed.body_ipos == pytest.approx(plain.body_ipos)
     collides = lambda m: int(((m.geom_contype != 0) | (m.geom_conaffinity != 0)).sum())
     assert collides(meshed) == collides(plain)
+
+
+def test_roll_turns_the_hull_about_the_pin_without_moving_the_pin(model):
+    a, b = mujoco.MjData(model), mujoco.MjData(model)
+    scene.reset(model, a, lateral=(0.03, 0.0))
+    scene.reset(model, b, lateral=(0.03, 0.0), roll=np.radians(10.0))
+    assert scene.pin_offset(model, b) == pytest.approx(scene.pin_offset(model, a), abs=1e-9)
+    assert scene.pin_axis(b) == pytest.approx(scene.pin_axis(a), abs=1e-9)
+    # the hull's centre swings about the pin axis, 0.41 m off it, by 10 degrees
+    moved = np.linalg.norm(b.body("vehicle").xpos - a.body("vehicle").xpos)
+    assert moved == pytest.approx(2 * np.hypot(0.41, 2.085) * np.sin(np.radians(5.0)), rel=0.01)
+
+
+def test_friction_and_fixture_mount_are_build_options():
+    default = scene.build_model(meshes=False)
+    colliding = (default.geom_contype != 0) | (default.geom_conaffinity != 0)
+    assert default.geom_friction[colliding, 0] == pytest.approx(0.3)
+    assert default.joint("shoulder_pitch").frictionloss[0] == pytest.approx(200.0)
+
+    slick = scene.build_model(meshes=False, friction=0.1)
+    assert slick.geom_friction[colliding, 0] == pytest.approx(0.1)
+
+    sprung = scene.build_model(meshes=False, fixture_stiffness=2.0e4)
+    assert sprung.nq == default.nq + 4  # one ball joint
+    assert sprung.joint("fixture_mount").stiffness[0] == pytest.approx(2.0e4)
+    with pytest.raises(ValueError):
+        scene.build_model(meshes=False, fixture_stiffness=1.0e8)  # too stiff for the timestep

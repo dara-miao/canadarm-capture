@@ -468,3 +468,68 @@ All batches used offsets up to 0.1 m and tilts up to 15°, the sourced capture l
 **Suggested model change added.** Log, for each attempt, how long the pin stayed catchable against how long the snare took to close. Failures can then be explained by their timing margin.
 
 **Not changed.** The model and the code.
+
+## 2026-10-10 · Milestone R4: model update from the research review
+
+**Goal.** Apply the changes listed in section 8 of the research notes.
+
+**Changed in the model.**
+
+| Change | Detail | Basis |
+|---|---|---|
+| Pull-in force | 3,560 N to 4,893 N | Canadarm2's rigidize preload (Walker and Vandersluis) |
+| Latch stage | 64,054 N as four forces pressing the fixture plate onto the rim, ramping over 6 s, only if pull-in seated the fixture | Canadarm2's four latches. Cams and latch geometry are not modelled |
+| Sequence | Snare 2 s, pause 2 s, pull-in 10 s, latch 6 s: 20 s | Inside the 30 s requirement |
+| Joint friction | 200 N m resisting back-drive on every arm joint | 156 N test side load at 1.3 m |
+| Contact friction | 0.6 to 0.3, with a build option to change it | The value Honda et al. chose |
+| Roll | Scenarios rotate the vehicle up to 10° about its pin axis | Worst case tested |
+| Fixture mount | Optional rotational spring under the grapple fixture | Honda et al. found its stiffness influential. Off by default |
+| Shoulder roll | Optional lock | As Honda et al. solve the arm's pose. Off by default |
+
+**Changed in what gets measured.**
+
+- *Stages.* Every attempt records whether the pin was engaged, seated, latched, and retained.
+- *Retention check.* After a capture seats and latches, the vehicle is levered sideways with 1,627 N m for 5 s. The joint must hold with under 3° of tilt. "Captured" now requires this. The load is the Shuttle end effector's largest bending case, borrowed because no Canadarm2 figure was found.
+- *Timing.* How long after firing the pin stayed catchable, up to the snare's 2 s closing time.
+- *A sixth outcome, "lost".* The snare closed on the pin and the pin later escaped. See below.
+- *Matched sweeps.* `batch.matched_sweep` varies one quantity with everything else, including the random seed, held fixed.
+
+**Checks on the mechanism.**
+
+| Check | Result |
+|---|---|
+| Pull-in alone under 474.5 N m (the no-separation requirement) | Holds, no tilt |
+| Pull-in alone under 1,627 N m | Gives way, as expected: its limit is about 4,893 N × 0.24 m = 1,170 N m |
+| Latched, under 1,627 N m | Holds with under 0.5° of tilt |
+| Straight pull of 7,000 N on the snare | Plate unseats to the carriage's end stop; pin still held |
+| Straight pull of 8,000 N on the snare | Pin escapes. The load forces the bars apart against their 1,500 N drive |
+
+The last row is a limit of this model. Real snare cables would not open that way. It is the rigid-bar counterpart of the contact tunnelling that Arbatani et al. describe for cables under high tension.
+
+**Batches, rerun on the updated model.** 60 attempts each, same seed as before, now with roll.
+
+| Batch | Captured | Caught, not rigid | Lost | Missed | Out of reach | Timed out |
+|---|---|---|---|---|---|---|
+| Baseline: drift to 0.031 m/s, tumble to 0.5°/s, perfect sensing | 60 | 0 | 0 | 0 | 0 | 0 |
+| Degraded sensing: same motion; 0.5 s delay, 10 Hz, 1 cm, 1° | 60 | 0 | 0 | 0 | 0 | 0 |
+| Wider motion: drift to 0.122 m/s, tumble to 2°/s; degraded sensing | 3 | 0 | 27 | 1 | 22 | 7 |
+
+In the first two batches every attempt was engaged, seated, latched, and retained, and the pin stayed catchable for the whole 2 s of closing. The largest tilt in any retention check was 0.007°.
+
+**What happened in the harsh batch.** Before this update it gave 12 captured, 10 caught but not rigid, and 12 missed. Now it gives 3 captured and 27 lost. I replayed eight of the lost attempts:
+
+- In all eight the snare closed on the pin. The pin left 4 to 9 s after firing, during the pause or the pull-in.
+- When the snare finished closing, the pin was still moving at 2.6 to 9.9 cm/s relative to the end effector. The arm stops tracking at that moment.
+- The bars were then forced most or all of the way open.
+
+So these are not misses. The snare catches a vehicle that is still moving, the arm stops, and bringing 7 tonnes to rest loads the snare past the roughly 8,000 N at which the bars give way. This is the "capture is a race" idea with a second leg: closing in time is not enough if the relative motion left at that moment is more than the mechanism can absorb.
+
+Why it got worse than before the update is not established. Halving the contact friction is the likeliest cause, since friction on the knob helps keep the bars from spreading, but that is a guess until experiment B varies it alone.
+
+**Caution.** This is a failure regime of this mechanism and controller at four times the tested drift and tumble. It says nothing about Canadarm2, whose snares are cables and whose operator would not attempt a capture in those conditions.
+
+**Checks.** 51 pass.
+
+**Framing.** Also adopted in this commit: the project is described as a case study of an established operation, with no literature gap claimed in advance. Canadarm2 captures vehicles routinely and does not need this simulation.
+
+**Next.** Experiment A: separate, matched sweeps of drift, tumble, offset, and tilt.

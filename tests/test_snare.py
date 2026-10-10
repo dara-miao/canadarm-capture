@@ -63,31 +63,61 @@ def test_capture_holds_against_500_newtons(model, lateral):
 
 
 def test_overload_backs_the_pin_out_but_keeps_it(model):
-    # 7000 N is about twice the pull-in force limit: the plate unseats, the snare still holds.
+    # 7,000 N is above the 4,893 N pull-in limit: the plate unseats to the carriage's end
+    # stop, and the snare still holds.
     z = scene.pin_offset(model, run(model, pull=7000.0))[2]
     assert SEATED + 0.02 < z < 0
 
 
-def test_seated_capture_resists_the_specified_bending_moment(model):
-    """The Shuttle arm's end effector was required to show no interface separation up to
-    474.5 N m of cross-axis bending (Daniell and Sachdev, 1982)."""
+def test_the_snare_itself_gives_way_near_8000_newtons(model):
+    # A limit of this model, not of the real mechanism: the load forces the bars apart
+    # against their 1,500 N drive. Real snare cables would not open this way.
+    assert scene.pin_offset(model, run(model, pull=8000.0))[2] > 0
+
+
+def test_grapple_sequence_fits_the_30_second_requirement():
+    # Walker and Vandersluis (1995): 30 s for snare, rigidize, and latch together.
+    assert snare.SEQUENCE_TIME <= 30.0
+    assert snare.CLOSE_TIME <= 3.0
+    assert snare.grapple_command(snare.PULL_IN_END) == (1.0, 1.0)
+    assert snare.latch_command(snare.PULL_IN_END) == 0.0
+    assert snare.latch_command(snare.SEQUENCE_TIME) == 1.0
+
+
+def bend(model, moment, latch):
+    """Seat the pin, optionally latch, then lever the vehicle sideways. Returns the pin's tilt and depth."""
     data = mujoco.MjData(model)
     scene.reset(model, data, standoff=INSERTED)
     vid = model.body("vehicle").id
     dt = model.opt.timestep
-    hold = snare.SEQUENCE_TIME + 2.0
-    for i in range(int(round((hold + PULL_TIME) / dt))):
+    load_from = snare.SEQUENCE_TIME + 2.0
+    for i in range(int(round((load_from + PULL_TIME) / dt))):
         t = i * dt
         scene.set_snare(model, data, *snare.grapple_command(t))
+        mujoco.mj_step1(model, data)
         data.qfrc_applied[:] = 0
-        if t > hold:
+        if latch:
+            scene.apply_latch(model, data, snare.latch_command(t))
+        if t > load_from:
             across = data.site("lee_mouth").xmat.reshape(3, 3)[:, 0]
-            mujoco.mj_applyFT(model, data, np.zeros(3), 474.5 * across, data.site("pin_tip").xpos, vid, data.qfrc_applied)
-        mujoco.mj_step(model, data)
-    assert scene.pin_axis_error(model, data) < np.radians(0.5)
-    assert scene.pin_offset(model, data)[2] == pytest.approx(SEATED, abs=0.002)
+            mujoco.mj_applyFT(model, data, np.zeros(3), moment * across, data.site("pin_tip").xpos, vid, data.qfrc_applied)
+        mujoco.mj_step2(model, data)
+    return scene.pin_axis_error(model, data), scene.pin_offset(model, data)[2]
 
 
-def test_without_the_snare_the_vehicle_escapes(model):
-    z = scene.pin_offset(model, run(model, grapple=False, pull=100.0))[2]
-    assert z > 1.0
+def test_pull_in_alone_resists_the_no_separation_moment(model):
+    """The Shuttle arm's end effector was required to show no interface separation up to
+    474.5 N m of cross-axis bending (Daniell and Sachdev, 1982)."""
+    tilt, depth = bend(model, 474.5, latch=False)
+    assert tilt < np.radians(0.5)
+    assert depth == pytest.approx(SEATED, abs=0.002)
+
+
+def test_latches_carry_a_moment_that_pull_in_alone_cannot(model):
+    # 1,627 N m is the Shuttle end effector's largest bending case. Pull-in alone gives
+    # way at about its preload times the rim radius: 4,893 N x 0.24 m = 1,170 N m.
+    unlatched_tilt, _ = bend(model, 1627.0, latch=False)
+    latched_tilt, depth = bend(model, 1627.0, latch=True)
+    assert unlatched_tilt > np.radians(3.0)
+    assert latched_tilt < np.radians(0.5)
+    assert depth == pytest.approx(SEATED, abs=0.002)

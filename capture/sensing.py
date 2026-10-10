@@ -55,7 +55,7 @@ class PinSensor:
         mujoco.mj_objectVelocity(self.model, data, mujoco.mjtObj.mjOBJ_SITE, self.tip_id, vel, 0)
         return PinObservation(
             tip=data.site("pin_tip").xpos.copy(),
-            axis=data.body("vehicle").xmat.reshape(3, 3)[:, 0].copy(),
+            axis=data.body("fixture").xmat.reshape(3, 3)[:, 0].copy(),
             v_tip=vel[3:].copy(),
             w=vel[:3].copy(),
         )

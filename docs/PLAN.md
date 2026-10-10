@@ -15,9 +15,11 @@ This is a study of robustness. The interesting output is not a successful catch.
 
 ## Why this project
 
-Reaching the target is only the start of a capture. The arm has to make and keep contact with an object that is free to move, so the contact itself can change the outcome. That ties together tracking, mechanism geometry, contact forces, and simulation assumptions, which is the same set of concerns behind contact-rich manipulation on Earth.
+Canadarm2 already captures cargo vehicles such as Cygnus, routinely. Nothing here is needed by that operation, and its real limits may be fully characterised in documents that are not public. A failure in this model is a failure of this model.
 
-The scenario is inspired by Canadarm2 capturing cargo vehicles such as Cygnus. It does not reproduce that system's flight limits, and nothing here is validated against flight data.
+The capture is chosen as a concrete case for learning contact-rich robotics and simulation. Reaching the target is only the start: the arm has to make and keep contact with an object that is free to move, so the contact itself can change the outcome. That ties together tracking, mechanism geometry, contact forces, and simulation assumptions, which is the same set of concerns behind contact-rich manipulation on Earth.
+
+The project is worthwhile as an engineering study if the model is transparent, the experiments are careful, the failures are explained, and the limits are stated. Whether it also yields a new finding is open, and would have to come from the results. No literature gap is claimed in advance.
 
 ## Definitions
 
@@ -35,16 +37,18 @@ A capture also has three stages of "done":
 
 | Stage | Meaning | In the model today |
 |---|---|---|
-| Engaged | The snare has closed on the pin | Not labelled separately |
-| Seated | Pull-in has finished with the fixture plate against the rim, on axis and at rest | This is the current "captured" label |
-| Retained | The connection survives a stated disturbance afterwards | Not part of the label yet. See milestone R4 |
+| Engaged | The pin was inside the snare when it finished closing | Recorded for every attempt |
+| Seated | Pull-in finished with the fixture plate against the rim, on axis and at rest | Recorded. The latches engage only if this holds |
+| Retained | The latched joint survives a stated disturbance | Recorded. The disturbance is 1,627 N m of bending for 5 s, with at most 3° of tilt allowed |
+
+"Captured" now means all three, plus latched. The retention load is the Shuttle end effector's largest bending case. No equivalent figure was found for Canadarm2's, so it is a borrowed target.
 
 ## Outside the scope
 
 - **Station safety.** The station is scenery. Nothing collides with it, so "out of reach" is a statement about the controller and the arm's workspace, not a safety judgement.
 - **Flight validation.** There is no comparison with telemetry or hardware tests.
 - **Cable mechanics.** The snare is three rigid bars, not cables.
-- **Fixture cams and end-effector latches.** Not modelled.
+- **Fixture cams.** Not modelled. The end effector's four latches are represented only by their total clamping force.
 - **Arm flexibility.** The arm is rigid.
 - **Orbital mechanics.** Gravity is zero throughout. This is a short-timescale approximation; see the research notes.
 - **A human operator.** The real capture is flown by an astronaut. The model's controller is automatic.
@@ -60,8 +64,8 @@ A capture also has three stages of "done":
 | R2 | Realism: sourced parameters | Done (2026-10-10) | Snare and capture numbers taken from the published papers where they give them |
 | R3 | Realism: 10 m capture point | Done (2026-10-10) | The attempt starts with the vehicle at the published capture distance |
 | 4 | Trial harness | Done (2026-10-10) | One command runs N trials and reports success rate and failure types |
-| R4 | Research review and model update | In progress | Research notes reviewed; agreed changes from their section 8 applied and tested |
-| 5 | Experiment A: closed-loop capture envelope | Planned | Outcome maps from separate, matched sweeps of drift, tumble, offset, and tilt, so their effects are not confounded |
+| R4 | Research review and model update | Done (2026-10-10) | Research notes reviewed; the changes in their section 8 applied and tested |
+| 5 | Experiment A: closed-loop capture envelope | Next | Outcome maps from separate, matched sweeps of drift, tumble, offset, and tilt, so their effects are not confounded |
 | 6 | Experiment B: parameter sensitivity | Planned | Matched trials varying friction, one *named* form of compliance, and observation staleness |
 | 7 | Experiment C: matched-model comparison in a second engine | Planned | The same dynamic model run in Newton, after checking the two models are equivalent |
 | 8 | Write-up | Planned | README with results, figures, and video, stating what the results are conditional on |
@@ -95,12 +99,12 @@ Notes on the experiments:
 | 2026-10-10 | Mount the arm on the Earth-facing side of the forward node (Harmony) | Cygnus is captured below the station; the exact fixture used is not sourced | Current, approximate |
 | 2026-10-10 | Move the grapple pin to the service module | The Cygnus model has a small fixture there | Current, unconfirmed |
 | 2026-10-10 | Use the Shuttle arm's end-effector paper as the main parameter source | It was the only primary source found with numbers at the time | Superseded in part: Walker and Vandersluis (1995) covers Canadarm2's own end effector |
-| 2026-10-10 | Pull-in force limit 3,560 N | The Shuttle end effector's rigidize load | Under review: the Canadarm2 value is 4,893 N |
+| 2026-10-10 | Pull-in force limit 3,560 N | The Shuttle end effector's rigidize load | Superseded: now 4,893 N, the Canadarm2 value |
 | 2026-10-10 | Arm goes limp during pull-in, except wrist roll | Both end-effector papers and Honda et al. describe rigidizing against a limp arm | Current |
 | 2026-10-10 | Arm keeps tracking until the snare has closed | Stopping at the trigger failed at a 0.031 m/s relative velocity | Current |
 | 2026-10-10 | Cap tip speed at 0.37 m/s | Canadarm2's published unloaded speed | Current |
 | 2026-10-10 | Every attempt starts with the pin 10 m from the station and the arm hovering 2 m short | Matches the published capture distance; the hover distance is an assumption | Current |
-| 2026-10-10 | Five outcome labels: captured, caught but not rigid, missed, out of reach, timed out | A single success flag hides why attempts fail | Current; retention to be added |
+| 2026-10-10 | Five outcome labels: captured, caught but not rigid, missed, out of reach, timed out | A single success flag hides why attempts fail | Extended the same day with a sixth, "lost" |
 | 2026-10-10 | Controller aborts when the arm's Jacobian is nearly singular | Without it the arm thrashed at the edge of its workspace | Current |
 | 2026-10-10 | Controller sees the pin only through a sensor model with delay, update rate, and noise | To ask how capture degrades when observations are stale or noisy. The perfect-knowledge runs remain the baseline | Current |
 | 2026-10-10 | Controller smooths measurements with a fixed-gain estimator | Checking alignment against raw noisy readings meant it never committed to inserting | Current |
@@ -108,6 +112,17 @@ Notes on the experiments:
 | 2026-10-10 | Pause before the experiments to build up the research notes | Results are only worth reporting if the model's inputs and limits are understood first | Current |
 | 2026-10-10 | Label every research claim Read, Reported, Assumed, or Disputed | Secondary summaries are useful for finding sources but are not sources | Current |
 | 2026-10-10 | Frame the project as a robustness study of a simplified capture model | Open MuJoCo tools for contact-rich space robotics already exist. A plain capture demo is not a contribution; a transparent account of where predictions break down can be | Current |
+| 2026-10-10 | Pull-in force limit 4,893 N | Canadarm2's rigidize preload (Walker and Vandersluis) | Current |
+| 2026-10-10 | Add a latch stage: 64,054 N applied as four forces at the rim, over 6 s, only if pull-in seated the fixture | The latches are what carry large bending loads on the real end effector | Current. Cams and latch geometry are not modelled |
+| 2026-10-10 | "Captured" requires seated, latched, and retained under 1,627 N m | A capture that seats can still be mechanically weak | Current. The load is borrowed from the Shuttle end effector |
+| 2026-10-10 | Joints resist back-driving with 200 N m of friction | Derived from the 156 N side load used to test the end effector, at 1.3 m from the wrist axes | Current. Applied to all joints alike, which is a guess |
+| 2026-10-10 | Contact friction 0.3, and a build option to change it | The static value Honda et al. chose for shaft and snare wire | Current. A modelling paper's input, not a measurement |
+| 2026-10-10 | Scenarios include roll about the pin axis, up to 10° | Part of the worst case the end effector was tested at | Current. The pin is symmetric, so roll only moves the hull's mass |
+| 2026-10-10 | Optional sprung mount for the grapple fixture | Honda et al. found fixture base stiffness the most influential parameter | Off by default. Limited to 5e4 N m/rad by the timestep, far softer than their starting value |
+| 2026-10-10 | Optional locked shoulder roll | Honda et al. fix that joint when solving the arm's pose | Off by default |
+| 2026-10-10 | Record engagement, seating, latching, retention, and how long the pin stayed catchable | Failures can then be explained by stage and by timing margin | Current |
+| 2026-10-10 | Add a "lost" outcome: the snare closed on the pin and the pin later escaped | In the harsh batch 27 of 28 non-held attempts had been snared first. Calling them misses hid that | Current |
+| 2026-10-10 | Describe the project as a case study, with no literature gap claimed in advance | Canadarm2 already does this routinely. A contribution, if any, has to come from the results | Current |
 | 2026-10-10 | Treat the station as fixed and the arm as rigid | The station is about 60 times heavier than the vehicle; arm flexibility is left out to keep the first version simple | Current |
 
 ## Values the model uses, by where they come from
@@ -122,17 +137,27 @@ Full provenance is in the research notes. This table records only what the model
 | Joint positions | Offset layout; 7.04 m booms | Measured from the CSA 1:100 model |
 | Boom diameter | 34 cm in the model; 35 cm published | CSA |
 | Tip speed cap | 0.37 m/s | CSA, unloaded speed |
+| Pull-in force limit | 4,893 N | Rigidize preload, Walker and Vandersluis |
+| Latch force | 64,054 N in total | Walker and Vandersluis |
+| Grapple sequence | Snare 2 s, pause 2 s, pull-in 10 s, latch 6 s: 20 s | Inside the 30 s requirement, with snare within 3 s and latch about 6 s, Walker and Vandersluis. The pause and pull-in time are this model's |
+| Joint back-drive friction | 200 N m | Derived from the 156 N test side load, Walker and Vandersluis |
+| Tested misalignment | 0.1 m offset, 15° tilt, 10° roll | Worst case tested, Walker and Vandersluis |
+| Limp arm during pull-in and latching | All joints but wrist roll | Both end-effector papers; Honda et al. |
 
 **From the Shuttle arm's end effector** (the ancestor of Canadarm2's; indicative only)
 
 | Quantity | Value | Source |
 |---|---|---|
 | Snare opening | 0.1 m | ±0.1 m lateral tolerance, Daniell and Sachdev |
-| Pull-in force limit | 3,560 N | Rigidize load, Daniell and Sachdev |
-| Snare and pull-in times | 2 s and 10 s | Inside the under-3 s and under-20 s requirements |
-| Limp arm during pull-in | All joints but wrist roll | Daniell and Sachdev |
 | Tested relative velocity | 0.031 m/s | A mechanism requirement. Not a verified limit on a visiting vehicle's drift |
-| Tested bending moment | 474.5 N m | No-separation requirement |
+| No-separation bending moment | 474.5 N m | Requirement. Pull-in alone holds it |
+| Retention check load | 1,627 N m, at most 3° of tilt | Largest bending case. Borrowed as the retention target |
+
+**From a modelling paper** (an input its authors chose, not a measurement)
+
+| Quantity | Value | Source |
+|---|---|---|
+| Contact friction | 0.3 | Honda et al., static coefficient for shaft and snare wire |
 
 **From the vehicle and the operation**
 
@@ -155,7 +180,7 @@ Full provenance is in the research notes. This table records only what the model
 - Joint servo gains, damping, and reflected inertia. No torque limits. A 0.03 rad/s (1.7°/s) joint rate cap.
 - Vehicle mass split between modules. The grapple pin's position is where the model shows a small fixture, which is probably the grapple fixture.
 - Grapple pin: 0.3 m long, 2 cm radius, with a flat-backed knob.
-- Snare: three rigid bars, 6 mm radius, drive force limit 1,500 N, friction 0.6.
+- Snare: three rigid bars, 6 mm radius, drive force limit 1,500 N. Under a straight pull of about 8,000 N the bars are forced apart and the pin escapes; real cables would not open that way.
 - Hover distance: the end effector starts 2 m from the pin.
 - Which point the published 10 m is measured from; here it is the module surface under the arm's base.
 - Sensor update rate and noise levels. Velocities reach the controller delayed but without added error.
@@ -167,7 +192,7 @@ Full provenance is in the research notes. This table records only what the model
 
 - **Results describe the surrogate, not the hardware.** The rigid-bar snare and flat-backed knob have different contact surfaces and kinematics from cables and cams. A sensitivity to friction could be a property of the bars. Experiments should check which findings survive plausible changes to the surrogate's geometry and contact behaviour.
 - **The controller is part of the result.** The joint rate cap, alignment tolerances, estimator gain, and tracking logic are invented, and one of them was changed because it caused failures. A boundary found in experiment A is where this controller with this mechanism fails, not a limit of Canadarm2.
-- **"Captured" does not yet mean retained.** The seated joint holds about 850 N m of bending and then lets go. A capture that seats can still be mechanically weak.
+- **The latch is a force, not a mechanism.** Retention now holds because 64 kN is applied at the rim once the fixture is seated. Whether real latches would engage on a slightly misaligned fixture is not something this model can say.
 - **Zero gravity is a timescale assumption.** Reasonable for a one-minute attempt according to the mjorbit comparison, but that does not by itself prove relative orbital motion is negligible against centimetre tolerances.
 - **Contact tuning.** Stiff contact in zero gravity may need a smaller timestep or solver tuning.
 - **Newton on macOS.** Supported in CPU-only mode but untested here.
