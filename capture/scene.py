@@ -27,6 +27,11 @@ WALL_THICKNESS = 0.04
 WALL_SEGMENTS = 16
 WALL_MASS = 40.0
 
+# Snare actuator travel [m]. The bars start 0.1 m from the axis; commanding past the
+# pin surface makes them press on it. The carriage pulls the closed snare inward.
+SNARE_TRAVEL = 0.08
+CARRIAGE_TRAVEL = 0.1
+
 
 def _add_cavity_wall(spec: mujoco.MjSpec) -> None:
     """Approximate a hollow cylinder with a ring of boxes.
@@ -48,6 +53,7 @@ def _add_cavity_wall(spec: mujoco.MjSpec) -> None:
             pos=[r_mid * np.cos(phi), r_mid * np.sin(phi), (CAVITY_Z0 + CAVITY_Z1) / 2],
             quat=[np.cos(theta / 2), 0, 0, np.sin(theta / 2)],
             mass=WALL_MASS / WALL_SEGMENTS,
+            rgba=[0.85, 0.72, 0.3, 0.35],  # see-through, so the snare is visible
         )
 
 
@@ -64,7 +70,22 @@ def arm_qpos_adr(model: mujoco.MjModel) -> np.ndarray:
 def set_arm(model: mujoco.MjModel, data: mujoco.MjData, q: np.ndarray) -> None:
     """Put the arm at joint angles q and command the actuators to hold it there."""
     data.qpos[arm_qpos_adr(model)] = q
-    data.ctrl[:] = q
+    data.ctrl[: len(ARM_JOINTS)] = q
+
+
+def set_snare(model: mujoco.MjModel, data: mujoco.MjData, close: float, retract: float) -> None:
+    """Command the snare. Both arguments run from 0 (open / extended) to 1 (closed / retracted)."""
+    data.ctrl[model.actuator("a_snare").id] = close * SNARE_TRAVEL
+    data.ctrl[model.actuator("a_carriage").id] = retract * CARRIAGE_TRAVEL
+
+
+def pin_offset(model: mujoco.MjModel, data: mujoco.MjData) -> np.ndarray:
+    """Pin tip position in the end-effector mouth frame: (x, y) lateral, z along the approach axis.
+
+    z is positive outside the cavity and negative inside it.
+    """
+    mouth = data.site("lee_mouth")
+    return mouth.xmat.reshape(3, 3).T @ (data.site("pin_tip").xpos - mouth.xpos)
 
 
 def place_vehicle(
@@ -76,6 +97,7 @@ def place_vehicle(
     """Place the vehicle so its grapple pin faces the end-effector mouth.
 
     standoff: distance from the mouth to the pin tip along the approach axis [m].
+              Negative puts the tip inside the cavity.
     lateral:  pin offset from the approach axis, in the end-effector x/y [m].
 
     Uses the arm's current pose. Vehicle velocity is left unchanged.

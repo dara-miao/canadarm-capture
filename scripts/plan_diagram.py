@@ -12,8 +12,8 @@ OUT = Path(__file__).resolve().parent.parent / "docs" / "media" / "plan.svg"
 # (label, title, line 1, line 2, status)
 STAGES = [
     ("1 · ZERO-G WORLD", "Build the scene", "7-joint arm · drifting vehicle", "Grapple pin · hollow end effector", "done"),
-    ("2 · GRAPPLE MECHANISM", "Model the snare", "Closing mechanism on the pin", "Contact friction + compliance", "next"),
-    ("3 · CLOSED LOOP", "Approach and capture", "Track the pin · trigger the snare", "Actuator limits + delay", "planned"),
+    ("2 · GRAPPLE MECHANISM", "Model the snare", "Closing mechanism on the pin", "Contact friction + compliance", "done"),
+    ("3 · CLOSED LOOP", "Approach and capture", "Track the pin · trigger the snare", "Actuator limits + delay", "next"),
     ("4 · REPEATABLE TRIALS", "Measure outcomes", "Success criteria · failure types", "Logs · plots · video", "planned"),
 ]
 EXPERIMENTS = [

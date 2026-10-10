@@ -18,9 +18,10 @@ def steps(model, seconds):
 
 def test_zero_gravity_and_layout(model):
     assert np.all(model.opt.gravity == 0)
-    assert model.nu == len(scene.ARM_JOINTS) == 7
-    # 7 hinge joints + one free joint (3 position + 4 quaternion)
-    assert model.nq == 7 + 7
+    # 7 arm motors, plus the snare drive and the carriage drive
+    assert model.nu == len(scene.ARM_JOINTS) + 2 == 9
+    # 7 arm joints, 4 snare slides, one free joint (3 position + 4 quaternion)
+    assert model.nq == 7 + 4 + 7
 
 
 def test_arm_reach_matches_canadarm2(model):
@@ -80,8 +81,9 @@ def test_arm_tracks_a_step_command(model):
     scene.reset(model, data, standoff=3.0)
     adr = scene.arm_qpos_adr(model)
     target = scene.READY_POSE + np.array([0.1, 0.05, -0.1, 0.1, 0.05, 0.1, -0.1])
-    data.ctrl[:] = target
+    data.ctrl[: len(scene.ARM_JOINTS)] = target
     for _ in range(steps(model, 30.0)):
         mujoco.mj_step(model, data)
     assert data.qpos[adr] == pytest.approx(target, abs=5e-3)
-    assert np.abs(data.qvel[:7]).max() < 1e-3
+    dof = [model.joint(n).dofadr[0] for n in scene.ARM_JOINTS]
+    assert np.abs(data.qvel[dof]).max() < 1e-3

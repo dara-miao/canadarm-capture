@@ -22,8 +22,8 @@ The project is simulation only. It is a reasoned study of a real operation, not 
 | # | Milestone | Status | Done when |
 |---|---|---|---|
 | 1 | Zero-g scene | Done (2026-10-10) | Arm and vehicle load, momentum is conserved, arm tracks commands |
-| 2 | Snare mechanism | Next | A closing mechanism holds the pin against a pull-out force |
-| 3 | Approach and capture | Planned | A controller completes a capture from a nominal start |
+| 2 | Snare mechanism | Done (2026-10-10) | A closing mechanism holds the pin against a pull-out force |
+| 3 | Approach and capture | Next | A controller completes a capture from a nominal start |
 | 4 | Trial harness | Planned | One command runs N trials and reports success rate and failure types |
 | 5 | Experiment A: capture envelope | Planned | Success map over misalignment, drift, and tumble |
 | 6 | Experiment B: parameter sensitivity | Planned | Matched trials showing the effect of friction, compliance, and delay |
@@ -39,6 +39,10 @@ The project is simulation only. It is a reasoned study of a real operation, not 
 | 2026-10-10 | Everything runs on a MacBook (CPU only) | No NVIDIA GPU available; rules out Isaac Sim and the Omniverse runtime libraries |
 | 2026-10-10 | MuJoCo first, Newton as a second engine later | The task is rigid-body only; MuJoCo is mature on macOS and easy to debug |
 | 2026-10-10 | Build the hollow end effector from a ring of 16 boxes | MuJoCo collides convex shapes, so a cavity cannot be one mesh |
+| 2026-10-10 | Model the snare as three rigid bars forming a shrinking triangle | Real snares are cables; rigid bars reproduce the centring and catching action without cable simulation |
+| 2026-10-10 | Open snare is the triangle inscribed in the cavity (inradius 0.1 m) | Matches the published lateral capture tolerance of ±0.1 m for this end-effector design |
+| 2026-10-10 | Flat-backed knob on the pin tip, not a ball | A ball wedged the bars apart under load and the pin slipped out |
+| 2026-10-10 | Stiff, high-force snare drive | The real drive is geared and is not pushed back open by load on the pin |
 | 2026-10-10 | Treat the station as fixed and the arm as rigid | The station is about 60 times heavier than the vehicle; arm flexibility is left out to keep the first version simple |
 
 ## Assumptions to verify
@@ -49,11 +53,19 @@ These are placeholders, chosen to be plausible. Each needs a source or an explic
 - Vehicle: 3.07 m diameter, 6.4 m long, 7,000 kg. Grapple fixture position on the hull is a guess.
 - Grapple pin: 0.3 m long, 2 cm radius. End-effector cavity: 0.2 m inner radius, 0.5 m deep.
 - Joint gains, damping, and reflected inertia are invented for stable tracking. No torque or speed limits yet.
-- Whether NASA or CSA publish capture limits we can compare against.
+- Snare: bar radius 6 mm, closing time 2 s, drive force limit 1,500 N, carriage force limit 1,000 N, friction 0.6. All invented.
+- Pin tip knob: 3.5 cm radius, 3 cm long. The real fixture's shaft and cam geometry is not reproduced.
+- Capture limits: a NASA report on this end-effector design gives ±0.1 m lateral and 0.1 m axial misalignment tolerance. Angular limits and limits on relative velocity still to find.
 - Which free 3D models exist to replace the primitive shapes.
 
 ## Risks
 
-- **Snare modelling.** Three wires closing on a pin is hard to model exactly. The fallback is a simplified rigid closing mechanism.
+- **Snare modelling.** Resolved for now with rigid bars (milestone 2). The bars cannot stretch or wrap like cables, which may matter for angular misalignment.
 - **Contact tuning.** Stiff contact in zero gravity may need a smaller timestep or solver tuning.
 - **Newton on macOS.** Supported in CPU-only mode but untested here.
+
+## References
+
+- NASA, Shuttle remote manipulator end effector report (misalignment tolerances): https://ntrs.nasa.gov/api/citations/19820015473/downloads/19820015473.pdf
+- Canadian Space Agency, Canadarm2's Latching End Effector: https://www.asc-csa.gc.ca/eng/multimedia/search/image/9362
+- Grapple fixture overview: https://en.wikipedia.org/wiki/Grapple_fixture

@@ -26,4 +26,5 @@ Do this as part of every piece of work, not at the end:
 ## Git
 
 - One commit per milestone, authored by the user, pushed to `origin` (github.com/dara-miao/canadarm-capture).
+- No `Co-Authored-By` line on commits. The README's "How this was built" section credits Claude Code instead.
 - Update `docs/PLAN.md`, `docs/DEVLOG.md`, and the plan diagram in the same commit as the milestone they describe.

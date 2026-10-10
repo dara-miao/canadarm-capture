@@ -57,3 +57,53 @@ Dated entries, newest last. Each one records what was built, why, what the check
 - No snare, no controller, no contact has happened yet.
 
 **Next.** Milestone 2: a closing mechanism inside the end effector that can hold the pin.
+
+## 2026-10-10 · Milestone 2: snare mechanism
+
+**How the real one works.** Three snare cables inside the end effector close around the grapple shaft, then the mechanism pulls the payload in until the interface is rigid. A NASA report gives the design's misalignment tolerance as ±0.1 m lateral and 0.1 m axial.
+
+**Built.**
+
+- A carriage inside the cavity that slides along the approach axis.
+- Three snare bars on the carriage, each sliding inward. Open, they form the triangle inscribed in the cavity, so the opening has a 0.1 m inradius, matching the published lateral tolerance. Closed, they meet around the pin.
+- One drive for all three bars, tied together with joint constraints, like the rotating ring that drives the real cables.
+- `capture/snare.py`: the grapple timing (close over 2 s, pause 2 s, pull in over 2 s).
+- `tests/test_snare.py`: eight checks. `scripts/render_capture.py`: stills and an animation.
+
+![Grapple sequence](media/snare_capture.gif)
+
+| Open, pin 6 cm off-centre | Closed and seated |
+|---|---|
+| ![Open](media/snare_open.png) | ![Seated](media/snare_seated.png) |
+
+**Scope of this milestone.** The pin starts already inside the cavity, the vehicle starts at rest, and the arm only holds still. Approaching a moving vehicle is milestone 3.
+
+**What went wrong: the first design did not hold.** Closing and centring worked on the first try, but a 100 N pull drew the pin straight out. The logged joint positions showed why. The pin had a ball tip, and when the carriage pulled the bars against it, the ball's curved surface pushed the bars outward, from 7.6 cm of travel back to 6.6 cm, until the ball passed through.
+
+Two changes fixed it, both with a physical justification:
+
+1. *Flat-backed knob instead of a ball.* A flat face pushes back along the pin axis only, so it cannot spread the bars.
+2. *Stiff snare drive.* Force limit raised from 300 N to 1,500 N and gain from 2e4 to 1e5 N/m, with 5 kg of reflected inertia on each bar. The real drive is geared and does not get pushed open.
+
+I also put the three bars in one plane. They had been stacked 14 mm apart so they could cross, which loaded the knob off-centre. They do not collide with each other, so one plane works.
+
+**Checks (all pass, 14 in total with milestone 1).**
+
+| Check | Result |
+|---|---|
+| Open snare, pin 5 cm off-centre | No contact |
+| Pin starting 6.3 cm off-centre | Centred to under 5 mm after closing |
+| Pull-in | Pin tip at 0.300 m depth: fixture plate seated on the rim |
+| 500 N pull-out for 20 s, from three start offsets up to 8.5 cm | Pin does not move (within 2 mm) |
+| 2,000 N pull-out (twice the carriage force limit) | Plate unseats by 8 cm to the carriage end stop; pin still caught |
+| Snare left open, 100 N pull | Vehicle leaves |
+
+**Side effect.** Two milestone 1 tests assumed seven motors; the model now has nine. Updated the tests.
+
+**Not done yet.**
+
+- Bars are rigid. Real cables wrap and stretch.
+- Every snare number (forces, speeds, friction) is invented.
+- No angular misalignment has been tested, only lateral.
+
+**Next.** Milestone 3: move the arm to a drifting vehicle and trigger the grapple.
