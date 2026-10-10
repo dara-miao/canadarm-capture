@@ -1,6 +1,6 @@
 # Plan
 
-Living document. Updated whenever a milestone finishes or a decision changes.
+Living document. Updated whenever a milestone finishes or a decision changes. What is known about the real operation, and where each number comes from, is in the [research notes](RESEARCH.md).
 Last updated: 2026-10-10.
 
 ![Project plan](media/plan.svg)
@@ -28,7 +28,8 @@ The project is simulation only. It is a reasoned study of a real operation, not 
 | R2 | Realism: sourced parameters | Done (2026-10-10) | Snare and capture numbers taken from the published papers where they give them |
 | R3 | Realism: 10 m capture point | Done (2026-10-10) | The attempt starts with the vehicle at the real capture distance |
 | 4 | Trial harness | Done (2026-10-10) | One command runs N trials and reports success rate and failure types |
-| 5 | Experiment A: capture envelope | Next | Success map over misalignment, drift, and tumble |
+| R4 | Research review and model update | Next | Findings in the research notes reviewed; agreed changes applied and tested |
+| 5 | Experiment A: capture envelope | Planned | Success map over misalignment, drift, and tumble |
 | 6 | Experiment B: parameter sensitivity | Planned | Matched trials showing the effect of friction, compliance, and delay |
 | 7 | Experiment C: second engine | Planned | Scene exported to USD and rerun in Newton, results compared |
 | 8 | Write-up | Planned | README with results, figures, and video |
@@ -67,6 +68,8 @@ The project is simulation only. It is a reasoned study of a real operation, not 
 | 2026-10-10 | Controller sees the pin only through a sensor model with delay, update rate, and noise | With perfect knowledge every attempt succeeds and the experiments show nothing |
 | 2026-10-10 | Controller smooths measurements with a fixed-gain estimator | Checking alignment against raw noisy readings meant it never committed to inserting |
 | 2026-10-10 | Scenarios are plain data generated from a seed | Batches are reproducible and can be spread across processes |
+| 2026-10-10 | Pause before the experiments to build up the research notes | Results are only worth reporting if the model's inputs and limits are understood first |
+| 2026-10-10 | Label every research claim Read, Reported, Assumed, or Disputed | Secondary summaries are useful for finding sources but are not sources |
 | 2026-10-10 | Treat the station as fixed and the arm as rigid | The station is about 60 times heavier than the vehicle; arm flexibility is left out to keep the first version simple |
 
 ## Sourced values

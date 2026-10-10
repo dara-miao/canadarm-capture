@@ -407,3 +407,28 @@ All batches used offsets up to 0.1 m and tilts up to 15°, the sourced capture l
 **Checks.** 39 pass. Thirteen are new: outcome labelling, the abort, sensor delay and noise, sampling, and CSV output.
 
 **Next.** Experiment A: sweep drift and tumble on a grid and map the capture envelope.
+
+## 2026-10-10 · Research review
+
+**Why.** Before running experiment A, stopped to gather what is actually known about the operation into one place. A result is only worth reporting if the inputs behind it are understood.
+
+**Built.** `docs/RESEARCH.md`: a plain-language account of the operation, the sources with a note on how far each can be trusted, tables of numbers with where each comes from and what kind of number it is, disagreements between sources, what is still unknown, and what the findings imply for the model.
+
+**How the research was done.** Dara ran three Perplexity searches. Those surfaced two sources I had not found, and a lead to a third. I then opened and read all three, so the notes can distinguish what has been checked against the source from what has only been reported.
+
+| Source | Found by | Read? | Result |
+|---|---|---|---|
+| Honda et al. (2014), HTV capture simulation fitted to telemetry | Perplexity | Yes | Every number Perplexity reported matched the paper |
+| Chang and Marquez (2018), NASA memo on who does what | Perplexity | Yes | Matched |
+| Walker and Vandersluis (1995), the LEE's own design paper | Lead from Perplexity; full text found inside the symposium proceedings on NASA's server | Yes | New: Canadarm2-specific end-effector figures |
+
+**What the 1995 paper adds.** Until now the end-effector numbers came from the Shuttle arm's smaller ancestor. The Canadarm2 values are a 4,893 N rigidize preload (against 3,560 N), four latches adding 64,054 N, a 30 s requirement for the whole capture sequence, and worst-case test conditions that include the force needed to back-drive the arm's joints.
+
+**Two things that change how the model should be described.**
+
+- Honda et al. model the snare wires as rigid rotating rods. This project's rigid bars are a simplification with published precedent, not an outlier.
+- The real capture is flown by an astronaut in manual mode, with only the end effector's sequence automated. This model studies an automated capture. That needs saying plainly wherever results are presented.
+
+**Still unknown.** Per-joint rate limits, the vehicle's leftover motion in free drift, and the arm's starting distance from the fixture. None of the accessible literature gives them. They are the three numbers that most affect where capture fails in the model.
+
+**Not changed.** The model. Section 7 of the research notes lists eleven suggested changes; none is applied until reviewed.

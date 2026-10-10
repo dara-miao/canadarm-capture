@@ -17,13 +17,13 @@ STAGES = [
     ("4 · REPEATABLE TRIALS", "Measure outcomes", "Success criteria · failure types", "Outcome labels · batches · sensing", "done"),
 ]
 EXPERIMENTS = [
-    ("5 · EXPERIMENT A", "Capture envelope", "Sweep misalignment, drift, tumble", "Map where capture succeeds", "next"),
+    ("5 · EXPERIMENT A", "Capture envelope", "Sweep misalignment, drift, tumble", "Map where capture succeeds", "planned"),
     ("6 · EXPERIMENT B", "Parameter sensitivity", "One change per matched trial", "Friction · compliance · delay", "planned"),
     ("7 · EXPERIMENT C", "Second engine", "Export to USD · rerun in Newton", "Does the result survive?", "planned"),
 ]
 
 # One line on what is happening right now, shown under the title.
-NOW = "Stages 1 to 4 and the realism pass are done.  Next: experiment A, the capture envelope."
+NOW = "Stages 1 to 4 are built.  Now: research review before any experiment (see RESEARCH.md)."
 
 W, H = 1600, 860
 BG, CARD, EDGE = "#0f1b2d", "#1b2a40", "#2b3d57"
