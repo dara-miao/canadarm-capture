@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 860" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#b9e36b"/></marker>
+    <marker id="b" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8fd3e8"/></marker>
+  </defs>
+  <rect width="1600" height="860" fill="#0f1b2d"/>
+  <text x="60" y="70" fill="#b9e36b" font-size="18" font-weight="700" letter-spacing="1">THE PLAN</text>
+  <text x="60" y="130" fill="#ffffff" font-size="46" font-weight="700">One capture world. Three experiments.</text>
+
+  <rect x="60" y="200" width="340" height="190" rx="14" fill="#1b2a40" stroke="#7fd36b" stroke-width="2"/>
+  <text x="82" y="240" fill="#b9e36b" font-size="15" font-weight="700" letter-spacing="0.5">1 · ZERO-G WORLD</text>
+  <text x="82" y="282" fill="#ffffff" font-size="27" font-weight="700">Build the scene</text>
+  <text x="82" y="318" fill="#a9b7c9" font-size="17">7-joint arm · drifting vehicle</text>
+  <text x="82" y="344" fill="#a9b7c9" font-size="17">Grapple pin · hollow end effector</text>
+  <rect x="328" y="352" width="56" height="24" rx="12" fill="#7fd36b"/>
+  <text x="356.0" y="369" fill="#0f1b2d" font-size="12" font-weight="700" text-anchor="middle" letter-spacing="0.5">DONE</text>
+  <line x1="406" y1="295.0" x2="434" y2="295.0" stroke="#b9e36b" stroke-width="3" marker-end="url(#a)"/>
+
+  <rect x="440" y="200" width="340" height="190" rx="14" fill="#1b2a40" stroke="#f2b84b" stroke-width="2"/>
+  <text x="462" y="240" fill="#b9e36b" font-size="15" font-weight="700" letter-spacing="0.5">2 · GRAPPLE MECHANISM</text>
+  <text x="462" y="282" fill="#ffffff" font-size="27" font-weight="700">Model the snare</text>
+  <text x="462" y="318" fill="#a9b7c9" font-size="17">Closing mechanism on the pin</text>
+  <text x="462" y="344" fill="#a9b7c9" font-size="17">Contact friction + compliance</text>
+  <rect x="708" y="352" width="56" height="24" rx="12" fill="#f2b84b"/>
+  <text x="736.0" y="369" fill="#0f1b2d" font-size="12" font-weight="700" text-anchor="middle" letter-spacing="0.5">NEXT</text>
+  <line x1="786" y1="295.0" x2="814" y2="295.0" stroke="#b9e36b" stroke-width="3" marker-end="url(#a)"/>
+
+  <rect x="820" y="200" width="340" height="190" rx="14" fill="#1b2a40" stroke="#2b3d57" stroke-width="1"/>
+  <text x="842" y="240" fill="#b9e36b" font-size="15" font-weight="700" letter-spacing="0.5">3 · CLOSED LOOP</text>
+  <text x="842" y="282" fill="#ffffff" font-size="27" font-weight="700">Approach and capture</text>
+  <text x="842" y="318" fill="#a9b7c9" font-size="17">Track the pin · trigger the snare</text>
+  <text x="842" y="344" fill="#a9b7c9" font-size="17">Actuator limits + delay</text>
+  <rect x="1061" y="352" width="83" height="24" rx="12" fill="#6f8098"/>
+  <text x="1102.5" y="369" fill="#0f1b2d" font-size="12" font-weight="700" text-anchor="middle" letter-spacing="0.5">PLANNED</text>
+  <line x1="1166" y1="295.0" x2="1194" y2="295.0" stroke="#b9e36b" stroke-width="3" marker-end="url(#a)"/>
+
+  <rect x="1200" y="200" width="340" height="190" rx="14" fill="#1b2a40" stroke="#2b3d57" stroke-width="1"/>
+  <text x="1222" y="240" fill="#b9e36b" font-size="15" font-weight="700" letter-spacing="0.5">4 · REPEATABLE TRIALS</text>
+  <text x="1222" y="282" fill="#ffffff" font-size="27" font-weight="700">Measure outcomes</text>
+  <text x="1222" y="318" fill="#a9b7c9" font-size="17">Success criteria · failure types</text>
+  <text x="1222" y="344" fill="#a9b7c9" font-size="17">Logs · plots · video</text>
+  <rect x="1441" y="352" width="83" height="24" rx="12" fill="#6f8098"/>
+  <text x="1482.5" y="369" fill="#0f1b2d" font-size="12" font-weight="700" text-anchor="middle" letter-spacing="0.5">PLANNED</text>
+  <path d="M1370,390 V455 H610" fill="none" stroke="#8fd3e8" stroke-width="3"/>
+  <line x1="610" y1="455" x2="610" y2="514" stroke="#8fd3e8" stroke-width="3" marker-end="url(#b)"/>
+  <line x1="990" y1="455" x2="990" y2="514" stroke="#8fd3e8" stroke-width="3" marker-end="url(#b)"/>
+  <line x1="1370" y1="455" x2="1370" y2="514" stroke="#8fd3e8" stroke-width="3" marker-end="url(#b)"/>
+
+  <rect x="440" y="520" width="340" height="190" rx="14" fill="#1b2a40" stroke="#2b3d57" stroke-width="1"/>
+  <text x="462" y="560" fill="#b9e36b" font-size="15" font-weight="700" letter-spacing="0.5">5 · EXPERIMENT A</text>
+  <text x="462" y="602" fill="#ffffff" font-size="27" font-weight="700">Capture envelope</text>
+  <text x="462" y="638" fill="#a9b7c9" font-size="17">Sweep misalignment, drift, tumble</text>
+  <text x="462" y="664" fill="#a9b7c9" font-size="17">Map where capture succeeds</text>
+  <rect x="681" y="672" width="83" height="24" rx="12" fill="#6f8098"/>
+  <text x="722.5" y="689" fill="#0f1b2d" font-size="12" font-weight="700" text-anchor="middle" letter-spacing="0.5">PLANNED</text>
+
+  <rect x="820" y="520" width="340" height="190" rx="14" fill="#1b2a40" stroke="#2b3d57" stroke-width="1"/>
+  <text x="842" y="560" fill="#b9e36b" font-size="15" font-weight="700" letter-spacing="0.5">6 · EXPERIMENT B</text>
+  <text x="842" y="602" fill="#ffffff" font-size="27" font-weight="700">Parameter sensitivity</text>
+  <text x="842" y="638" fill="#a9b7c9" font-size="17">One change per matched trial</text>
+  <text x="842" y="664" fill="#a9b7c9" font-size="17">Friction · compliance · delay</text>
+  <rect x="1061" y="672" width="83" height="24" rx="12" fill="#6f8098"/>
+  <text x="1102.5" y="689" fill="#0f1b2d" font-size="12" font-weight="700" text-anchor="middle" letter-spacing="0.5">PLANNED</text>
+
+  <rect x="1200" y="520" width="340" height="190" rx="14" fill="#1b2a40" stroke="#2b3d57" stroke-width="1"/>
+  <text x="1222" y="560" fill="#b9e36b" font-size="15" font-weight="700" letter-spacing="0.5">7 · EXPERIMENT C</text>
+  <text x="1222" y="602" fill="#ffffff" font-size="27" font-weight="700">Second engine</text>
+  <text x="1222" y="638" fill="#a9b7c9" font-size="17">Export to USD · rerun in Newton</text>
+  <text x="1222" y="664" fill="#a9b7c9" font-size="17">Does the result survive?</text>
+  <rect x="1441" y="672" width="83" height="24" rx="12" fill="#6f8098"/>
+  <text x="1482.5" y="689" fill="#0f1b2d" font-size="12" font-weight="700" text-anchor="middle" letter-spacing="0.5">PLANNED</text>
+  <text x="60" y="590" fill="#b9e36b" font-size="20" font-weight="600">Same scene and trial</text>
+  <text x="60" y="618" fill="#b9e36b" font-size="20" font-weight="600">harness, reused</text>
+  <text x="60" y="652" fill="#a9b7c9" font-size="17">Each experiment changes</text>
+  <text x="60" y="676" fill="#a9b7c9" font-size="17">only what it is testing</text>
+  <text x="60" y="810" fill="#ffffff" font-size="21">Build the world  /  add the mechanism  /  close the loop  /  measure  /  experiment  /  write up</text>
+</svg>

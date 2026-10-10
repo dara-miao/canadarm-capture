@@ -1,0 +1,91 @@
+<!--
+  Free-flyer capture scene: a 7-joint station arm and a drifting cargo vehicle.
+
+  Dimensions and masses are round-number approximations of Canadarm2 and a
+  Cygnus-class vehicle, not engineering data. See docs/PLAN.md for sources and
+  open questions.
+
+  The hollow end-effector wall is added in capture/scene.py, because a cavity
+  has to be assembled from convex pieces.
+-->
+<mujoco model="canadarm2_capture">
+  <compiler angle="radian" autolimits="true"/>
+  <option gravity="0 0 0" timestep="0.002" integrator="implicitfast"/>
+
+  <visual>
+    <global offwidth="1920" offheight="1080"/>
+    <headlight ambient="0.35 0.35 0.35" diffuse="0.85 0.85 0.85" specular="0.1 0.1 0.1"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="flat" rgb1="0.01 0.01 0.02" rgb2="0.01 0.01 0.02" width="64" height="384"/>
+  </asset>
+
+  <default>
+    <joint range="-4.71 4.71" armature="500" damping="50"/>
+    <!-- Arm links are visual only for now; only the end effector collides. -->
+    <default class="link">
+      <geom contype="0" conaffinity="0" rgba="0.92 0.92 0.9 1"/>
+    </default>
+    <default class="lee">
+      <geom contype="1" conaffinity="1" rgba="0.85 0.72 0.3 1" friction="0.6 0.005 0.0001"/>
+    </default>
+    <default class="vehicle">
+      <geom contype="1" conaffinity="1" friction="0.6 0.005 0.0001"/>
+    </default>
+  </default>
+
+  <worldbody>
+    <geom name="truss" type="box" size="5 1 0.5" pos="0 0 -0.5" rgba="0.45 0.45 0.5 1" contype="0" conaffinity="0"/>
+
+    <body name="sr" childclass="link">
+      <joint name="shoulder_roll" axis="0 0 1"/>
+      <geom type="cylinder" fromto="0 0 0 0 0 0.5" size="0.18" mass="110"/>
+      <body name="sy" pos="0 0 0.5">
+        <joint name="shoulder_yaw" axis="0 1 0"/>
+        <geom type="cylinder" fromto="0 0 0 0 0 0.5" size="0.18" mass="110"/>
+        <body name="sp" pos="0 0 0.5">
+          <joint name="shoulder_pitch" axis="1 0 0"/>
+          <geom type="capsule" fromto="0 0 0 0 0 7.3" size="0.17" mass="300"/>
+          <body name="ep" pos="0 0 7.3">
+            <joint name="elbow_pitch" axis="1 0 0"/>
+            <geom type="capsule" fromto="0 0 0 0 0 7.3" size="0.17" mass="300"/>
+            <body name="wp" pos="0 0 7.3">
+              <joint name="wrist_pitch" axis="1 0 0"/>
+              <geom type="cylinder" fromto="0 0 0 0 0 0.5" size="0.18" mass="110"/>
+              <body name="wy" pos="0 0 0.5">
+                <joint name="wrist_yaw" axis="0 1 0"/>
+                <geom type="cylinder" fromto="0 0 0 0 0 0.5" size="0.18" mass="110"/>
+                <body name="lee" pos="0 0 0.5" childclass="lee">
+                  <joint name="wrist_roll" axis="0 0 1"/>
+                  <geom name="lee_base" type="cylinder" fromto="0 0 0 0 0 0.5" size="0.25" mass="200"/>
+                  <!-- cavity wall: z = 0.5 to 1.0, inner radius 0.2 (added in scene.py) -->
+                  <site name="lee_mouth" pos="0 0 1.0" size="0.02" rgba="0 1 0 1"/>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+
+    <body name="vehicle" pos="0 0 25" childclass="vehicle">
+      <freejoint name="vehicle_free"/>
+      <geom name="hull" type="cylinder" size="1.535 3.2" mass="7000" rgba="0.8 0.8 0.82 1"/>
+      <geom name="gf_plate" type="cylinder" fromto="1.535 0 0 1.585 0 0" size="0.25" mass="10" rgba="0.2 0.2 0.2 1"/>
+      <geom name="gf_pin" type="capsule" fromto="1.585 0 0 1.885 0 0" size="0.02" mass="2" rgba="0.9 0.9 0.9 1"/>
+      <geom name="gf_tip" type="sphere" pos="1.885 0 0" size="0.035" mass="0.5" rgba="0.9 0.9 0.9 1"/>
+      <site name="pin_tip" pos="1.885 0 0" size="0.02" rgba="1 0 0 1"/>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <position name="a_shoulder_roll"  joint="shoulder_roll"  kp="3e5" kv="3e5"/>
+    <position name="a_shoulder_yaw"   joint="shoulder_yaw"   kp="3e5" kv="3e5"/>
+    <position name="a_shoulder_pitch" joint="shoulder_pitch" kp="3e5" kv="3e5"/>
+    <position name="a_elbow_pitch"    joint="elbow_pitch"    kp="3e5" kv="3e5"/>
+    <position name="a_wrist_pitch"    joint="wrist_pitch"    kp="5e4" kv="3e4"/>
+    <position name="a_wrist_yaw"      joint="wrist_yaw"      kp="5e4" kv="3e4"/>
+    <position name="a_wrist_roll"     joint="wrist_roll"     kp="5e4" kv="3e4"/>
+  </actuator>
+</mujoco>
