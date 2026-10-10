@@ -64,7 +64,7 @@ def _add_cavity_wall(spec: mujoco.MjSpec) -> None:
 
 
 def meshes_available() -> bool:
-    names = list(geometry.ARM_MESHES.values()) + list(geometry.VEHICLE_MESHES)
+    names = [*geometry.ARM_MESHES.values(), *geometry.VEHICLE_MESHES, *geometry.STATION_MESHES]
     return all((MESH_DIR / f"{n}.stl").exists() for n in names)
 
 
@@ -76,8 +76,8 @@ def _use_meshes(spec: mujoco.MjSpec) -> None:
     """
     visual = dict(type=mujoco.mjtGeom.mjGEOM_MESH, contype=0, conaffinity=0, density=0)
     for geom in spec.geoms:
-        # arm stand-ins, the end-effector shell, and the vehicle hull
-        if geom.name.startswith(("v_", "lee_", "hull_")):
+        # arm stand-ins, the end-effector shell, the vehicle hull, and the station box
+        if geom.name.startswith(("v_", "lee_", "hull_", "truss")):
             geom.rgba[3] = 0.0
     for body, mesh in geometry.ARM_MESHES.items():
         spec.add_mesh(name=mesh, file=str(MESH_DIR / f"{mesh}.stl"))
@@ -85,6 +85,9 @@ def _use_meshes(spec: mujoco.MjSpec) -> None:
     for mesh, rgba in geometry.VEHICLE_MESHES.items():
         spec.add_mesh(name=mesh, file=str(MESH_DIR / f"{mesh}.stl"))
         spec.body("vehicle").add_geom(name=f"mesh_{mesh}", meshname=mesh, rgba=list(rgba), **visual)
+    for mesh, rgba in geometry.STATION_MESHES.items():
+        spec.add_mesh(name=mesh, file=str(MESH_DIR / f"{mesh}.stl"))
+        spec.worldbody.add_geom(name=f"mesh_{mesh}", meshname=mesh, rgba=list(rgba), **visual)
 
 
 def build_model(meshes: bool | None = None) -> mujoco.MjModel:

@@ -16,6 +16,18 @@ BOOM_B_OFFSET = np.array([0.03, -1.87, 0.48])
 # hull axis along z, grapple fixture pointing along +x.
 CYGNUS_MESH_TO_BODY = np.array([[-1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, 1.0, 0.0]])
 
+# NASA's station model is in arbitrary units. Its truss spans 45.6 units against a real
+# 108.5 m, and its module radii give a similar ratio.
+STATION_SCALE = 2.35
+# Model axes: modules along y (forward is +y), truss along z, Earth-facing side is +x.
+# World axes here: z points away from the arm's mounting surface, toward the vehicle.
+STATION_MESH_TO_WORLD = np.array([[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]])
+# Point on the model that the arm's base sits on: the Earth-facing side of the forward
+# node (Harmony), found from cross-sections of the model. The real arm mounts on
+# dedicated fixtures; which one, and exactly where, is not sourced, so this is approximate.
+STATION_ARM_MOUNT = np.array([0.76, 14.75, 0.0])
+STATION_MESHES = {"station_body": (0.78, 0.78, 0.8, 1.0), "station_arrays": (0.16, 0.2, 0.42, 1.0)}
+
 # Meshes written by scripts/fetch_assets.py, by the body they are attached to.
 ARM_MESHES = {
     "arm_root": "lee_a",

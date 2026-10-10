@@ -6,7 +6,9 @@ A MuJoCo simulation of a space station arm capturing a free-floating cargo vehic
 
 ![Project plan](docs/media/plan.svg)
 
-![Scene](docs/media/scene_wide.png)
+![Station, arm, and Cygnus](docs/media/scene_station.png)
+
+![Arm on the forward node](docs/media/scene_wide.png)
 
 ![Approach and capture, 4x speed](docs/media/approach_capture.gif)
 
@@ -21,7 +23,7 @@ python3 -m venv .venv
 .venv/bin/python scripts/render_approach.py
 ```
 
-That runs with plain stand-in shapes. To use the real 3D models, fetch them once (about 9 MB, from the Canadian Space Agency's site):
+That runs with plain stand-in shapes. To use the real 3D models, fetch them once (about 10 MB, from the Canadian Space Agency and NASA):
 
 ```bash
 .venv/bin/pip install -e ".[assets]"
@@ -42,7 +44,7 @@ Simulation only. Arm joint positions are measured from a simplified 1:100 model;
 
 ## Credits
 
-3D models of Canadarm2 and Cygnus: Canadian Space Agency. They are downloaded from the agency's site, not stored here, and used for non-commercial purposes. This project is not associated with or endorsed by the Canadian Space Agency or NASA.
+3D models of Canadarm2 and Cygnus: Canadian Space Agency. 3D model of the International Space Station: NASA. They are downloaded from the agencies' own sites, not stored here, and used for non-commercial purposes. This project is not associated with or endorsed by the Canadian Space Agency or NASA.
 
 ## How this was built
 

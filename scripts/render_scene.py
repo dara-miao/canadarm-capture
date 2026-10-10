@@ -15,7 +15,8 @@ OUT = ROOT / "docs" / "media"
 
 VIEWS = {
     # name: (lookat, distance, azimuth, elevation)
-    "scene_wide": ((0.5, 1.0, 6.5), 30.0, 35.0, -12.0),
+    "scene_station": ((-10.0, 0.0, 2.0), 70.0, 50.0, -20.0),
+    "scene_wide": ((0.0, 2.0, 4.0), 26.0, 150.0, 5.0),
     "scene_closeup": (None, 6.0, 60.0, -10.0),
 }
 

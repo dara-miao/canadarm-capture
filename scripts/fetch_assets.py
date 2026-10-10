@@ -8,6 +8,9 @@ Sources and terms:
   Canadian Space Agency, 1:100 printable models of Canadarm2 and Cygnus.
     Credit: Canadian Space Agency. Non-commercial reproduction permitted with
     acknowledgement; no endorsement implied. https://www.asc-csa.gc.ca/eng/terms.asp
+  NASA 3D Resources, International Space Station (B).
+    Credit: NASA. Published as free and without copyright; NASA's media usage
+    guidelines apply. https://github.com/nasa/NASA-3D-Resources
 
 Needs the `assets` extra:  pip install -e ".[assets]"
 """
@@ -34,6 +37,11 @@ FILES = [
     "Cygnus_Enhanced_1-100_v01.STL",
     "Cygnus_Enhanced_1-100_SolarArray_v01.STL",
 ]
+NASA_ISS = (
+    "https://raw.githubusercontent.com/nasa/NASA-3D-Resources/master/3D%20Models/"
+    "International%20Space%20Station%20(ISS)%20(B)/International%20Space%20Station%20(ISS)%20(B).glb"
+)
+ISS_FILE = "ISS_B.glb"
 PRINT_SCALE = 0.1  # files are in millimetres at 1:100, so 1 mm is 0.1 m at full size
 
 
@@ -45,6 +53,9 @@ def download() -> None:
             continue
         print("downloading", name)
         urllib.request.urlretrieve(CSA + urllib.parse.quote(name), path)
+    if not (RAW / ISS_FILE).exists():
+        print("downloading", ISS_FILE)
+        urllib.request.urlretrieve(NASA_ISS, RAW / ISS_FILE)
 
 
 def load(name: str) -> trimesh.Trimesh:
@@ -122,6 +133,27 @@ def cygnus() -> None:
     save("cygnus_arrays", [array, other])
 
 
+def station() -> None:
+    """The station, scaled to full size and placed so the arm's base sits on it."""
+    scene = trimesh.load(RAW / ISS_FILE, force="scene")
+    to_world = np.eye(4)
+    to_world[:3, :3] = g.STATION_SCALE * g.STATION_MESH_TO_WORLD
+    to_world[:3, 3] = -to_world[:3, :3] @ g.STATION_ARM_MOUNT
+    body, arrays = [], []
+    for node in scene.graph.nodes_geometry:
+        transform, name = scene.graph[node]
+        mesh = scene.geometry[name].copy()
+        mesh.apply_transform(transform)
+        if mesh.bounds[1][1] > 30:
+            continue  # stray discs far from the station in the source file
+        thin_and_wide = mesh.extents.min() < 0.3 and np.sort(mesh.extents)[1] > 20
+        mesh.apply_transform(to_world)
+        mesh.visual = trimesh.visual.ColorVisuals()
+        (arrays if thin_and_wide else body).append(mesh)
+    save("station_body", body)
+    save("station_arrays", arrays)
+
+
 def main() -> None:
     download()
     OUT.mkdir(parents=True, exist_ok=True)
@@ -129,6 +161,7 @@ def main() -> None:
     boom_a()
     boom_b()
     cygnus()
+    station()
 
 
 if __name__ == "__main__":

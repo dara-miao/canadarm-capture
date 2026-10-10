@@ -240,3 +240,27 @@ The approach and capture tests passed unchanged on the new arm.
 - The station is still a grey box. NASA's free station model loads, but it is low-detail and untextured, and attaching the arm to it properly needs a real attachment point.
 - The solar arrays and the arm's links do not collide with anything.
 - Joint positions come from bounding boxes of a simplified printable model, not from engineering drawings.
+
+## 2026-10-10 · Realism pass, step 1 continued: the station
+
+**Built.** NASA's International Space Station model (B) replaces the grey box. `scripts/fetch_assets.py` downloads it from NASA's 3D Resources repository, drops a few stray discs that sit far from the station in the source file, scales it, and splits the solar arrays from the rest so they can be coloured.
+
+![Station with the arm and Cygnus](media/scene_station.png)
+![Arm mounted on the forward node](media/scene_wide.png)
+
+**Working out the model.** The file has no units and no module names; its meshes are grouped by material, not by module.
+
+- *Scale.* The truss spans 45.6 model units against a real 108.5 m, giving 2.38. Module radii give 2.1 to 2.3. Used 2.35.
+- *Which way is down.* The truss sits on one side of the module axis. On the real station the truss is on the space-facing side, so the opposite side faces Earth.
+- *Which end is forward.* Cross-sections along the module axis show where the two side-mounted laboratories (Kibo and Columbus) attach. That is the forward node, Harmony.
+
+**What went wrong.** The first placement had forward and aft swapped. I misread which way a rendered view was facing, and the arm ended up floating a metre off the Russian segment. The render made the mistake obvious. Fixed by measuring cross-sections instead of reading the picture.
+
+**Placement.** The arm's base sits on the Earth-facing side of Harmony, and the vehicle is captured about 9 m below it. Cygnus is captured roughly 10 m below the station, so the direction is right. The exact fixture the real arm stands on for these captures is not sourced.
+
+**Limits.**
+
+- The model is low-detail and untextured, and its US modules are about 15% narrower than the real ones at this scale.
+- The station is scenery. Nothing collides with it.
+
+**Checks.** 21 pass. The station adds no mass or collision shapes.

@@ -24,7 +24,7 @@ The project is simulation only. It is a reasoned study of a real operation, not 
 | 1 | Zero-g scene | Done (2026-10-10) | Arm and vehicle load, momentum is conserved, arm tracks commands |
 | 2 | Snare mechanism | Done (2026-10-10) | A closing mechanism holds the pin against a pull-out force |
 | 3 | Approach and capture | Done (2026-10-10) | A controller completes a capture from a nominal start |
-| R1 | Realism: real 3D models | Done (2026-10-10) | Arm and vehicle use the Canadian Space Agency models; arm joints placed from them |
+| R1 | Realism: real 3D models | Done (2026-10-10) | Arm, vehicle, and station use Canadian Space Agency and NASA models; arm joints placed from them |
 | R2 | Realism: sourced parameters | Next | Snare and capture numbers taken from the published papers where they give them |
 | R3 | Realism: 10 m capture point | Planned | The attempt starts with the vehicle at the real capture distance |
 | 4 | Trial harness | Planned | One command runs N trials and reports success rate and failure types |
@@ -54,6 +54,7 @@ The project is simulation only. It is a reasoned study of a real operation, not 
 | 2026-10-10 | Fetch the 3D models with a script; do not store them in the repository | The Canadian Space Agency permits non-commercial reproduction with credit; fetching from the source avoids redistributing the files |
 | 2026-10-10 | Rebuild the arm's joints from the CSA model's separate parts | The model shows Canadarm2's offset joints, which the first straight-line arm did not have |
 | 2026-10-10 | Meshes are appearance only; collisions keep simple shapes | Keeps contact fast and predictable, and the simulation runs without the downloaded files |
+| 2026-10-10 | Mount the arm on the Earth-facing side of the forward node (Harmony) | Cygnus is captured about 10 m below the station; the exact fixture used is not sourced, so this is an approximation |
 | 2026-10-10 | Move the grapple pin to the service module | The Cygnus model has a small fixture there |
 | 2026-10-10 | Treat the station as fixed and the arm as rigid | The station is about 60 times heavier than the vehicle; arm flexibility is left out to keep the first version simple |
 
@@ -72,7 +73,7 @@ These are placeholders, chosen to be plausible. Each needs a source or an explic
 - Snare: bar radius 6 mm, closing time 2 s, drive force limit 1,500 N, carriage force limit 1,000 N, friction 0.6. All invented.
 - Pin tip knob: 3.5 cm radius, 3 cm long. The real fixture's shaft and cam geometry is not reproduced.
 - Capture limits: a NASA report on this end-effector design gives ±0.1 m lateral and 0.1 m axial misalignment tolerance. Angular limits and limits on relative velocity still to find.
-- Station: still a grey box. NASA's free station model is low-detail and placing the arm on it correctly needs a real attachment point; not done.
+- Station: NASA's model (B), scaled by 2.35 to match the real truss length. It is low-detail, untextured, and its US modules come out about 15% narrower than the real ones. The arm is mounted on the Earth-facing side of the forward node; the real mounting fixture and its exact position are not sourced.
 
 ## Risks
 

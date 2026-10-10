@@ -23,7 +23,7 @@ EXPERIMENTS = [
 ]
 
 # One line on what is happening right now, shown under the title.
-NOW = "Now: realism pass before stage 4.  Real 3D models: done.  Sourced parameters: next.  10 m start: planned."
+NOW = "Now: realism pass before stage 4.  Real 3D models and station: done.  Sourced parameters: next.  10 m start: planned."
 
 W, H = 1600, 860
 BG, CARD, EDGE = "#0f1b2d", "#1b2a40", "#2b3d57"
