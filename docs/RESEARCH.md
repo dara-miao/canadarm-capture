@@ -11,6 +11,7 @@ Every claim carries one of four labels.
 | Label | Meaning |
 |---|---|
 | **Read** | Taken from the source itself, which was opened and read for this project |
+| **Read (summary)** | The source was opened, but through a tool that returns a summary with quotations, not the raw text. Good for the specific points checked; not a full reading |
 | **Reported** | Came from a secondary summary (a Perplexity search) and has not been checked against the source |
 | **Assumed** | No source. A value chosen for the model |
 | **Disputed** | Sources disagree |
@@ -76,7 +77,26 @@ The professional way to simulate the LEE: each snare as 10 flexible cable elemen
 **Canadian Space Agency.** [Canadarm, Canadarm2, and Canadarm3 comparative table](https://asc-csa.gc.ca/eng/iss/canadarm2/canadarm-canadarm2-comparative-table.asp). Headline figures for the arm.
 
 **Freer, Guo, Deligianni, and Yang (2020).** "On-Orbit Operations Simulator for Workload Measurement during Telerobotic Training." [arXiv 2002.10594](https://arxiv.org/pdf/2002.10594).
-A Unity training simulator used to study operator workload. No contact physics; a grapple means coming within 1 m. Useful only for its ground-control latency figure.
+A Unity training simulator used to study operator workload. No contact physics; a grapple means coming within 1 m. Gives ground-control communication latency of 0.3 to 0.5 s each way, and tests round-trip delays of 0, 0.5, 1.0, and 1.5 s between an operator's command and seeing the result.
+*Caution:* that is a human teleoperation delay. It is not the delay of a sensor feeding an automatic controller, which is what this project's model has.
+
+### Read through a summary
+
+**Zhang, Verhagen, Vega, McKeen, and Manchester (2026).** "mjorbit: A Simulation Framework for Space Robotics." [arXiv 2609.08010](https://arxiv.org/abs/2609.08010), submitted 7 September 2026.
+Extends MuJoCo with orbit propagation, spacecraft actuators, and sensors, with CPU and GPU backends. Points checked:
+
+- Its docking example closes the latch with "a conditional weld constraint between the port frames", switched on when separation is under 0.2 m and attitude error under 5°. Contact is modelled "at the latch level". The snare-and-pull-in mechanism studied here has no counterpart in it.
+- An Astrobee robot with a parallel-jaw gripper grasps a handle, succeeding in 88% of 1,024 parallel simulations.
+- In a two-body collision test, zero-gravity and orbit-coupled runs "are indistinguishable" through the impact and diverge after roughly 0.2 hours. That supports using zero gravity for an attempt lasting about a minute.
+- The authors state that "the validation in this paper is sim-to-sim" and that hardware and on-orbit tests are still needed.
+
+**Schwartz, Hansson, Bodmer, Sternberg, Jia-Richards, and Albee (2026).** "SmallSatSim: A High-Fidelity Simulation and Training Toolkit for Microgravity Robotic Close Proximity Operations." [arXiv 2603.14598](https://arxiv.org/html/2603.14598v1), 15 March 2026.
+A MuJoCo toolkit for small free-flying satellites: control, learning on GPU, configurable failures, and contact. Points checked:
+
+- It has a contact-rich docking example, reported as one trial (first contact at 16.9 s, peak force 2.06 N), not a sweep.
+- The authors call their scenarios "illustrative examples, rather than exhaustive benchmarks".
+- It involves thruster-driven free-flyers. There is no robot arm and no grapple fixture.
+- It notes that MuJoCo Warp is a GPU implementation of MuJoCo built on NVIDIA Warp. This matters for experiment C: rerunning in Newton with that solver would largely be comparing MuJoCo with itself.
 
 ### Known but not read
 
@@ -182,7 +202,8 @@ Honda et al. report that the fixture base stiffness "has much larger effect on t
 | Operator's aim | To minimise arm oscillation with smooth inputs while capturing within the time limit | Chang and Marquez | Read |
 | Arm cameras | Four: one each side of the elbow, one on each end | CSA | Read |
 | How relative pose is seen | From the camera image of the target on the grapple fixture | Honda et al. | Read |
-| Ground-control latency | 0.3 to 0.5 s each way | Freer et al. | Read |
+| Ground-control communication latency | 0.3 to 0.5 s each way | Freer et al. | Read. A teleoperation figure; see the caution in section 3 |
+| Delay of an onboard pose sensor | unknown | none | Open |
 
 ## 5. Where sources disagree
 
@@ -205,7 +226,51 @@ In order of how much they affect where capture fails in the model:
 
 The four unread documents at the top of the table in section 3 are the most likely places to find items 1 to 4.
 
-## 7. What this means for the model
+## 7. What this project can and cannot claim
+
+This section came out of a critique of the plan (see the log). The points below were checked against the sources where they rest on one.
+
+### The gap is narrower than "nobody has done this"
+
+Open MuJoCo tools for contact-rich space robotics now exist: SmallSatSim and mjorbit, both from 2026. A capture demonstration in MuJoCo is therefore not new. What the existing work leaves open is more specific:
+
+| Work | What it does | What it leaves for this project |
+|---|---|---|
+| Honda et al. (2014) | Reconstructs one real capture and fits parameters to its telemetry | Sweeps across conditions to find where capture fails |
+| Arbatani et al. (2023) | Simulates the flexible cables faithfully | Accessible experiments on a declared simplification, including how much the simplification matters |
+| Freer et al. (2020) | Measures operator workload | Physical engagement, pull-in, and retention |
+| SmallSatSim (2026) | General toolkit; one illustrative docking trial | A dedicated arm-and-fixture task with structured failure analysis |
+| mjorbit (2026) | Orbit-coupled simulation; docking by a conditional weld | The mechanics of the capture interface itself |
+
+These are differences of emphasis. They are not evidence that no one has run a similar experiment.
+
+A statement of the gap that the sources support: existing work models capture dynamics, flexible snares, and contact control, and recent open tools simulate contact in microgravity. None of that by itself says how far a particular capture prediction can be trusted when the mechanism, actuators, sensing, and numerics are uncertain. This project looks at that question for one simplified arm-and-fixture scenario.
+
+### Three envelopes
+
+"Capture envelope" can mean the *geometric* envelope of the mechanism, the *closed-loop* envelope of a controller using that mechanism, or the *operational* envelope a flight procedure allows. A mechanism's design tolerance is not a limit on a visiting vehicle's drift. This project measures the second kind, for its own controller and mechanism. The plan's definitions section carries this.
+
+One consequence: the 0.031 m/s used in tests comes from the Shuttle end effector's requirements. Earlier entries in the build log call the tested range "sourced capture limits". The accurate phrase is "a range derived from the Shuttle end-effector paper".
+
+### Engaged, seated, retained
+
+Catching the pin, finishing pull-in, and surviving a later disturbance are three different achievements. The model's "captured" label currently means seated. Since the seated joint lets go above about 850 N m, a retention check belongs in the definition of success.
+
+### The mechanism is a substitute, not a cheaper copy
+
+Three rigid bars and a flat-backed knob have different contact surfaces and kinematics from three cables and a cammed shaft. The knob's shape was chosen partly because a ball tip failed. Any envelope measured here belongs to that substitute. The useful question is which findings survive plausible changes to it.
+
+### The controller is part of the result
+
+The rate cap, tolerances, and estimator gain are invented, and the tracking logic was changed because the first version let the pin escape. So a statement like "capture fails above this tumble rate" must read "this controller and mechanism fail above this rate under these conditions".
+
+### What the first batches do and do not show
+
+They show the harness reaches both successful and unsuccessful regimes, and that a harsh condition exposes several failure paths. They do not show that sensing has no effect, which parameter causes the drop, or whether the boundary is smooth. Drift and tumble were scaled together, so their effects are confounded. Separate sweeps and matched trials are needed.
+
+A perfect-knowledge baseline that always succeeds is still a result: it establishes the baseline inside the sampled range. Degraded sensing should be added to answer a question, not to produce failures.
+
+## 8. What this means for the model
 
 Nothing here has been applied yet. These are the changes the research points to.
 
@@ -222,11 +287,23 @@ Nothing here has been applied yet. These are the changes the research points to.
 | A person flies the arm, in Manual mode | Autonomous controller | State plainly that the model studies an automated capture |
 | Capture takes 2 to 3 minutes | 41 s to the snare firing | Not wrong, but the model's approach is brisk. Note it |
 | Honda et al. fix shoulder roll when solving the arm's pose | All seven joints move | Optional. Would make poses more comparable to theirs |
+| Success should include retention | "Captured" means seated and at rest | Add a retention check: after seating, apply a stated disturbance and require the joint to hold. Say whether the load is literature-derived or exploratory |
+| Engagement is a distinct stage | Not recorded | Record whether the snare closed on the pin, separately from seating |
+| Drift and tumble were varied together | One "wide" batch scaled both | In experiment A, sweep each separately with matched trials |
+| "Compliance" has several meanings | Unspecified in the plan | Name the one varied in experiment B (now done in the plan) |
+| Teleoperation latency is not sensor delay | Delay range cited to Freer et al. | Describe observation delay as an exploratory stress test (now done in the plan) |
+| Zero gravity holds for short horizons | Zero gravity throughout | Keep, and state the timescale assumption. A later check with orbital corrections is optional |
 
-## 8. Research log
+## 9. Research log
 
 **2026-10-10, session 1 (Claude).** Read the user's notes on NVIDIA's simulation stack and physics simulation basics. Found the 1982 Shuttle end-effector paper, the 2023 cable-simulation abstract, and the CSA comparison table. Could not open the 2010 "Cosmic Catch" paper or the JAXA 2009 abstract's full text.
 
 **2026-10-10, session 2 (Dara, via Perplexity).** Three searches: the physics of free-flyer capture and its link to contact-rich manipulation; a hunt for the missing numbers; and newer work from 2018 to 2026. Found Honda et al. (2014) and Chang and Marquez (2018), and the lead to Walker and Vandersluis (1995). Established that the three highest-priority numbers are not in the accessible literature.
 
 **2026-10-10, session 2 (Claude).** Opened and read Honda et al., Chang and Marquez, and Walker and Vandersluis. Every number Perplexity reported from the first two matched the source. Walker and Vandersluis had not been read by anyone yet and turned out to hold the Canadarm2-specific end-effector figures: 4,893 N rigidize preload, 64,054 N latch load, the 30 s capture requirement, and the worst-case test conditions with their back-drive loads.
+
+**2026-10-10, session 3 (Dara, via Perplexity).** A critique of the plan and README, drawing on mjorbit, SmallSatSim, and Freer et al. Main points: the gap is narrower than "no MuJoCo capture simulator exists"; the plan mixed three kinds of envelope; the rigid-bar mechanism and the controller are both part of any result; "captured" needs a retention criterion; teleoperation latency is not sensor delay; compliance and the second-engine comparison were underspecified.
+
+**2026-10-10, session 3 (Claude).** Checked the critique's claims about mjorbit and SmallSatSim against the papers through a summarising fetch; they held. Added section 7 and six rows to section 8, and revised the plan: reframed the question as a robustness study, added definitions and an explicit scope list, marked two decisions as superseded, split the values the model uses by where they come from, and tightened experiments A, B, and C.
+
+*A caution about the Perplexity text itself.* Several of its citation links pointed at the wrong work: statements about SmallSatSim linked to the Honda paper, statements about Honda linked to an unrelated journal page, and statements about Freer linked to the cable-simulation abstract. The claims were right where checked, but the links cannot be relied on to find the source. This is the reason for the Reported label.

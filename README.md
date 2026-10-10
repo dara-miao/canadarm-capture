@@ -1,6 +1,8 @@
 # canadarm-capture
 
-A MuJoCo simulation of a space station arm capturing a free-floating cargo vehicle, built to study how much error the capture tolerates and which physical parameters decide it.
+A MuJoCo study of how robust a simulated spacecraft capture is. A simplified model of a space station arm catches a free-drifting cargo vehicle; the project maps where that fails, in which ways, and how much the answers depend on the model's own assumptions.
+
+Inspired by Canadarm2 capturing Cygnus. It does not reproduce that system's flight limits.
 
 **Status:** in progress. The arm captures a drifting, tumbling vehicle from the 10 m capture point, with delayed and noisy sensing. A batch runner labels how each attempt ends. The systematic experiments have not been run yet. See the [research notes](docs/RESEARCH.md), the [plan](docs/PLAN.md), and the [build log](docs/DEVLOG.md).
 
@@ -40,7 +42,7 @@ Runs on CPU. Developed on an Apple Silicon Mac with MuJoCo 3.15.
 
 ## Scope
 
-Simulation only. Arm joint positions are measured from a simplified 1:100 model; masses, gains, and the snare are approximations. Nothing here is validated against flight data. The [plan](docs/PLAN.md) lists every assumption.
+Simulation only, and deliberately simplified. Not modelled: the snare's cables (three rigid bars stand in), the grapple fixture's cams, the end effector's latches, arm flexibility, orbital mechanics, collisions with the station, and the astronaut who flies the real arm. Nothing here is validated against flight data. The [plan](docs/PLAN.md) lists every assumption and the [research notes](docs/RESEARCH.md) say where each number comes from.
 
 ## Credits
 

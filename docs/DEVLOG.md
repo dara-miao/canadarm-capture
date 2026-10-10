@@ -432,3 +432,24 @@ All batches used offsets up to 0.1 m and tilts up to 15°, the sourced capture l
 **Still unknown.** Per-joint rate limits, the vehicle's leftover motion in free drift, and the arm's starting distance from the fixture. None of the accessible literature gives them. They are the three numbers that most affect where capture fails in the model.
 
 **Not changed.** The model. Section 7 of the research notes lists eleven suggested changes; none is applied until reviewed.
+
+## 2026-10-10 · Reframing after a critique
+
+**Input.** Dara ran the plan and README through Perplexity for a critique against recent work. I checked its claims about the two 2026 MuJoCo space-robotics tools (mjorbit and SmallSatSim) against the papers, and they held.
+
+**What changed in how the project is described.**
+
+- *The question.* From "how much error can the arm tolerate" to a robustness question: where does capture fail in this simplified model, how, and how much do the answers depend on the model's own assumptions.
+- *The gap.* Open MuJoCo tools for contact-rich space robotics exist, so a capture demo is not new. mjorbit closes its docking latch with a conditional weld, and SmallSatSim shows one illustrative docking trial with no arm. What is open is a transparent account of where one capture model's predictions break down.
+- *Three envelopes.* Geometric, closed-loop, and operational. This project measures the closed-loop envelope of its own controller and mechanism.
+- *Three stages.* Engaged, seated, retained. "Captured" currently means seated.
+
+**Corrections to earlier entries.** These stay as written, with this note:
+
+- Entries above call the tested range "sourced capture limits". It is a range derived from the Shuttle end-effector paper, which states a mechanism requirement and not a limit on a visiting vehicle's motion.
+- The milestone 3 and realism step 3 entries say the experiments "show nothing" or will be uninformative with perfect sensing. A baseline that always succeeds is a result. Degraded sensing is added to ask how capture degrades, not to produce failures.
+- The 0.3 to 0.5 s latency from Freer et al. is a ground teleoperation figure. Using it as a sensor delay for an automatic controller is an exploratory stress test, not a sourced value.
+
+**Documents changed.** `RESEARCH.md` gained a section on what the project can and cannot claim. `PLAN.md` was rewritten: new question, definitions, an explicit list of what is outside the scope, decisions marked current or superseded, model values grouped by origin, and tighter definitions of the three experiments.
+
+**Not changed.** The model and the code.

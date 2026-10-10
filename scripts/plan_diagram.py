@@ -17,13 +17,13 @@ STAGES = [
     ("4 · REPEATABLE TRIALS", "Measure outcomes", "Success criteria · failure types", "Outcome labels · batches · sensing", "done"),
 ]
 EXPERIMENTS = [
-    ("5 · EXPERIMENT A", "Capture envelope", "Sweep misalignment, drift, tumble", "Map where capture succeeds", "planned"),
-    ("6 · EXPERIMENT B", "Parameter sensitivity", "One change per matched trial", "Friction · compliance · delay", "planned"),
-    ("7 · EXPERIMENT C", "Second engine", "Export to USD · rerun in Newton", "Does the result survive?", "planned"),
+    ("5 · EXPERIMENT A", "Closed-loop envelope", "Separate sweeps: drift, tumble, offset", "Map where and how it fails", "planned"),
+    ("6 · EXPERIMENT B", "Parameter sensitivity", "One change per matched trial", "Friction · named compliance · delay", "planned"),
+    ("7 · EXPERIMENT C", "Matched-model check", "Same dynamics in a second engine", "Does the result survive?", "planned"),
 ]
 
 # One line on what is happening right now, shown under the title.
-NOW = "Stages 1 to 4 are built.  Now: research review before any experiment (see RESEARCH.md)."
+NOW = "Stages 1 to 4 are built.  Now: research review and model update, before any experiment."
 
 W, H = 1600, 860
 BG, CARD, EDGE = "#0f1b2d", "#1b2a40", "#2b3d57"
@@ -62,7 +62,7 @@ def main() -> None:
   </defs>
   <rect width="{W}" height="{H}" fill="{BG}"/>
   <text x="{X0}" y="70" fill="{ACCENT}" font-size="18" font-weight="700" letter-spacing="1">THE PLAN</text>
-  <text x="{X0}" y="130" fill="{TEXT}" font-size="46" font-weight="700">One capture world. Three experiments.</text>
+  <text x="{X0}" y="130" fill="{TEXT}" font-size="46" font-weight="700">One capture model. Three robustness experiments.</text>
   <text x="{X0}" y="168" fill="{STATUS['next'][1]}" font-size="17" font-weight="600">{escape(NOW)}</text>""",
     ]
 
