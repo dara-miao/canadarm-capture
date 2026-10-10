@@ -453,3 +453,18 @@ All batches used offsets up to 0.1 m and tilts up to 15°, the sourced capture l
 **Documents changed.** `RESEARCH.md` gained a section on what the project can and cannot claim. `PLAN.md` was rewritten: new question, definitions, an explicit list of what is outside the scope, decisions marked current or superseded, model values grouped by origin, and tighter definitions of the three experiments.
 
 **Not changed.** The model and the code.
+
+## 2026-10-10 · More reading: why capture fails, and what ground tests show
+
+**Input.** A fourth Perplexity search from Dara. I read the main paper (Christidi-Loumpasefski et al., 2024) and its numbers matched. The second (Li et al., 2021) sits behind a browser check, so it is recorded as reported.
+
+**Ideas added to the research notes.**
+
+- *Capture is a race.* The mechanism has to finish securing the target before relative motion removes the chance. The model showed this in realism step 2, when a receding pin backed out before the snare shut. That was logged then as a controller fault. It is better understood as an instance of this general structure.
+- *Two kinds of uncertainty.* About the encounter (experiment A) and about the model (experiments B and C). Robustness to one says nothing about the other.
+- *No single tolerance.* The question is which conditions lead to which outcome, and how stable that is when the assumptions change.
+- *Ground tests are not ground truth.* Reported work shows air-bearing supports shifting a manipulator's measured vibration frequency by about 40%.
+
+**Suggested model change added.** Log, for each attempt, how long the pin stayed catchable against how long the snare took to close. Failures can then be explained by their timing margin.
+
+**Not changed.** The model and the code.

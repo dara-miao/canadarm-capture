@@ -44,6 +44,8 @@ Three clarifications matter for the model:
 
 **Compliance versus damping.** Something that gives under load spreads a contact over a longer time and lowers the peak force. But give alone stores energy and hands it back, which is a rebound. Capture needs give *and* energy loss. Making everything soft is not the answer.
 
+**Capture is a race.** Engagement succeeds only if the mechanism finishes securing the target before relative motion takes the opportunity away. Three times are worth keeping apart: how long the pin stays in a catchable position, how long the snare takes to close, and how long pull-in and retention take. This is why leftover motion, sensing delay, and actuator speed interact instead of adding up independently. The model has already shown it: when the arm stopped the moment the snare fired, a receding pin backed out before the snare shut. Christidi-Loumpasefski et al. (2024) make the same point for a different mechanism, where too short a contact means the attachment never forms.
+
 **Limp mode.** One of the arm's non-motion modes. Chang and Marquez (2018) list four: safed, brakes on, standby (motors hold position), and limp, in which the "arm joints are passively compliant". During rigidizing the arm is limp so the LEE can pull itself into line with the fixture instead of fighting the arm.
 
 **A position command is not a force guarantee.** A controller that insists on a position regardless of contact produces whatever force that takes. Contact-rich control (impedance control, hybrid force and position control) shapes how the robot yields. This is the shared ground with manipulation on Earth: in both, success depends on geometry, friction, compliance, and control response together, not on position accuracy alone.
@@ -73,6 +75,10 @@ Describes who does what during arm operations, including free-flyer capture. The
 **Arbatani, Kövecses, and Teichmann (2023).** "Real-time Simulation of Cable-Based Robotic End Effectors." McGill University and CM Labs. ECCOMAS Multibody Dynamics, Lisbon. [Extended abstract](https://multibody2023.tecnico.ulisboa.pt/prog_MULTIBODY_WEB/MULTBODY2023_ABSTRACTS/ID_243_327_ECCOMAS_MBD_2023_accepted_rev.pdf).
 The professional way to simulate the LEE: each snare as 10 flexible cable elements, with cable-to-pin and cable-to-cable contact. Names contact tunnelling under high cable tension as the central difficulty.
 *Caution:* a two-page abstract. Its numbers describe the simulation, not the hardware.
+
+**Christidi-Loumpasefski, Yalçın, Delisle, Li, Olivares-Mendez, and Martinez (2024).** "Adaptive Control Scheme for Space Debris Capture in the Presence of Mass and Inertia Uncertainty." University of Luxembourg. *IEEE Access*, DOI 10.1109/ACCESS.2024.3374109. [Author manuscript](https://orbilu.uni.lu/bitstream/10993/60540/1/Adaptive_Control_Scheme_for_Space_Debris_Capture_in_the_Presence_of_Mass_and_Inertia_Uncertainty_preprint.pdf).
+A compliant capture device with gecko-adhesive pads, mounted on a CubeSat, for debris. Not Canadarm2 and not a snare. Useful for one idea: capture has a soft phase that must last long enough for the hard attachment to form. In their simulation the true debris mass is 4 kg while the controller first assumes 12 kg. Without adaptation, contact lasts 7 s; with the mass estimated during contact and gains updated, 11 s, against an assumed minimum of 10 s. Over 20 seeded runs the mass estimate came within 5% in a mean of 1.56 s (standard deviation 0.68 s).
+*Caution:* MATLAB/Simscape only, with experimental validation listed as future work. The 10 s requirement is an assumption of theirs. No number transfers to this project; the failure mechanism does.
 
 **Canadian Space Agency.** [Canadarm, Canadarm2, and Canadarm3 comparative table](https://asc-csa.gc.ca/eng/iss/canadarm2/canadarm-canadarm2-comparative-table.asp). Headline figures for the arm.
 
@@ -111,6 +117,17 @@ A MuJoCo toolkit for small free-flying satellites: control, learning on GPU, con
 | Snare cable dynamics paper, *J. Central South University* (2013) | Flexible cable model of a snare end effector | Paywalled |
 | US patent 4929009A, "End effector" | Design description of the snare and latch mechanism | Reported, not read |
 | "Canadarm: The SRMS Technical Details", IEEE | Shuttle arm figures | Reported, not read. Gives a rigidize load in "kg", which is not a force unit |
+
+### Reported, on ground testing and earlier work
+
+From a Perplexity summary. None was opened successfully (the first sits behind a browser check).
+
+| Source | What it is reported to show | Why it matters here |
+|---|---|---|
+| Li et al. (2021), "Estimation of Vibration Characteristics of a Space Manipulator From Air Bearing Supported Test Data", *Frontiers in Robotics and AI*, DOI 10.3389/frobt.2021.641165 | A small lab manipulator's vibration frequency measured at 0.3750 Hz unsupported and 0.2222 Hz on air bearings; a correction brought the prediction to 0.3390 Hz, cutting the error from 40.75% to 9.6%. Identified damping stayed too high | Ground tests change the dynamics they are meant to validate. A simulation that matches hardware is not thereby validated for orbit |
+| "Experimental Validation of Docking and Capture Using Space Robotics Technology", NASA report indexed 1993, [NTRS 19930013118](https://ntrs.nasa.gov/api/citations/19930013118/downloads/19930013118.pdf) | Planar air-bearing experiments on docking with misalignment, contact stabilisation, impedance control, teleoperation delay, parameter identification, flexible payloads | These concerns have been studied for decades. No claim to have discovered them |
+| ESA-hosted presentation on a planar air-bearing microgravity simulator | Limits of such testbeds: motion in one plane, finite area, scaled-down hardware, careful calibration | A 3D simulation can reach combinations a planar rig cannot, at the price of assumed contact models |
+| "The analysis of capture strategy for redundant space manipulator...", *Advances in Mechanical Engineering* | Reported to discuss attitude regulation of a snare-type end effector with a contact model | A lead on snare capture strategy. Full text not retrieved |
 
 ### Reported for background only
 
@@ -264,6 +281,36 @@ Three rigid bars and a flat-backed knob have different contact surfaces and kine
 
 The rate cap, tolerances, and estimator gain are invented, and the tracking logic was changed because the first version let the pin escape. So a statement like "capture fails above this tumble rate" must read "this controller and mechanism fail above this rate under these conditions".
 
+### Two kinds of uncertainty
+
+The project deals with two different uncertainties, and showing robustness to one says nothing about the other.
+
+| Kind | Examples | Who would face it | Which experiment |
+|---|---|---|---|
+| About the encounter | Leftover drift and tumble, starting alignment, measurement error, the vehicle's mass | A real controller, during a real capture | A |
+| About the model | Rigid bars for cables, invented rate limits and gains, approximate fixture geometry, friction and contact softness, missing cams and flexibility | Nobody in flight. It is doubt about whether the simulation represents the real system | B and C |
+
+A controller that copes with noisy measurements *inside the model* has not shown that the model is relevant. The strongest version of this project keeps the two apart and reports both.
+
+### There is no single tolerance
+
+The outcome depends on where contact begins, how fast relative motion spoils the alignment, whether the arm keeps tracking, whether the snare shuts before the pin escapes, whether pull-in completes, and whether the joint survives load. So "the error the arm can tolerate" is not one number. The question to ask is which combinations of conditions lead to each outcome, for a stated mechanism, controller, and numerical model, and how stable that classification is when those are changed.
+
+### Why simulate at all
+
+Ground experiments supply real material and mechanism behaviour, but planar testbeds restrict the motion and their supports alter inertia and damping (reported; see section 3). Simulation reaches conditions hardware cannot, but rests on assumed contact models. Neither is simply more accurate. The value is in stating the trade plainly.
+
+### Claims and their standing
+
+| Statement | Standing |
+|---|---|
+| Unknown inertial properties can change whether contact lasts long enough to attach | Shown in simulation for a different mechanism (read) |
+| Ground-test supports can alter measured vibration and damping | Shown experimentally for a lab manipulator (reported) |
+| Planar tests cannot reproduce every 3D misalignment | Stated in a presentation (reported) |
+| Capture, impedance control, delay, and misalignment have long been studied experimentally | Supported by a 1993 NASA report (reported) |
+| No public failure-boundary benchmark exists for a Canadarm2-like capture | Not established. Do not claim it |
+| This project's combination of outcome labels, sweeps, and engine comparison is new | Not established. Describe it as the intended contribution |
+
 ### What the first batches do and do not show
 
 They show the harness reaches both successful and unsuccessful regimes, and that a harsh condition exposes several failure paths. They do not show that sensing has no effect, which parameter causes the drop, or whether the boundary is smooth. Drift and tumble were scaled together, so their effects are confounded. Separate sweeps and matched trials are needed.
@@ -289,6 +336,7 @@ Nothing here has been applied yet. These are the changes the research points to.
 | Honda et al. fix shoulder roll when solving the arm's pose | All seven joints move | Optional. Would make poses more comparable to theirs |
 | Success should include retention | "Captured" means seated and at rest | Add a retention check: after seating, apply a stated disturbance and require the joint to hold. Say whether the load is literature-derived or exploratory |
 | Engagement is a distinct stage | Not recorded | Record whether the snare closed on the pin, separately from seating |
+| Capture is a race between closing and escaping | Timing is not recorded | Log, per attempt, how long the pin stayed catchable against how long the snare took, so failures can be explained by their margin |
 | Drift and tumble were varied together | One "wide" batch scaled both | In experiment A, sweep each separately with matched trials |
 | "Compliance" has several meanings | Unspecified in the plan | Name the one varied in experiment B (now done in the plan) |
 | Teleoperation latency is not sensor delay | Delay range cited to Freer et al. | Describe observation delay as an exploratory stress test (now done in the plan) |
@@ -307,3 +355,7 @@ Nothing here has been applied yet. These are the changes the research points to.
 **2026-10-10, session 3 (Claude).** Checked the critique's claims about mjorbit and SmallSatSim against the papers through a summarising fetch; they held. Added section 7 and six rows to section 8, and revised the plan: reframed the question as a robustness study, added definitions and an explicit scope list, marked two decisions as superseded, split the values the model uses by where they come from, and tightened experiments A, B, and C.
 
 *A caution about the Perplexity text itself.* Several of its citation links pointed at the wrong work: statements about SmallSatSim linked to the Honda paper, statements about Honda linked to an unrelated journal page, and statements about Freer linked to the cable-simulation abstract. The claims were right where checked, but the links cannot be relied on to find the source. This is the reason for the Reported label.
+
+**2026-10-10, session 4 (Dara, via Perplexity).** Further reading on why capture fails and on what ground tests can and cannot show: Christidi-Loumpasefski et al. (2024) on contact time under mass uncertainty; Li et al. (2021) on air-bearing supports changing measured vibration; a 1993 NASA report and an ESA presentation on planar testbeds; a lead on snare capture strategy. Main ideas: capture is a race between engagement and separation; there are two kinds of uncertainty; there is no single tolerance number.
+
+**2026-10-10, session 4 (Claude).** Downloaded and read the Christidi-Loumpasefski manuscript; the reported numbers matched. Could not open Li et al. (a browser check blocked it), so it stays Reported, as do the NASA report, the ESA presentation, and the snare-strategy lead. Added the "capture is a race" idea to section 2, four subsections to section 7, and one row to section 8.

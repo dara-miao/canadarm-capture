@@ -29,6 +29,8 @@ Three different things get called a "capture envelope". This project studies the
 | Closed-loop capture | From which starting conditions does *this controller with this mechanism* reach, snare, pull in, and hold? | All of the above, plus the arm's start pose, joint rate limits, tracking and insertion logic, estimator, sensing, abort rules, and time allowed |
 | Operationally allowed | Which conditions would a real flight procedure permit? | Flight rules. Not studied here, and not sourced |
 
+The experiments address two different uncertainties. Experiment A varies the *encounter*: the vehicle's motion, the starting alignment, what the controller can sense. Experiments B and C vary the *model*: its physical parameters and the simulator underneath it. Robustness to the first says nothing about the second.
+
 A capture also has three stages of "done":
 
 | Stage | Meaning | In the model today |
