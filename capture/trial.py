@@ -51,6 +51,7 @@ class TrialResult:
     latched: bool = False  # the latches engaged
     retained: bool = False  # the joint held through the retention check
     catchable_time: float = 0.0  # how long after firing the pin stayed catchable, up to the snare's closing time [s]
+    close_speed: float = 0.0  # pin speed relative to the end effector when the snare finished closing [m/s]
     retention_tilt: float = 0.0  # largest pin tilt during the retention check [rad]
 
     @property
@@ -58,11 +59,7 @@ class TrialResult:
         return self.outcome is Outcome.CAPTURED
 
 
-def relative_speed(model: mujoco.MjModel, data: mujoco.MjData) -> float:
-    v_tip, v_mouth = np.empty(6), np.empty(6)
-    mujoco.mj_objectVelocity(model, data, mujoco.mjtObj.mjOBJ_SITE, model.site("pin_tip").id, v_tip, 0)
-    mujoco.mj_objectVelocity(model, data, mujoco.mjtObj.mjOBJ_SITE, model.site("lee_mouth").id, v_mouth, 0)
-    return float(np.linalg.norm(v_tip[3:] - v_mouth[3:]))
+relative_speed = scene.relative_speed
 
 
 def is_seated(phase: Phase, offset: np.ndarray, rel_speed: float) -> bool:
@@ -172,5 +169,6 @@ def run_trial(
         latched=latched,
         retained=retained,
         catchable_time=controller.catchable_time,
+        close_speed=controller.close_speed,
         retention_tilt=tilt,
     )

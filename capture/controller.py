@@ -71,6 +71,9 @@ class ControllerConfig:
     # The Shuttle arm's end effector removes angular misalignment "against a limped arm":
     # joints with low resistance to being back-driven, except wrist roll.
     limp_during_pull_in: bool = True
+    # Go limp as soon as the snare has closed, instead of holding position through the
+    # pause before pull-in. Off by default; an option for studying lost captures.
+    limp_from_snare_close: bool = False
     # Honda et al. (2014) hold the base-side shoulder roll joint fixed when solving the
     # arm's pose for a capture. Off by default; on makes poses comparable to theirs.
     lock_shoulder_roll: bool = False
@@ -121,6 +124,7 @@ class CaptureController:
         self.latched: bool | None = None  # did the latches engage
         self.catchable_time = 0.0  # how long after firing the pin stayed catchable, up to CLOSE_TIME [s]
         self._left_catch_zone = False
+        self.close_speed = 0.0  # pin speed relative to the end effector when the snare finished closing [m/s]
         self.sensor.reset(data)
         self.estimate: PinObservation | None = None
         self.last_measurement: PinObservation | None = None
@@ -181,7 +185,8 @@ class CaptureController:
             data.ctrl[: self.n] = self.q_cmd + self.lead * dq
             scene.set_snare(model, data, *(snare.grapple_command(since) if closing else (0.0, 0.0)))
         else:
-            pulling_in = snare.CLOSE_TIME + snare.SETTLE_TIME <= since < snare.SEQUENCE_TIME
+            limp_start = snare.CLOSE_TIME if cfg.limp_from_snare_close else snare.CLOSE_TIME + snare.SETTLE_TIME
+            pulling_in = limp_start <= since < snare.SEQUENCE_TIME
             if since >= snare.SEQUENCE_TIME and not self.holding_after_pull_in:
                 self.q_cmd = data.qpos[self.qadr].copy()  # hold wherever the pull-in left the arm
                 self.holding_after_pull_in = True
@@ -207,6 +212,7 @@ class CaptureController:
                 self._left_catch_zone = True
         elif self.engaged is None:
             self.engaged = bool(depth >= CATCH_DEPTH[0] - 0.006 and lateral < 0.03)
+            self.close_speed = scene.relative_speed(self.model, data)
         if since >= snare.PULL_IN_END and self.latched is None:
             self.latched = bool(
                 abs(depth - SEATED_DEPTH) < SEATED_TOL

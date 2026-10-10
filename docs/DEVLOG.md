@@ -533,3 +533,31 @@ Why it got worse than before the update is not established. Halving the contact 
 **Framing.** Also adopted in this commit: the project is described as a case study of an established operation, with no literature gap claimed in advance. Canadarm2 captures vehicles routinely and does not need this simulation.
 
 **Next.** Experiment A: separate, matched sweeps of drift, tumble, offset, and tilt.
+
+## 2026-10-10 · Two questions, and pilots started
+
+**Decision.** A project needs one question to answer, not just a working system to describe. Chosen:
+
+1. *Main.* Which of the model's assumptions decide where the simulated capture fails?
+2. *Mechanics.* Why do snared pins get lost?
+
+Neither is claimed to be new. Both are about this model.
+
+**Built for the pilots.**
+
+- Build option for the snare drive's force limit, and a controller option to go limp as soon as the snare closes.
+- Batches can now run with a variant of the model or the controller.
+- Each attempt records the pin's speed relative to the end effector at the moment the snare finishes closing.
+- `experiments/pilot_lost.py`: the 60 harsh scenarios rerun with one change at a time.
+- `experiments/pilot_sensitivity.py`: drift swept from 2 to 15 cm/s, repeated with one assumption changed at a time. The failure point is the drift speed where the capture rate crosses 50%.
+
+**Status.** Pilots running when this entry was written. Results to follow in the next entry.
+
+**First two results from the lost-capture pilot.**
+
+| Variant | Captured | Lost | Out of reach | Timed out | Missed |
+|---|---|---|---|---|---|
+| Baseline | 3 | 27 | 24 | 5 | 1 |
+| Arm limp as soon as the snare closes | 7 | 23 | 24 | 5 | 1 |
+
+Going limp earlier recovers four captures. The stiff hold after closing is part of the cause, not most of it. In both, the pin was moving at a median of 5.8 cm/s relative to the end effector when the snare closed.

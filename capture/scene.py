@@ -129,6 +129,7 @@ def build_model(
     meshes: bool | None = None,
     friction: float | None = None,
     fixture_stiffness: float | None = None,
+    snare_force: float | None = None,
 ) -> mujoco.MjModel:
     """Build the scene.
 
@@ -138,6 +139,8 @@ def build_model(
     fixture_stiffness: mount the grapple fixture on a rotational spring of this
               stiffness [N m/rad] instead of rigidly. Honda et al. (2014) found the
               fixture base's stiffness strongly affects early capture.
+    snare_force: force limit of the drive that closes the snare bars [N]. Defaults
+              to the model file's 1,500 N, which is not sourced.
     """
     spec = mujoco.MjSpec.from_file(str(BASE_XML))
     _add_cavity_wall(spec)
@@ -145,6 +148,8 @@ def build_model(
         _set_friction(spec, friction)
     if fixture_stiffness is not None:
         _mount_fixture_on_spring(spec, fixture_stiffness)
+    if snare_force is not None:
+        spec.actuator("a_snare").forcerange = [-snare_force, snare_force]
     if meshes is None:
         meshes = meshes_available()
     if meshes:
@@ -186,6 +191,14 @@ def apply_latch(model: mujoco.MjModel, data: mujoco.MjData, fraction: float) -> 
         point = mouth.xpos + LATCH_RADIUS * (dx * R_l[:, 0] + dy * R_l[:, 1])
         mujoco.mj_applyFT(model, data, -pull, zero, point, vehicle, data.qfrc_applied)
         mujoco.mj_applyFT(model, data, pull, zero, point, tool, data.qfrc_applied)
+
+
+def relative_speed(model: mujoco.MjModel, data: mujoco.MjData) -> float:
+    """Speed of the pin tip relative to the end-effector mouth [m/s]."""
+    v_tip, v_mouth = np.empty(6), np.empty(6)
+    mujoco.mj_objectVelocity(model, data, mujoco.mjtObj.mjOBJ_SITE, model.site("pin_tip").id, v_tip, 0)
+    mujoco.mj_objectVelocity(model, data, mujoco.mjtObj.mjOBJ_SITE, model.site("lee_mouth").id, v_mouth, 0)
+    return float(np.linalg.norm(v_tip[3:] - v_mouth[3:]))
 
 
 def pin_axis(data: mujoco.MjData) -> np.ndarray:

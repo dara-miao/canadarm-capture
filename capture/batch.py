@@ -20,7 +20,7 @@ import mujoco
 import numpy as np
 
 from . import scene
-from .controller import CaptureController
+from .controller import CaptureController, ControllerConfig
 from .sensing import PinSensor, SensorConfig
 from .trial import Outcome, run_trial
 
@@ -129,7 +129,9 @@ def matched_sweep(base: list[Scenario], quantity: str, values: list[float]) -> l
     return [with_value(s, quantity, v) for v in values for s in base]
 
 
-def run_scenario(model: mujoco.MjModel, s: Scenario, max_time: float = 180.0) -> dict:
+def run_scenario(
+    model: mujoco.MjModel, s: Scenario, max_time: float = 180.0, config: ControllerConfig | None = None
+) -> dict:
     """Run one scenario and return a flat row: the scenario's fields plus the result."""
     data = mujoco.MjData(model)
     scene.reset(model, data, lateral=(s.lateral_x, s.lateral_y), tilt=(s.tilt_x, s.tilt_y), roll=s.roll)
@@ -141,7 +143,7 @@ def run_scenario(model: mujoco.MjModel, s: Scenario, max_time: float = 180.0) ->
         SensorConfig(s.sensor_delay, s.sensor_rate, s.sensor_pos_noise, s.sensor_angle_noise),
         seed=s.seed,
     )
-    r = run_trial(model, data, CaptureController(model, sensor=sensor), max_time=max_time)
+    r = run_trial(model, data, CaptureController(model, config, sensor=sensor), max_time=max_time)
     return asdict(s) | {
         "outcome": r.outcome.value,
         "engaged": int(r.engaged),
@@ -149,6 +151,7 @@ def run_scenario(model: mujoco.MjModel, s: Scenario, max_time: float = 180.0) ->
         "latched": int(r.latched),
         "retained": int(r.retained),
         "catchable_time": r.catchable_time,
+        "close_speed": r.close_speed,
         "retention_tilt": r.retention_tilt,
         "duration": r.duration,
         "t_trigger": "" if r.t_trigger is None else r.t_trigger,
@@ -161,24 +164,37 @@ def run_scenario(model: mujoco.MjModel, s: Scenario, max_time: float = 180.0) ->
 
 
 _model: mujoco.MjModel | None = None
+_config: ControllerConfig | None = None
 
 
-def _init_worker() -> None:
-    global _model
-    _model = scene.build_model(meshes=False)  # appearance is irrelevant here, and this loads faster
+def _init_worker(build: dict, config: dict) -> None:
+    global _model, _config
+    # appearance is irrelevant here, and the model loads faster without meshes
+    _model = scene.build_model(meshes=False, **build)
+    _config = ControllerConfig(**config)
 
 
 def _work(s: Scenario) -> dict:
-    return run_scenario(_model, s)
+    return run_scenario(_model, s, config=_config)
 
 
-def run_batch(scenarios: list[Scenario], workers: int | None = None) -> list[dict]:
-    """Run scenarios across processes. Results come back in the order given."""
+def run_batch(
+    scenarios: list[Scenario],
+    workers: int | None = None,
+    build: dict | None = None,
+    config: dict | None = None,
+) -> list[dict]:
+    """Run scenarios across processes. Results come back in the order given.
+
+    build:  keyword arguments for scene.build_model, such as friction or snare_force.
+    config: fields of ControllerConfig to change, such as max_joint_rate.
+    """
+    build, config = build or {}, config or {}
     workers = workers or max(1, (os.cpu_count() or 2) - 2)
     if workers == 1:
-        _init_worker()
+        _init_worker(build, config)
         return [_work(s) for s in scenarios]
-    with mp.get_context("spawn").Pool(workers, initializer=_init_worker) as pool:
+    with mp.get_context("spawn").Pool(workers, initializer=_init_worker, initargs=(build, config)) as pool:
         return pool.map(_work, scenarios, chunksize=1)
 
 
