@@ -2,7 +2,7 @@
 
 A MuJoCo simulation of a space station arm capturing a free-floating cargo vehicle, built to study how much error the capture tolerates and which physical parameters decide it.
 
-**Status:** in progress. The arm approaches a drifting, tumbling vehicle, inserts the grapple pin, and captures it. A realism pass is under way; the systematic experiments have not been run yet. See the [plan](docs/PLAN.md) and the [build log](docs/DEVLOG.md).
+**Status:** in progress. The arm captures a drifting, tumbling vehicle from the 10 m capture point, with delayed and noisy sensing. A batch runner labels how each attempt ends. The systematic experiments have not been run yet. See the [plan](docs/PLAN.md) and the [build log](docs/DEVLOG.md).
 
 ![Project plan](docs/media/plan.svg)
 

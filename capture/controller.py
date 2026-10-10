@@ -11,9 +11,11 @@ Tracking is resolved-rate control: a desired end-effector velocity is mapped to
 joint velocities through the damped pseudo-inverse of the Jacobian, then
 integrated into joint position commands.
 
-The controller reads the true pin pose and velocity from the simulator. A real
-system would estimate these from a camera target; sensing error is a parameter
-for later experiments, not part of this controller.
+The controller sees the pin only through a PinSensor (capture/sensing.py), which
+can delay and corrupt the measurements. It smooths them with a simple estimator:
+between measurements the estimate moves with the reported velocity, and each new
+measurement pulls it part of the way over. It makes no attempt to predict ahead
+to cancel a delay. With the default sensor it sees the truth.
 """
 
 from dataclasses import dataclass
@@ -23,6 +25,12 @@ import mujoco
 import numpy as np
 
 from . import scene, snare
+from .sensing import PinObservation, PinSensor
+
+
+def _cross(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+    """Cross product of two 3-vectors. Several times faster than np.cross at this size."""
+    return np.array([a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]])
 
 
 class Phase(Enum):
@@ -30,6 +38,7 @@ class Phase(Enum):
     INSERT = "insert"
     GRAPPLE = "grapple"
     DONE = "done"
+    ABORTED = "aborted"  # the pin went out of reach before the snare fired
 
 
 @dataclass
@@ -50,6 +59,13 @@ class ControllerConfig:
     max_ang: float = 0.03  # cap on the corrective tip rotation rate [rad/s]
     max_joint_rate: float = 0.03  # [rad/s]
     dls_damping: float = 0.05
+    # Abort when the arm is nearly straight or folded and can no longer move its tip
+    # freely: the smallest singular value of the Jacobian falls below this. It is
+    # about 0.77 at the ready pose.
+    min_conditioning: float = 0.15
+    # Fraction of the way the pin estimate moves toward each new measurement.
+    # 1 trusts every measurement fully; smaller values average out noise.
+    measurement_gain: float = 0.2
     settle_time: float = 5.0  # wait after the snare sequence before finishing [s]
     # The Shuttle arm's end effector removes angular misalignment "against a limped arm":
     # joints with low resistance to being back-driven, except wrist roll.
@@ -62,14 +78,19 @@ def _clamp_norm(v: np.ndarray, limit: float) -> np.ndarray:
 
 
 class CaptureController:
-    def __init__(self, model: mujoco.MjModel, config: ControllerConfig | None = None):
+    def __init__(
+        self,
+        model: mujoco.MjModel,
+        config: ControllerConfig | None = None,
+        sensor: PinSensor | None = None,
+    ):
         self.model = model
         self.cfg = config or ControllerConfig()
+        self.sensor = sensor or PinSensor(model)
         self.n = len(scene.ARM_JOINTS)
         self.qadr = scene.arm_qpos_adr(model)
         self.dof = np.array([model.joint(j).dofadr[0] for j in scene.ARM_JOINTS])
         self.mouth_id = model.site("lee_mouth").id
-        self.tip_id = model.site("pin_tip").id
         # The joint servos damp joint velocity, so a moving command lags by kv/kp
         # seconds. Leading the command by that much cancels the lag.
         act = [model.actuator("a_" + j).id for j in scene.ARM_JOINTS]
@@ -82,18 +103,32 @@ class CaptureController:
         self.aligned_since = None
         self.t_trigger = None
         self.holding_after_pull_in = False
+        self.conditioning = np.inf  # smallest Jacobian singular value seen while tracking
+        self.sensor.reset(data)
+        self.estimate: PinObservation | None = None
+        self.last_measurement: PinObservation | None = None
 
     def step(self, data: mujoco.MjData) -> None:
         """Set data.ctrl. Call between mj_step1 and mj_step2."""
         cfg, model = self.cfg, self.model
         dt = model.opt.timestep
-        offset = scene.pin_offset(model, data)
+        obs = self._update_estimate(self.sensor.observe(data), dt)
+        # Where the controller believes the pin is, in the end-effector mouth frame.
+        mouth = data.site("lee_mouth")
+        R_l = mouth.xmat.reshape(3, 3)
+        offset = R_l.T @ (obs.tip - mouth.xpos)
         lateral = np.linalg.norm(offset[:2])
+        axis_error = np.arccos(np.clip(-obs.axis @ R_l[:, 2], -1.0, 1.0))
+
+        if self.phase is Phase.ABORTED:
+            data.ctrl[: self.n] = self.q_cmd
+            scene.set_snare(model, data, 0.0, 0.0)
+            return
 
         if self.phase is Phase.ALIGN:
             ok = (
                 lateral < cfg.align_lateral
-                and scene.pin_axis_error(model, data) < cfg.align_angle
+                and axis_error < cfg.align_angle
                 and abs(offset[2] - cfg.hold_standoff) < cfg.align_standoff
             )
             if not ok:
@@ -116,7 +151,13 @@ class CaptureController:
         # lets a receding pin back out of the snare before it shuts.
         closing = self.phase is Phase.GRAPPLE and since < snare.CLOSE_TIME
         if self.phase in (Phase.ALIGN, Phase.INSERT) or closing:
-            dq = self._tracking_rates(data)
+            dq, conditioning = self._tracking_rates(data, obs)
+            self.conditioning = min(self.conditioning, conditioning)
+            if conditioning < cfg.min_conditioning and not closing:
+                self.phase = Phase.ABORTED
+                data.ctrl[: self.n] = self.q_cmd
+                scene.set_snare(model, data, 0.0, 0.0)
+                return
             self.q_cmd += dq * dt
             data.ctrl[: self.n] = self.q_cmd + self.lead * dq
             scene.set_snare(model, data, *(snare.grapple_command(since) if closing else (0.0, 0.0)))
@@ -133,25 +174,38 @@ class CaptureController:
                 data.ctrl[: self.n - 1] = limp[:-1]
             scene.set_snare(model, data, *snare.grapple_command(since))
 
-    def _tracking_rates(self, data: mujoco.MjData) -> np.ndarray:
+    def _update_estimate(self, measurement: PinObservation, dt: float) -> PinObservation:
+        """Smooth the sensor's measurements into a running estimate of the pin."""
+        if self.estimate is None:
+            self.estimate = PinObservation(measurement.tip.copy(), measurement.axis.copy(), measurement.v_tip, measurement.w)
+            self.last_measurement = measurement
+            return self.estimate
+        est = self.estimate
+        est.v_tip, est.w = measurement.v_tip, measurement.w
+        est.tip = est.tip + est.v_tip * dt
+        est.axis = est.axis + _cross(est.w, est.axis) * dt
+        if measurement is not self.last_measurement:  # the sensor produced a new reading
+            k = self.cfg.measurement_gain
+            est.tip = est.tip + k * (measurement.tip - est.tip)
+            est.axis = est.axis + k * (measurement.axis - est.axis)
+            self.last_measurement = measurement
+        est.axis = est.axis / np.linalg.norm(est.axis)
+        return est
+
+    def _tracking_rates(self, data: mujoco.MjData, obs: PinObservation) -> tuple[np.ndarray, float]:
+        """Joint rates that follow the observed pin, and the Jacobian's smallest singular value."""
         cfg, model = self.cfg, self.model
         mouth = data.site("lee_mouth")
         z_l = mouth.xmat.reshape(3, 3)[:, 2]
-        tip = data.site("pin_tip").xpos
-        pin = data.body("vehicle").xmat.reshape(3, 3)[:, 0]
-
-        # Pin tip velocity and vehicle angular velocity, world frame.
-        vel = np.empty(6)
-        mujoco.mj_objectVelocity(model, data, mujoco.mjtObj.mjOBJ_SITE, self.tip_id, vel, 0)
-        w_veh, v_tip = vel[:3], vel[3:]
+        tip, pin, v_tip, w_veh = obs.tip, obs.axis, obs.v_tip, obs.w
 
         # Target: mouth on the pin axis at the commanded standoff, facing the pin.
         target = tip + self.standoff_cmd * pin
-        v_target = v_tip + self.standoff_cmd * np.cross(w_veh, pin)
+        v_target = v_tip + self.standoff_cmd * _cross(w_veh, pin)
         v = _clamp_norm(cfg.kp_lin * (target - mouth.xpos), cfg.max_lin) + v_target
         v = _clamp_norm(v, cfg.max_tip_speed)
         # Roll about the pin axis is left free: the pin is symmetric.
-        w = _clamp_norm(cfg.kp_ang * np.cross(z_l, -pin), cfg.max_ang) + w_veh - (w_veh @ pin) * pin
+        w = _clamp_norm(cfg.kp_ang * _cross(z_l, -pin), cfg.max_ang) + w_veh - (w_veh @ pin) * pin
 
         jacp = np.empty((3, model.nv))
         jacr = np.empty((3, model.nv))
@@ -163,4 +217,4 @@ class CaptureController:
         peak = np.abs(dq).max()
         if peak > cfg.max_joint_rate:
             dq *= cfg.max_joint_rate / peak
-        return dq
+        return dq, float(np.linalg.svd(J, compute_uv=False)[-1])

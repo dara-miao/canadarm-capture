@@ -14,16 +14,16 @@ STAGES = [
     ("1 · ZERO-G WORLD", "Build the scene", "7-joint arm · drifting vehicle", "Grapple pin · hollow end effector", "done"),
     ("2 · GRAPPLE MECHANISM", "Model the snare", "Closing mechanism on the pin", "Contact friction + compliance", "done"),
     ("3 · CLOSED LOOP", "Approach and capture", "Track the pin · trigger the snare", "Arm tracks a drifting pin", "done"),
-    ("4 · REPEATABLE TRIALS", "Measure outcomes", "Success criteria · failure types", "Logs · plots · video", "next"),
+    ("4 · REPEATABLE TRIALS", "Measure outcomes", "Success criteria · failure types", "Outcome labels · batches · sensing", "done"),
 ]
 EXPERIMENTS = [
-    ("5 · EXPERIMENT A", "Capture envelope", "Sweep misalignment, drift, tumble", "Map where capture succeeds", "planned"),
+    ("5 · EXPERIMENT A", "Capture envelope", "Sweep misalignment, drift, tumble", "Map where capture succeeds", "next"),
     ("6 · EXPERIMENT B", "Parameter sensitivity", "One change per matched trial", "Friction · compliance · delay", "planned"),
     ("7 · EXPERIMENT C", "Second engine", "Export to USD · rerun in Newton", "Does the result survive?", "planned"),
 ]
 
 # One line on what is happening right now, shown under the title.
-NOW = "Realism pass complete: real 3D models and station, sourced parameters, 10 m capture point.  Next: stage 4."
+NOW = "Stages 1 to 4 and the realism pass are done.  Next: experiment A, the capture envelope."
 
 W, H = 1600, 860
 BG, CARD, EDGE = "#0f1b2d", "#1b2a40", "#2b3d57"

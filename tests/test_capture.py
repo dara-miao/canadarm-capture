@@ -6,7 +6,7 @@ import pytest
 
 from capture import scene
 from capture.controller import CaptureController, Phase
-from capture.trial import run_trial
+from capture.trial import Outcome, run_trial
 
 
 @pytest.fixture(scope="module")
@@ -71,7 +71,7 @@ def test_a_vehicle_leaving_too_fast_is_never_grappled(model):
     result = attempt(model, drift=(0.0, 0.0, 0.3), max_time=60.0)
     assert not result.success
     assert result.t_trigger is None
-    assert result.phase in (Phase.ALIGN, Phase.INSERT)
+    assert result.outcome in (Outcome.OUT_OF_REACH, Outcome.TIMED_OUT)
 
 
 @pytest.mark.parametrize("drift", [(0.0, 0.0, 0.031), (0.0, 0.0, -0.031), (0.031, 0.0, 0.0)])

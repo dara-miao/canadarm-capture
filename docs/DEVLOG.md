@@ -355,3 +355,55 @@ The 1982 paper is about the Shuttle arm's end effector, not Canadarm2's. Canadar
 **Checks.** 26 pass.
 
 **Next.** Milestone 4, the trial harness. It needs an out-of-reach abort and outcome labels: captured, missed, caught but not rigid, never reached.
+
+## 2026-10-10 · Milestone 4: trial harness
+
+**Goal.** Run many attempts from one command and say how each one ended.
+
+**Built.**
+
+- `capture/trial.py`: five outcome labels, decided from the true final state.
+
+  | Outcome | Meaning |
+  |---|---|
+  | Captured | Pin seated, on axis, and at rest in the end effector |
+  | Caught but not rigid | Snare holds the pin, but it is not seated or is still moving |
+  | Missed | Snare fired and the pin is not held |
+  | Out of reach | Controller gave up before firing, with the arm at the edge of its workspace |
+  | Timed out | Snare never fired in 180 s |
+
+- `capture/controller.py`: an out-of-reach abort. The controller stops when the smallest singular value of the arm's Jacobian drops below 0.15 (it is 0.77 at the ready pose).
+- `capture/sensing.py`: the controller now sees the pin only through a sensor with a delay, an update rate, and random error on each reading.
+- `capture/batch.py`: a `Scenario` holds everything that defines one attempt. `sample()` draws scenarios from a seed, `run_batch()` spreads them over processes, and the command line prints outcome counts and writes a CSV.
+
+      python -m capture.batch --n 60 --seed 0 --out results/name.csv
+
+**A controller fault found on the way.** With 1 cm and 1 degree of measurement noise the controller hovered in front of the pin until it timed out. It required alignment within 1 cm and 1 degree for a full second, and it tested that against each raw reading. Added a small estimator: between readings the estimate moves with the reported velocity, and each new reading pulls it 20% of the way over. With that, the same conditions capture.
+
+**First batches.** 60 attempts each, same seed, so the three batches share the same offsets and tilts.
+
+| Batch | Vehicle motion | Sensing | Captured | Caught, not rigid | Missed | Out of reach | Timed out |
+|---|---|---|---|---|---|---|---|
+| Baseline | Drift to 0.031 m/s, tumble to 0.5°/s | Perfect | 60 | 0 | 0 | 0 | 0 |
+| Degraded sensing | Same | 0.5 s delay, 10 Hz, 1 cm, 1° | 60 | 0 | 0 | 0 | 0 |
+| Wider motion | Drift to 0.122 m/s, tumble to 2°/s | Same as above | 12 | 10 | 12 | 20 | 6 |
+
+All batches used offsets up to 0.1 m and tilts up to 15°, the sourced capture limits.
+
+**What the batches say.**
+
+- Inside the sourced limits the model captures every time, and a half-second delay with centimetre-level noise does not change that. This is consistent with the 1982 requirement that the end effector capture at those limits, though it is not evidence the model is right: the controller has an easy job there.
+- At four times the drift and tumble the capture rate falls to 20%, and all five outcomes appear. The largest group is out of reach: the vehicle drifts away faster than the arm can usefully follow.
+- Within the wide batch, the vehicles that ended out of reach were mostly receding (median +0.033 m/s along the approach axis) and those caught but not rigid were mostly approaching (median -0.040 m/s).
+
+**Limits of these numbers.**
+
+- Sixty attempts per batch is small. The 20% figure has a wide margin.
+- Uniform sampling inside a ball puts most samples near the outer edge, so the wide batch has only four attempts with drift under 0.06 m/s. Experiment A should sweep a grid instead.
+- The boundary depends on invented limits: the 0.03 rad/s joint rate cap, the alignment tolerances, and the estimator gain.
+
+**Performance note.** An attempt takes about 1.2 s of computer time on an idle machine. These batches took two to three minutes each because the interactive viewer was open, using more than a full processor core, and the laptop was on battery.
+
+**Checks.** 39 pass. Thirteen are new: outcome labelling, the abort, sensor delay and noise, sampling, and CSV output.
+
+**Next.** Experiment A: sweep drift and tumble on a grid and map the capture envelope.

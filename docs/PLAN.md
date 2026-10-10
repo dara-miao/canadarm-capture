@@ -27,8 +27,8 @@ The project is simulation only. It is a reasoned study of a real operation, not 
 | R1 | Realism: real 3D models | Done (2026-10-10) | Arm, vehicle, and station use Canadian Space Agency and NASA models; arm joints placed from them |
 | R2 | Realism: sourced parameters | Done (2026-10-10) | Snare and capture numbers taken from the published papers where they give them |
 | R3 | Realism: 10 m capture point | Done (2026-10-10) | The attempt starts with the vehicle at the real capture distance |
-| 4 | Trial harness | Next | One command runs N trials and reports success rate and failure types |
-| 5 | Experiment A: capture envelope | Planned | Success map over misalignment, drift, and tumble |
+| 4 | Trial harness | Done (2026-10-10) | One command runs N trials and reports success rate and failure types |
+| 5 | Experiment A: capture envelope | Next | Success map over misalignment, drift, and tumble |
 | 6 | Experiment B: parameter sensitivity | Planned | Matched trials showing the effect of friction, compliance, and delay |
 | 7 | Experiment C: second engine | Planned | Scene exported to USD and rerun in Newton, results compared |
 | 8 | Write-up | Planned | README with results, figures, and video |
@@ -62,6 +62,11 @@ The project is simulation only. It is a reasoned study of a real operation, not 
 | 2026-10-10 | Arm keeps tracking until the snare has closed | Stopping at the trigger failed at the paper's 0.031 m/s relative velocity |
 | 2026-10-10 | Cap tip speed at 0.37 m/s | Canadarm2's published unloaded speed |
 | 2026-10-10 | Every attempt starts with the pin at the 10 m capture point and the arm hovering 2 m short | Matches the published capture distance; the hover distance is an assumption |
+| 2026-10-10 | Five outcome labels: captured, caught but not rigid, missed, out of reach, timed out | A single success flag hides why attempts fail |
+| 2026-10-10 | Controller aborts when the arm's Jacobian is nearly singular | Without it the arm thrashed at the edge of its workspace |
+| 2026-10-10 | Controller sees the pin only through a sensor model with delay, update rate, and noise | With perfect knowledge every attempt succeeds and the experiments show nothing |
+| 2026-10-10 | Controller smooths measurements with a fixed-gain estimator | Checking alignment against raw noisy readings meant it never committed to inserting |
+| 2026-10-10 | Scenarios are plain data generated from a seed | Batches are reproducible and can be spread across processes |
 | 2026-10-10 | Treat the station as fixed and the arm as rigid | The station is about 60 times heavier than the vehicle; arm flexibility is left out to keep the first version simple |
 
 ## Sourced values
@@ -100,15 +105,16 @@ Daniell and Sachdev (1982) describes the Shuttle arm's end effector: 0.34 m in d
 - Snare: three rigid bars, 6 mm radius, drive force limit 1,500 N, friction 0.6. Cable tension and friction are not sourced.
 - Hover distance: the end effector starts 2 m from the pin. No source found for the real pre-capture distance.
 - Which point the published 10 m is measured from is not stated; here it is the module surface under the arm's base.
-- Controller: gains, 3 cm/s insertion speed, alignment tolerances. Real captures are flown by an operator; the controller here has perfect knowledge of the pin.
+- Sensing: delay, update rate, and noise levels are free parameters. Only the 0.3 to 0.5 s ground-control latency is sourced. Velocities reach the controller delayed but without added error.
+- Tumble rates for a vehicle in free drift are not sourced; batches use up to 0.5°/s by default.
+- Controller: gains, 3 cm/s insertion speed, alignment tolerances, estimator gain of 0.2, abort threshold. Real captures are flown by an operator; the controller here has perfect knowledge of the pin.
 - Station: NASA's model (B), scaled by 2.35. Low-detail, untextured, US modules about 15% narrow. The arm's mounting position on the forward node is approximate.
 
 ## Risks
 
 - **Snare modelling.** Resolved for now with rigid bars (milestone 2). The bars cannot stretch or wrap like cables, which may matter for angular misalignment.
-- **The task may be too easy as modelled.** With perfect sensing and generous joint rates the controller succeeds across everything tried so far. The experiments need realistic limits (sensing noise and delay, rate and torque limits) or the envelope will be uninformative.
+- **The envelope depends on invented limits.** With sensing modelled, what bounds success is the arm's joint rate cap, the alignment tolerances, and the estimator gain, all of which are invented. Experiment results must be reported as conditional on them.
 - **Off-axis loads.** With the pin 2.5 m from the vehicle's centre of mass, a force through the centre of mass levers the fixture sideways. The seated capture resists about 850 N m of bending, which meets the 474.5 N m no-separation figure but not the 1,627 N m case; the real fixture's cam arms and the end effector's latches are missing.
-- **No reach limit.** A vehicle receding at 0.122 m/s drags the tracking arm to the edge of its workspace, where the controller misbehaves. The trial harness needs an out-of-reach abort.
 - **Contact tuning.** Stiff contact in zero gravity may need a smaller timestep or solver tuning.
 - **Newton on macOS.** Supported in CPU-only mode but untested here.
 

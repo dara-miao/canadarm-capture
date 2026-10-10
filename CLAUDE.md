@@ -15,6 +15,7 @@ Do this as part of every piece of work, not at the end:
 ## Commands
 
 - Tests: `.venv/bin/python -m pytest`
+- Batch of attempts: `.venv/bin/python -m capture.batch --n 100 --seed 0 --out results/name.csv` (results/ is git-ignored)
 - Renders: `.venv/bin/python scripts/render_scene.py`
 - Plan diagram: `.venv/bin/python scripts/plan_diagram.py`
 - Fetch 3D models (git-ignored, needed for mesh renders): `.venv/bin/python scripts/fetch_assets.py`
@@ -24,6 +25,7 @@ Do this as part of every piece of work, not at the end:
 
 - Must run on an Apple Silicon Mac, CPU only. No NVIDIA-only dependencies.
 - MuJoCo first; Newton is a later second-engine comparison.
+- The interactive viewer uses more than a full core. Close it before running batches, and keep batches modest when the user is on battery.
 
 ## Git
 
