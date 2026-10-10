@@ -70,8 +70,9 @@ def test_overload_backs_the_pin_out_but_keeps_it(model):
 
 
 def test_the_snare_itself_gives_way_near_8000_newtons(model):
-    # A limit of this model, not of the real mechanism: the load forces the bars apart
-    # against their 1,500 N drive. Real snare cables would not open this way.
+    # A limit of this model, not of the real mechanism: the load forces the bars apart.
+    # What they give way against is not established; changing the drive's force limit
+    # made no difference in the pilots. Real snare cables would not open this way.
     assert scene.pin_offset(model, run(model, pull=8000.0))[2] > 0
 
 

@@ -1,0 +1,13 @@
+variant,captured_at_0.02,captured_at_0.04,captured_at_0.06,captured_at_0.08,captured_at_0.10,captured_at_0.12,captured_at_0.15,failure_point_m_s
+baseline,1.0,0.92,0.5,0.08,0.08,0.08,0.08,0.06
+contact friction 0.1,1.0,0.92,0.42,0.08,0.08,0.08,0.08,0.057
+contact friction 0.6,1.0,0.83,0.75,0.17,0.08,0.08,0.0,0.069
+joint rate cap halved (0.015 rad/s),1.0,0.75,0.33,0.08,0.0,0.0,0.0,0.052
+joint rate cap doubled (0.06 rad/s),1.0,0.92,0.5,0.08,0.08,0.08,0.08,0.06
+snare drive 750 N,1.0,0.92,0.5,0.08,0.08,0.08,0.08,0.06
+"snare drive 3,000 N",1.0,0.92,0.5,0.08,0.08,0.08,0.08,0.06
+observation delay 0.5 s,1.0,0.92,0.17,0.08,0.08,0.08,0.08,0.051
+observation delay 1.0 s,1.0,0.83,0.17,0.0,0.0,0.0,0.0,0.05
+estimator gain 0.05,1.0,0.92,0.5,0.08,0.08,0.08,0.08,0.06
+estimator gain 1.0,1.0,0.92,0.5,0.08,0.08,0.08,0.08,0.06
+arm limp as soon as snare closes,1.0,0.92,0.92,0.92,0.58,0.5,0.25,0.12

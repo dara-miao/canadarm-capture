@@ -71,12 +71,15 @@ A capture also has three stages of "done":
 | R3 | Realism: 10 m capture point | Done (2026-10-10) | The attempt starts with the vehicle at the published capture distance |
 | 4 | Trial harness | Done (2026-10-10) | One command runs N trials and reports success rate and failure types |
 | R4 | Research review and model update | Done (2026-10-10) | Research notes reviewed; the changes in their section 8 applied and tested |
-| 5 | Experiment A: closed-loop capture envelope | Next | Outcome maps from separate, matched sweeps of drift, tumble, offset, and tilt, so their effects are not confounded |
+| P | Pilots for the two questions | Done (2026-10-10) | Both pilots run and written up; summary tables in `docs/data/` |
+| 5 | Experiment A: closed-loop capture envelope | Next, design under review after the pilots | Outcome maps from separate, matched sweeps of drift, tumble, offset, and tilt, so their effects are not confounded |
 | 6 | Experiment B: parameter sensitivity | Planned | Matched trials varying friction, one *named* form of compliance, and observation staleness |
 | 7 | Experiment C: matched-model comparison in a second engine | Planned | The same dynamic model run in Newton, after checking the two models are equivalent |
 | 8 | Write-up | Planned | README with results, figures, and video, stating what the results are conditional on |
 
 Notes on the experiments:
+
+- **After the pilots.** Experiments A and B are not yet redesigned. The pilots found that the largest effect by far is a controller choice (when the arm goes limp), and that lost pins escape through soft stops and bar coupling in the rigid-bar snare. Both need deciding on before the full experiments are fixed. See the build log entry "Pilot results".
 
 - **Experiment B.** "Compliance" can mean contact softness at the pin and bars, snare-drive stiffness, pull-in-drive stiffness, joint-servo stiffness, or structural flexibility of the arm or fixture. They are not interchangeable. The experiment will vary a named one. Candidates that the model can express today are contact softness and joint-servo stiffness. Fixture base stiffness is the one Honda et al. found most influential, and would need adding to the model.
 - **Experiment C.** The comparison is between matched dynamic models, not matching appearances. Before comparing, check that masses and inertias, joint axes and limits, collision shapes, actuator laws and saturation, contact and friction definitions, initial conditions, controller and sensor timing, and success criteria are the same. Newton's default rigid-body solver is a port of MuJoCo, so the run must use a different solver or contact model to be an independent check. Agreement would show consistency under shared assumptions, not validity. Disagreement would flag something to investigate, not say which engine is right.
@@ -129,6 +132,8 @@ Notes on the experiments:
 | 2026-10-10 | Record engagement, seating, latching, retention, and how long the pin stayed catchable | Failures can then be explained by stage and by timing margin | Current |
 | 2026-10-10 | Add a "lost" outcome: the snare closed on the pin and the pin later escaped | In the harsh batch 27 of 28 non-held attempts had been snared first. Calling them misses hid that | Current |
 | 2026-10-10 | Describe the project as a case study, with no literature gap claimed in advance | Canadarm2 already does this routinely. A contribution, if any, has to come from the results | Current |
+| 2026-10-10 | Lead with two questions, and run small pilots before fixing the full experiments | A project needs a question to answer. Pilots are cheap and show whether an experiment would measure anything | Current |
+| 2026-10-10 | Build option for the snare drive's force limit; controller option to go limp as soon as the snare closes | Needed to vary them one at a time in the pilots | Current. Both off by default; the default behaviour is unchanged |
 | 2026-10-10 | Treat the station as fixed and the arm as rigid | The station is about 60 times heavier than the vehicle; arm flexibility is left out to keep the first version simple | Current |
 
 ## Values the model uses, by where they come from
@@ -186,7 +191,7 @@ Full provenance is in the research notes. This table records only what the model
 - Joint servo gains, damping, and reflected inertia. No torque limits. A 0.03 rad/s (1.7°/s) joint rate cap.
 - Vehicle mass split between modules. The grapple pin's position is where the model shows a small fixture, which is probably the grapple fixture.
 - Grapple pin: 0.3 m long, 2 cm radius, with a flat-backed knob.
-- Snare: three rigid bars, 6 mm radius, drive force limit 1,500 N. Under a straight pull of about 8,000 N the bars are forced apart and the pin escapes; real cables would not open that way.
+- Snare: three rigid bars, 6 mm radius, drive force limit 1,500 N. Under a straight pull of about 8,000 N the bars are forced apart and the pin escapes; real cables would not open that way. The bars' open stop and the coupling that makes the three move together are soft constraints: in lost attempts the bars were pushed up to 4 cm past the stop and up to 7.7 cm apart from each other. The pilots showed the drive's force limit does not set this, so what does is an open question about the model.
 - Hover distance: the end effector starts 2 m from the pin.
 - Which point the published 10 m is measured from; here it is the module surface under the arm's base.
 - Sensor update rate and noise levels. Velocities reach the controller delayed but without added error.
@@ -200,6 +205,8 @@ Full provenance is in the research notes. This table records only what the model
 - **The controller is part of the result.** The joint rate cap, alignment tolerances, estimator gain, and tracking logic are invented, and one of them was changed because it caused failures. A boundary found in experiment A is where this controller with this mechanism fails, not a limit of Canadarm2.
 - **The latch is a force, not a mechanism.** Retention now holds because 64 kN is applied at the rim once the fixture is seated. Whether real latches would engage on a slightly misaligned fixture is not something this model can say.
 - **Zero gravity is a timescale assumption.** Reasonable for a one-minute attempt according to the mjorbit comparison, but that does not by itself prove relative orbital motion is negligible against centimetre tolerances.
+- **The biggest sensitivity found so far is to the controller.** In the pilots, letting the arm go limp when the snare closes doubled the drift speed at which capture fails; friction, drive force, arm speed, and observation delay each moved it by 1 cm/s or less. A parameter ranking on this model may mostly reflect that one piece of invented logic.
+- **Lost pins escape through the surrogate's soft constraints.** A sensitivity study of that failure would be measuring MuJoCo's joint-limit and equality softness as much as anything physical.
 - **Contact tuning.** Stiff contact in zero gravity may need a smaller timestep or solver tuning.
 - **Newton on macOS.** Supported in CPU-only mode but untested here.
 

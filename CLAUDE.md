@@ -40,10 +40,9 @@ Do this as part of every piece of work, not at the end:
 Read `docs/PLAN.md` (questions, milestones, decisions), `docs/RESEARCH.md` (sources and numbers), and the last few entries of `docs/DEVLOG.md` before doing anything.
 
 - Milestones 1 to 4 and R1 to R4 are done. The model has the Canadarm2 pull-in force, a latch stage, a retention check, and six outcome labels.
-- Two questions are being explored with pilot runs, both written at the top of the plan:
+- Two questions lead the project, both written at the top of the plan:
   1. Which of the model's assumptions decide where the simulated capture fails? (`experiments/pilot_sensitivity.py`)
   2. Why do snared pins get lost? (`experiments/pilot_lost.py`)
-- Each pilot writes a summary table to `docs/data/`. If `docs/data/pilot_lost.csv` or `docs/data/pilot_sensitivity.csv` is missing, that pilot did not finish: rerun its script (about 15 and 30 minutes).
-- Not yet done for the pilots: a build log entry with the results, and a commit of `docs/data/`.
-- First results from the lost-capture pilot (60 harsh scenarios): baseline 3 captured and 27 lost; with the arm going limp as soon as the snare closes, 7 captured and 23 lost.
-- After the pilots: decide with the user what the full experiments A and B should be. Do not run them unasked.
+- Both pilots are finished and written up in the build log entry "Pilot results". Summary tables are in `docs/data/`. Before rerunning a pilot because a table is missing, check it is not still running (`pgrep -fl experiments/pilot_`).
+- Pilot findings in one line each: going limp when the snare closes doubles the drift speed at which capture fails (6 to 12 cm/s); friction, snare drive force, arm speed, and observation delay each move it by 1 cm/s or less; lost pins escape by pushing the snare bars past their soft open stop and apart from each other, which is an artefact of the rigid-bar snare. `experiments/replay_lost.py` shows this for single attempts.
+- Open, for the user to decide: whether "limp at close" becomes the default, whether to harden the snare's stops and coupling, and what the full experiments A and B should be. Do not change the model or run the experiments unasked.
