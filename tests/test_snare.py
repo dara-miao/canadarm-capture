@@ -63,9 +63,29 @@ def test_capture_holds_against_500_newtons(model, lateral):
 
 
 def test_overload_backs_the_pin_out_but_keeps_it(model):
-    # 2000 N is twice the carriage force limit: the plate unseats, the snare still holds.
-    z = scene.pin_offset(model, run(model, pull=2000.0))[2]
+    # 7000 N is about twice the pull-in force limit: the plate unseats, the snare still holds.
+    z = scene.pin_offset(model, run(model, pull=7000.0))[2]
     assert SEATED + 0.02 < z < 0
+
+
+def test_seated_capture_resists_the_specified_bending_moment(model):
+    """The Shuttle arm's end effector was required to show no interface separation up to
+    474.5 N m of cross-axis bending (Daniell and Sachdev, 1982)."""
+    data = mujoco.MjData(model)
+    scene.reset(model, data, standoff=INSERTED)
+    vid = model.body("vehicle").id
+    dt = model.opt.timestep
+    hold = snare.SEQUENCE_TIME + 2.0
+    for i in range(int(round((hold + PULL_TIME) / dt))):
+        t = i * dt
+        scene.set_snare(model, data, *snare.grapple_command(t))
+        data.qfrc_applied[:] = 0
+        if t > hold:
+            across = data.site("lee_mouth").xmat.reshape(3, 3)[:, 0]
+            mujoco.mj_applyFT(model, data, np.zeros(3), 474.5 * across, data.site("pin_tip").xpos, vid, data.qfrc_applied)
+        mujoco.mj_step(model, data)
+    assert scene.pin_axis_error(model, data) < np.radians(0.5)
+    assert scene.pin_offset(model, data)[2] == pytest.approx(SEATED, abs=0.002)
 
 
 def test_without_the_snare_the_vehicle_escapes(model):

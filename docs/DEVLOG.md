@@ -264,3 +264,52 @@ The approach and capture tests passed unchanged on the new arm.
 - The station is scenery. Nothing collides with it.
 
 **Checks.** 21 pass. The station adds no mass or collision shapes.
+
+## 2026-10-10 · Realism pass, step 2: sourced parameters
+
+**Goal.** Replace invented numbers with published ones wherever a source gives them.
+
+**What could be read.**
+
+| Source | Access | Useful? |
+|---|---|---|
+| Daniell and Sachdev (1982), the design paper for the Shuttle arm's end effector | Full text (scanned PDF with a text layer) | Yes, the main source |
+| Arbatani, Kövecses, and Teichmann (2023), real-time simulation of the Canadarm2 end effector's cables | Two-page extended abstract | For method and context |
+| Canadian Space Agency comparison table | Web page | Arm speeds and dimensions |
+| Uyama et al. (2009), snare contact with the HTV grapple fixture | Abstract only | No numbers |
+| Journal paper on snare cable dynamics | Paywalled | Not read |
+
+The 1982 paper is about the Shuttle arm's end effector, not Canadarm2's. Canadarm2's is a larger descendant of the same three-snare design, so its numbers are a guide and not exact values for this model. The full list is in `PLAN.md` under "Sourced values".
+
+**What changed in the model.**
+
+| Parameter | Was (invented) | Now | Basis |
+|---|---|---|---|
+| Pull-in force limit | 1,000 N | 3,560 N | Rigidize load in the grapple shaft |
+| Pull-in time | 2 s | 10 s | Specification: under 20 s |
+| Snare closing time | 2 s | 2 s (kept) | Specification: under 3 s |
+| Arm during pull-in | Held rigid | Limp, except wrist roll | "Carried out against a limped arm" |
+| Arm tip speed | Uncapped | 0.37 m/s cap | Canadarm2's unloaded speed |
+
+**Three things the sourced numbers exposed.**
+
+1. *The pull-in drive was not delivering its force.* A new test applied the paper's 474.5 N m bending moment, at which the real interface must not separate. The model's joint opened by 1.85 degrees. The drive's position gain was too low to reach its own force limit, so the clamp was about 1,050 N instead of 3,560 N. After raising the gain:
+
+   | Bending moment | Tilt of the pin in the end effector |
+   |---|---|
+   | 474.5 N m (required: no separation) | 0.000° |
+   | 800 N m | 0.009° |
+   | 1,200 N m | 10° |
+   | 1,627 N m (required: at most 3°) | Pin escapes |
+
+   Separation starts near 850 N m, which is the clamp force times the rim radius (3,560 N × 0.24 m). The model meets the first requirement and fails the second, because it has no cam arms or latches.
+
+2. *The controller failed at the specified capture velocity.* The paper allows the payload to be moving at up to 0.031 m/s at capture. With the vehicle receding at that speed, the model missed. The controller stopped the arm the moment the snare fired, and in the 2 s the snare takes to close the pin backed out 6 cm, past the snare. The controller now keeps tracking until the snare has closed. Captures then succeed at 0.031 m/s and 0.06 m/s in all three directions.
+
+3. *There is no reach limit.* At 0.122 m/s receding (the paper's impact design case, not a capture requirement), the arm chases the vehicle to the edge of its workspace and the controller misbehaves. Logged as a risk; the trial harness needs an out-of-reach abort.
+
+**From the 2023 abstract.** The professional approach models each snare as 10 flexible cable elements, with the pin attached to a 20,000 kg payload and a 1 ms time step, and names contact tunnelling under high cable tension as the main difficulty. This model's rigid bars avoid that problem by not being cables, which is also its main limitation.
+
+**Checks.** 25 pass, including three new ones tied to published figures: the bending moment and the capture velocity in three directions.
+
+**Still invented.** Listed in `PLAN.md` under "Assumptions still unsourced". The main ones are link masses, servo gains, snare cable tension and friction, and the absence of arm flexibility.

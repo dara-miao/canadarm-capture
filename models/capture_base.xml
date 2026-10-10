@@ -159,6 +159,8 @@
     <position name="a_wrist_yaw"      joint="wrist_yaw"      kp="5e4" kv="3e4"/>
     <position name="a_wrist_roll"     joint="wrist_roll"     kp="5e4" kv="3e4"/>
     <position name="a_snare"    joint="snare_0"        kp="1e5" kv="1500" forcerange="-1500 1500"/>
-    <position name="a_carriage" joint="carriage_slide" kp="5e4" kv="2000" forcerange="-1000 1000"/>
+    <!-- Pull-in force limit: the Shuttle arm's end effector signals "rigidized" at about
+         3,560 N in the grapple shaft (Daniell and Sachdev, 1982). -->
+    <position name="a_carriage" joint="carriage_slide" kp="4e5" kv="8000" forcerange="-3560 3560"/>
   </actuator>
 </mujoco>

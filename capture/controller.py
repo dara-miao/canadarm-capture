@@ -4,7 +4,8 @@ The arm tracks the grapple pin in three phases:
 
   ALIGN    hold a standoff in front of the pin until the end effector is lined up
   INSERT   advance along the pin axis until the pin tip is past the snare
-  GRAPPLE  freeze the arm and run the snare sequence
+  GRAPPLE  run the snare sequence: keep tracking while the snare closes, stop,
+           go limp while the pin is pulled in, then hold position again
 
 Tracking is resolved-rate control: a desired end-effector velocity is mapped to
 joint velocities through the damped pseudo-inverse of the Jacobian, then
@@ -45,10 +46,14 @@ class ControllerConfig:
     kp_lin: float = 0.8  # position error gain [1/s]
     kp_ang: float = 0.8  # orientation error gain [1/s]
     max_lin: float = 0.10  # cap on the corrective tip speed [m/s]
+    max_tip_speed: float = 0.37  # Canadarm2's published unloaded speed [m/s]
     max_ang: float = 0.03  # cap on the corrective tip rotation rate [rad/s]
     max_joint_rate: float = 0.03  # [rad/s]
     dls_damping: float = 0.05
     settle_time: float = 5.0  # wait after the snare sequence before finishing [s]
+    # The Shuttle arm's end effector removes angular misalignment "against a limped arm":
+    # joints with low resistance to being back-driven, except wrist roll.
+    limp_during_pull_in: bool = True
 
 
 def _clamp_norm(v: np.ndarray, limit: float) -> np.ndarray:
@@ -76,6 +81,7 @@ class CaptureController:
         self.standoff_cmd = self.cfg.hold_standoff
         self.aligned_since = None
         self.t_trigger = None
+        self.holding_after_pull_in = False
 
     def step(self, data: mujoco.MjData) -> None:
         """Set data.ctrl. Call between mj_step1 and mj_step2."""
@@ -105,14 +111,27 @@ class CaptureController:
             if data.time - self.t_trigger >= snare.SEQUENCE_TIME + cfg.settle_time:
                 self.phase = Phase.DONE
 
-        if self.phase in (Phase.ALIGN, Phase.INSERT):
+        since = None if self.t_trigger is None else data.time - self.t_trigger
+        # Keep following the pin until the snare has closed on it; stopping at the trigger
+        # lets a receding pin back out of the snare before it shuts.
+        closing = self.phase is Phase.GRAPPLE and since < snare.CLOSE_TIME
+        if self.phase in (Phase.ALIGN, Phase.INSERT) or closing:
             dq = self._tracking_rates(data)
             self.q_cmd += dq * dt
             data.ctrl[: self.n] = self.q_cmd + self.lead * dq
-            scene.set_snare(model, data, 0.0, 0.0)
+            scene.set_snare(model, data, *(snare.grapple_command(since) if closing else (0.0, 0.0)))
         else:
-            data.ctrl[: self.n] = self.q_cmd  # arm holds still
-            scene.set_snare(model, data, *snare.grapple_command(data.time - self.t_trigger))
+            pulling_in = snare.CLOSE_TIME + snare.SETTLE_TIME <= since < snare.SEQUENCE_TIME
+            if since >= snare.SEQUENCE_TIME and not self.holding_after_pull_in:
+                self.q_cmd = data.qpos[self.qadr].copy()  # hold wherever the pull-in left the arm
+                self.holding_after_pull_in = True
+            data.ctrl[: self.n] = self.q_cmd
+            if pulling_in and cfg.limp_during_pull_in:
+                # Commanding each joint to where it is, led by its own velocity, makes the
+                # servo torque exactly zero. Wrist roll (the last joint) stays held.
+                limp = data.qpos[self.qadr] + self.lead * data.qvel[self.dof]
+                data.ctrl[: self.n - 1] = limp[:-1]
+            scene.set_snare(model, data, *snare.grapple_command(since))
 
     def _tracking_rates(self, data: mujoco.MjData) -> np.ndarray:
         cfg, model = self.cfg, self.model
@@ -130,6 +149,7 @@ class CaptureController:
         target = tip + self.standoff_cmd * pin
         v_target = v_tip + self.standoff_cmd * np.cross(w_veh, pin)
         v = _clamp_norm(cfg.kp_lin * (target - mouth.xpos), cfg.max_lin) + v_target
+        v = _clamp_norm(v, cfg.max_tip_speed)
         # Roll about the pin axis is left free: the pin is symmetric.
         w = _clamp_norm(cfg.kp_ang * np.cross(z_l, -pin), cfg.max_ang) + w_veh - (w_veh @ pin) * pin
 

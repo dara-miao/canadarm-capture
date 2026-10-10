@@ -64,3 +64,10 @@ def test_a_vehicle_leaving_too_fast_is_never_grappled(model):
     assert not result.success
     assert result.t_trigger is None
     assert result.phase in (Phase.ALIGN, Phase.INSERT)
+
+
+@pytest.mark.parametrize("drift", [(0.0, 0.0, 0.031), (0.0, 0.0, -0.031), (0.031, 0.0, 0.0)])
+def test_captures_at_the_specified_relative_velocity(model, drift):
+    """The Shuttle arm's end effector had to capture a payload moving at up to
+    0.031 m/s relative to the Orbiter (Daniell and Sachdev, 1982)."""
+    assert attempt(model, drift=drift).success
