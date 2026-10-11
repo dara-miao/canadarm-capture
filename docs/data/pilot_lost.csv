@@ -1,9 +1,9 @@
 variant,captured,caught_not_rigid,lost,missed,out_of_reach,timed_out,engaged,median_close_speed_cm_s
-baseline,3,0,27,1,24,5,30,5.81
-arm limp as soon as snare closes,7,0,23,1,24,5,30,5.81
-contact friction 0.6,5,5,19,2,23,6,29,3.73
-contact friction 0.1,2,0,28,1,22,7,30,6.31
-"snare drive 3,000 N",3,0,27,1,24,5,30,5.81
-snare drive 750 N,3,0,27,1,24,5,30,4.78
-perfect sensing,5,0,26,0,23,6,31,0.86
-limp at close + perfect sensing,11,0,20,0,23,6,31,0.86
+baseline,30,0,0,1,24,5,30,5.86
+arm limp as soon as snare closes,30,0,0,1,24,5,30,5.86
+contact friction 0.6,10,20,0,1,23,6,30,3.71
+contact friction 0.1,30,0,0,1,22,7,30,5.93
+"snare drive 3,000 N",30,0,0,1,24,5,30,5.86
+snare drive 750 N,30,0,0,1,24,5,30,4.8
+perfect sensing,30,1,0,0,23,6,31,0.86
+limp at close + perfect sensing,29,2,0,0,23,6,31,0.86

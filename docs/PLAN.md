@@ -73,14 +73,17 @@ A capture also has three stages of "done":
 | R4 | Research review and model update | Done (2026-10-10) | Research notes reviewed; the changes in their section 8 applied and tested |
 | P | Pilots for the two questions | Done (2026-10-10) | Both pilots run and written up; summary tables in `docs/data/` |
 | P2 | Load pilot: what happens after the snare closes | Done (2026-10-11) | Forces, vehicle motion, and tilt logged for the harsh batch; table in `docs/data/pilot_load.csv` |
-| 5 | Experiment A: closed-loop capture envelope | Blocked until the plate-on-rim contact is fixed | Outcome maps from separate, matched sweeps of drift, tumble, offset, and tilt, so their effects are not confounded |
+| R5 | Fix the plate-on-rim contact | Done (2026-10-11) | Plate seats on a ring of spheres; load and lost-capture pilots rerun; a replay of the failing attempt is a test |
+| P3 | Rerun the sensitivity pilot on the fixed model | Next | Table and failure types by speed in `docs/data/` |
+| 5 | Experiment A: closed-loop capture envelope | Planned, to be redesigned after P3 | Outcome maps from separate, matched sweeps of drift, tumble, offset, and tilt, so their effects are not confounded |
 | 6 | Experiment B: parameter sensitivity | Planned | Matched trials varying friction, one *named* form of compliance, and observation staleness |
 | 7 | Experiment C: matched-model comparison in a second engine | Planned | The same dynamic model run in Newton, after checking the two models are equivalent |
 | 8 | Write-up | Planned | README with results, figures, and video, stating what the results are conditional on |
 
 Notes on the experiments:
 
-- **After the load pilot (2026-10-11).** Every lost capture in the harsh batch ends in a numerical contact failure: tumble tilts the fixture plate into the end effector's rim, and the solver returns meganewton forces that throw the vehicle off. "Lost" counts so far measure that artefact. Neither experiment should run until the contact is fixed and the load pilot rerun. See the build log entry of 2026-10-11.
+- **After the rim fix (2026-10-11).** With the plate seating on a ring of spheres, no pin is lost in any variant of the harsh batch: all 30 snared attempts are captured. The second question is answered (lost pins were a contact failure in the model). The first has lost its main pilot result, which came from the old rim. New leads: at friction 0.6, 20 of 30 snared attempts end caught but not rigid; and half the harsh batch never reaches the pin at all. The questions at the top of this plan need restating with Dara before experiments A and B are designed.
+- **After the load pilot (2026-10-11).** Every lost capture in the harsh batch ended in a numerical contact failure: tumble tilted the fixture plate into the end effector's rim, and the solver returned meganewton forces that threw the vehicle off. "Lost" counts before the rim fix measure that artefact.
 - **After the pilots.** Experiments A and B are not yet redesigned. The pilots found that the largest effect by far is a controller choice (when the arm goes limp), and that lost pins escape through soft stops and bar coupling in the rigid-bar snare. Both need deciding on before the full experiments are fixed. See the last two build log entries of 2026-10-10.
 
 - **Experiment B.** "Compliance" can mean contact softness at the pin and bars, snare-drive stiffness, pull-in-drive stiffness, joint-servo stiffness, or structural flexibility of the arm or fixture. They are not interchangeable. The experiment will vary a named one. Candidates that the model can express today are contact softness and joint-servo stiffness. Fixture base stiffness is the one Honda et al. found most influential, and would need adding to the model.
@@ -136,7 +139,8 @@ Notes on the experiments:
 | 2026-10-10 | Describe the project as a case study, with no literature gap claimed in advance | Canadarm2 already does this routinely. A contribution, if any, has to come from the results | Current |
 | 2026-10-10 | Lead with two questions, and run small pilots before fixing the full experiments | A project needs a question to answer. Pilots are cheap and show whether an experiment would measure anything | Current |
 | 2026-10-10 | Build option for the snare drive's force limit; controller option to go limp as soon as the snare closes | Needed to vary them one at a time in the pilots | Current. Both off by default; the default behaviour is unchanged |
-| 2026-10-11 | Hold the full experiments until the plate-on-rim contact is fixed | The load pilot showed all 50 lost captures in the harsh batch end in a solver blow-up at that contact | Current |
+| 2026-10-11 | Hold the full experiments until the plate-on-rim contact is fixed | The load pilot showed all 50 lost captures in the harsh batch end in a solver blow-up at that contact | Done the same day |
+| 2026-10-11 | Fixture plate seats on a ring of 32 spheres, and collides with nothing else | The tops of the overlapping wall boxes gave the plate redundant contacts that the solver resolved with forces of up to 2.3 MN | Current. `rim="boxes"` rebuilds the old rim |
 | 2026-10-10 | Treat the station as fixed and the arm as rigid | The station is about 60 times heavier than the vehicle; arm flexibility is left out to keep the first version simple | Current |
 
 ## Values the model uses, by where they come from
@@ -193,7 +197,8 @@ Full provenance is in the research notes. This table records only what the model
 - Arm link masses and inertias, totalling about 1,400 kg of moving mass.
 - Joint servo gains, damping, and reflected inertia. No torque limits. A 0.03 rad/s (1.7°/s) joint rate cap.
 - Vehicle mass split between modules. The grapple pin's position is where the model shows a small fixture, which is probably the grapple fixture.
-- Grapple pin: 0.3 m long, 2 cm radius, with a flat-backed knob. Fixture plate: 0.25 m radius. With the cavity's 0.2 m inner radius these let the plate's edge reach the rim at 5 to 12° of tilt, less than the 15° Canadarm2's end effector was tested at.
+- Grapple pin: 0.3 m long, 2 cm radius, with a flat-backed knob. Fixture plate: 0.25 m radius. With the cavity's 0.2 m inner radius these let the plate's edge reach the rim at 5 to 14° of tilt. Canadarm2's end effector was tested at 15°.
+- Rim: 32 spheres of 2 cm radius on a 0.22 m circle. A contact surface chosen for the solver's sake, not a model of the real rim.
 - Snare: three rigid bars, 6 mm radius, drive force limit 1,500 N. Under a straight pull of about 8,000 N the bars are forced apart and the pin escapes; real cables would not open that way. The bars' open stop and the coupling that makes the three move together are soft constraints: in lost attempts the bars were pushed up to 4 cm past the stop and up to 7.7 cm apart from each other. The pilots showed the drive's force limit does not set this, so what does is an open question about the model.
 - Hover distance: the end effector starts 2 m from the pin.
 - Which point the published 10 m is measured from; here it is the module surface under the arm's base.
@@ -209,8 +214,8 @@ Full provenance is in the research notes. This table records only what the model
 - **The latch is a force, not a mechanism.** Retention now holds because 64 kN is applied at the rim once the fixture is seated. Whether real latches would engage on a slightly misaligned fixture is not something this model can say.
 - **Zero gravity is a timescale assumption.** Reasonable for a one-minute attempt according to the mjorbit comparison, but that does not by itself prove relative orbital motion is negligible against centimetre tolerances.
 - **The biggest sensitivity found so far is to the controller.** In the pilots, letting the arm go limp when the snare closes doubled the drift speed at which capture fails; friction, drive force, arm speed, and observation delay each moved it by 1 cm/s or less. A parameter ranking on this model may mostly reflect that one piece of invented logic.
-- **Lost pins are a numerical failure.** In the harsh batch every lost pin leaves after the fixture plate, tilted 5 to 12° by the vehicle's tumble, meets the end effector's rim and the contact forces jump to between 73 kN and 2.3 MN, adding kinetic energy. The bars being pushed past their soft stop and apart from each other is a consequence of that. Likely cause: the cavity wall's 16 overlapping boxes give redundant contacts. Until it is fixed, the model cannot say what a tilted plate meeting the rim does.
-- **The snare does not stop rotation.** Three bars on a round pin hold a point. Nothing in the model arrests the vehicle's tumble between snare closure and seating, about 12 s later. Whether the real snare, fixture cams, or operator procedure does is not researched.
+- **A contact failure went unnoticed through four milestones.** Until 2026-10-11 every lost pin was a solver failure where the tilted fixture plate met the rim. It was found only when contact forces and kinetic energy were logged. Other contacts of the same kind remain (the knob against the overlapping wall boxes). Batches should log peak contact force and flag any attempt where the vehicle gains speed.
+- **Tilt is removed by a substitute for the cams.** The snare holds a point and does not stop rotation, so the vehicle's tumble tilts the plate up to 14° before it meets the rim, and pull-in levers it flat. On the real fixture, cam arms do this. The plate, rim, and pin dimensions that set the lever are not sourced, and the result is sensitive to friction at that contact.
 - **Contact tuning.** Stiff contact in zero gravity may need a smaller timestep or solver tuning.
 - **Newton on macOS.** Supported in CPU-only mode but untested here.
 

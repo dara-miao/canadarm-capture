@@ -7,9 +7,10 @@ bars put on the pin, the contact force between the vehicle and the rest of the e
 effector, and when the pin left.
 
     python experiments/pilot_load.py
+    python experiments/pilot_load.py boxes    # the rim as it was before 2026-10-11
 
-Writes docs/data/pilot_load.csv, one row per attempt in which the snare fired.
-A pilot: 60 scenarios, one seed. About 5 minutes on 8 cores.
+Writes docs/data/pilot_load.csv (or pilot_load_box_rim.csv), one row per attempt in
+which the snare fired. A pilot: 60 scenarios, one seed. About 90 s on 8 cores.
 """
 
 import csv
@@ -49,9 +50,9 @@ def _stage(since: float) -> str:
     return "after pull-in"
 
 
-def run(args: tuple[int, batch.Scenario, str]) -> dict | None:
-    index, s, variant = args
-    model = scene.build_model(meshes=False)
+def run(args: tuple[int, batch.Scenario, str, str]) -> dict | None:
+    index, s, variant, rim = args
+    model = scene.build_model(meshes=False, rim=rim)
     data = mujoco.MjData(model)
     scene.reset(model, data, lateral=(s.lateral_x, s.lateral_y), tilt=(s.tilt_x, s.tilt_y), roll=s.roll)
     scene.set_vehicle_velocity(
@@ -150,11 +151,12 @@ def run(args: tuple[int, batch.Scenario, str]) -> dict | None:
 
 def main() -> None:
     base = batch.sample(60, HARSH, seed=0)
-    jobs = [(i, s, name) for name in VARIANTS for i, s in enumerate(base)]
+    rim = sys.argv[1] if len(sys.argv) > 1 else "spheres"
+    jobs = [(i, s, name, rim) for name in VARIANTS for i, s in enumerate(base)]
     workers = max(1, (os.cpu_count() or 2) - 2)
     with mp.get_context("spawn").Pool(workers) as pool:
         rows = [r for r in pool.map(run, jobs, chunksize=1) if r is not None]
-    path = ROOT / "docs" / "data" / "pilot_load.csv"
+    path = ROOT / "docs" / "data" / ("pilot_load.csv" if rim == "spheres" else "pilot_load_box_rim.csv")
     with path.open("w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=list(rows[0]))
         writer.writeheader()

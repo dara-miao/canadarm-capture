@@ -38,6 +38,9 @@ CAVITY_RADIUS = 0.20
 WALL_THICKNESS = 0.04
 WALL_SEGMENTS = 16
 WALL_MASS = 40.0
+# The rim the fixture plate seats on: a ring of spheres whose tops lie in the mouth plane.
+RIM_SPHERES = 32
+RIM_BIT = 4  # collision bit shared only by the rim spheres and the fixture plate
 
 # Snare actuator travel [m]. The bars start 0.1 m from the axis; commanding past the
 # pin surface makes them press on it. The carriage pulls the closed snare inward.
@@ -76,6 +79,33 @@ def _add_cavity_wall(spec: mujoco.MjSpec) -> None:
             mass=WALL_MASS / WALL_SEGMENTS,
             rgba=[0.85, 0.72, 0.3, 0.35],  # see-through, so the snare is visible
         )
+
+
+def _add_rim(spec: mujoco.MjSpec) -> None:
+    """Give the fixture plate its own surface to seat on: a ring of spheres on the rim.
+
+    The wall boxes overlap at their edges, so a tilted plate touched two of them at the
+    same place, and the solver returned forces of up to 2 MN that threw the vehicle off
+    (build log, 2026-10-11). Each sphere gives the plate one contact with one normal.
+    The plate then collides with the spheres only, and nothing else collides with them.
+    """
+    lee = spec.body("lee_tool")
+    r = WALL_THICKNESS / 2
+    r_mid = CAVITY_RADIUS + r
+    for i in range(RIM_SPHERES):
+        phi = 2 * np.pi * i / RIM_SPHERES
+        lee.add_geom(
+            name=f"lee_rim_{i}",
+            type=mujoco.mjtGeom.mjGEOM_SPHERE,
+            size=[r, 0, 0],
+            pos=[r_mid * np.cos(phi), r_mid * np.sin(phi), CAVITY_Z1 - r],
+            contype=RIM_BIT,
+            conaffinity=0,
+            density=0,
+            rgba=[0.85, 0.72, 0.3, 0.35],
+        )
+    plate = spec.geom("gf_plate")
+    plate.contype, plate.conaffinity = 0, RIM_BIT
 
 
 def meshes_available() -> bool:
@@ -130,6 +160,7 @@ def build_model(
     friction: float | None = None,
     fixture_stiffness: float | None = None,
     snare_force: float | None = None,
+    rim: str = "spheres",
 ) -> mujoco.MjModel:
     """Build the scene.
 
@@ -141,9 +172,16 @@ def build_model(
               fixture base's stiffness strongly affects early capture.
     snare_force: force limit of the drive that closes the snare bars [N]. Defaults
               to the model file's 1,500 N, which is not sourced.
+    rim:      what the fixture plate seats on. "spheres" is a ring of spheres on the rim.
+              "boxes" is the tops of the wall boxes, as before 2026-10-11; kept only to
+              reproduce the contact failure that led to the change.
     """
+    if rim not in ("spheres", "boxes"):
+        raise ValueError(f"unknown rim: {rim}")
     spec = mujoco.MjSpec.from_file(str(BASE_XML))
     _add_cavity_wall(spec)
+    if rim == "spheres":
+        _add_rim(spec)
     if friction is not None:
         _set_friction(spec, friction)
     if fixture_stiffness is not None:

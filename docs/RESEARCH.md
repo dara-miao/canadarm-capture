@@ -86,7 +86,15 @@ A compliant capture device with gecko-adhesive pads, mounted on a CubeSat, for d
 A Unity training simulator used to study operator workload. No contact physics; a grapple means coming within 1 m. Gives ground-control communication latency of 0.3 to 0.5 s each way, and tests round-trip delays of 0, 0.5, 1.0, and 1.5 s between an operator's command and seeing the result.
 *Caution:* that is a human teleoperation delay. It is not the delay of a sensor feeding an automatic controller, which is what this project's model has.
 
+**NASA, SSP 50235 (baseline, 10 February 2000).** "Interface Definition Document (IDD) for International Space Station (ISS) Visiting Vehicles (VVs)." [Copy hosted by the University of Maryland](https://spacecraft.ssl.umd.edu/design_lib/SSP50235.ISSvehicleIDD.pdf).
+The station programme's requirements on any visiting vehicle. Read for the paragraphs on capture by the arm (4.2.2.1.2, 4.6.2, 4.6.8.5, 5.1.7.3) only; the rest was searched, not read. It has no capture rates and no fixture dimensions. It points to where they are: see "Known but not read".
+*Caution:* a 2000 baseline, written before HTV, Dragon, or Cygnus flew. Later revisions may differ. The berthing-box document it cites is numbered "JSC TBD".
+
 ### Read through a summary
+
+**US patent 4,750,769 (Tebb, Spar Aerospace, 1988), "Auxiliary grapple fixture", and US patent 4,929,011 (Vandersluis and Quittner, 1990), "Grapple fixture".** Read through a summarising fetch for geometry. Neither gives a dimension. The first says the standard fixture weighs about 27 lb and that protrusions on its three cam arms mate with matching ones in the end effector. The second describes a different, cone-shaped fixture, not the one on Cygnus.
+
+**International External Robotic Interface Interoperability Standards, baseline (2019).** [PDF](https://internationaldeepspacestandards.com/wp-content/uploads/2024/02/robotic_baseline_final_3-2019.pdf). Text searched for grapple fixture and capture terms. It has a picture of the flight releasable grapple fixture and a discussion of release mechanisms, and says visiting vehicles' fixtures release as a whole assembly of more than 12 kg. No dimensions and no capture envelope.
 
 **Zhang, Verhagen, Vega, McKeen, and Manchester (2026).** "mjorbit: A Simulation Framework for Space Robotics." [arXiv 2609.08010](https://arxiv.org/abs/2609.08010), submitted 7 September 2026.
 Extends MuJoCo with orbit propagation, spacecraft actuators, and sensors, with CPU and GPU backends. Points checked:
@@ -115,6 +123,9 @@ A MuJoCo toolkit for small free-flying satellites: control, learning on GPU, con
 | *ISS Robotics Group Robotics Book*, JSC-48540 (2001) | Cited by Chang and Marquez | Not found online |
 | "Canada and the International Space Station Program", SpaceOps 2025, paper 0266 | Reported to cover the history of free-flyer capture, including the 50th on 6 August 2024 | Reported, not read |
 | Snare cable dynamics paper, *J. Central South University* (2013) | Flexible cable model of a snare end effector | Paywalled |
+| NSTS 07700, Volume XIV, Appendix 8, "Payload Deployment and Retrieval System" | The Shuttle programme's definition of the standard grapple fixture and the end effector's capture envelope. Named by SSP 50235 as the requirement for a flight releasable grapple fixture | Not found online. SSP 50235 prints the volume as "XIX"; other sources say XIV |
+| NSTS 21000-IDD-ISS, section 14 | Named by SSP 50235 alongside it | Not found online |
+| SSP 42004, "Mobile Servicing System to User Interface Control Document (Generic)", and SSP 41167, the MSS segment specification | Canadarm2's own interface and payload-handling requirements. The likeliest home of the LEE's capture envelope and allowed rates | Not found online |
 | US patent 4929009A, "End effector" | Design description of the snare and latch mechanism | Reported, not read |
 | "Canadarm: The SRMS Technical Details", IEEE | Shuttle arm figures | Reported, not read. Gives a rigidize load in "kg", which is not a force unit |
 
@@ -205,7 +216,9 @@ Honda et al. report that the fixture base stiffness "has much larger effect on t
 | Time to capture | 2 to 3 minutes once the crew has "Go" and the arm is in the capture window | Chang and Marquez | Typical duration. Not an abort limit | Read |
 | Arm's starting distance from the fixture | 2 m | none | This model's choice | Assumed |
 | Leftover drift and tumble in free drift | up to 0.031 m/s; up to 0.5°/s | Drift from the Shuttle requirement; tumble from nothing | This model's choice | Assumed |
-| Time limit for free drift | none | none | Chang and Marquez mention a "required time limit" without a number | Open |
+| Time limit for free drift | 90 s | SSP 50235 (2000 baseline), 4.6.8.5 | Requirement on the vehicle: stay inside its berthing box "for up to 90 sec of free drift". Not a limit on how long the arm may take | Read |
+| Holding position before capture | at least 5 minutes | SSP 50235 (2000 baseline), 4.2.2.1.2 | Requirement on the vehicle: keep its grapple fixture inside a defined grapple box | Read |
+| Size of the grapple box | not given | SSP 50235 defers to a document numbered "JSC TBD" | | Open |
 
 ### Operations and sensing
 
@@ -236,8 +249,8 @@ In order of how much they affect where capture fails in the model:
 1. **Per-joint rate limits.** Not found in any source read. The model's 1.7°/s is invented.
 2. **Leftover motion in free drift.** Honda et al. started their simulation from HTV telemetry but did not print the values. Angular rates appear only in their plots.
 3. **The arm's starting distance from the fixture.** Not found.
-4. **Free-drift time limit.** Mentioned without a number.
-5. **Grapple fixture dimensions.** Shaft length and diameter, the cam at its tip, the three large cams. No dimensioned drawing found.
+4. **Free-drift time limit.** A 2000 requirement has the vehicle stay in its box for up to 90 s of free drift. How long the operator is allowed is still not found.
+5. **Grapple fixture dimensions.** Shaft length and diameter, the cam at its tip, the three large cams, the base plate. No dimensioned drawing found after a second search (2026-10-11). The defining documents are named in section 3 and are not online. This now matters more: in the model, the plate's radius, the rim's radius, and the pin's length set the tilt at which the plate meets the rim (5 to 12°), and that contact is what removes tilt.
 6. **Which fixture the arm stands on for a Cygnus capture.** Not found. The berthing port (Unity, Earth-facing) is not the same thing as where the arm is based.
 7. **Link masses, joint torque limits, arm stiffness.** Not found.
 
@@ -375,3 +388,8 @@ Applied on 2026-10-10 unless marked otherwise. The build log has the details and
 **2026-10-10, session 5 (Dara, via Perplexity).** Dara objected that Canadarm2 already captures spacecraft, so the project cannot be motivated as solving that. Perplexity agreed and revised its assessment: the earlier framing overstated a mission need. The project is a case study for learning and for testing a model's assumptions. Whether it becomes research with a new finding is open.
 
 **2026-10-10, session 5 (Claude).** Agreed and adopted. Added the first subsection of section 7 and revised the plan's "Why this project" and the README to match. The operational facts cited (routine captures, agency training simulators) are recorded as reported.
+
+**2026-10-11 (Claude).** Prompted by the load pilot, which found that everything after snare closure turns on the fixture plate meeting the end effector's rim. Searched again for fixture and end-effector geometry and for allowed rates at capture. Found no dimensions. Found and read the capture paragraphs of SSP 50235 (2000 baseline), which gives two vehicle-side requirements (5 minutes in the grapple box, up to 90 s of free drift) and names the documents that define the fixture. Two patents and a 2019 interoperability standard were checked through summaries or text search and gave nothing dimensional. One result was a wrong lead: NTRS 19930013102 is a one-page abstract about a magnetic end effector.
+
+*What the sources do say about tilt.* Walker and Vandersluis and the patents agree that the fixture's cam arms, mating with features in the end effector during pull-in, are what remove angular misalignment. The model has no cams. Its flat plate levering on the rim does the same job by a different route, with dimensions that are not sourced. Treat any result about tilt during pull-in as a property of that substitute.
+

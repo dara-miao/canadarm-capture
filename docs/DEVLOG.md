@@ -740,3 +740,70 @@ The first two wall boxes report identical penetration and force throughout. The 
 - No fix. Candidates: build the cavity wall so that the plate meets one surface at a time, or give the rim a single collision ring; then rerun this pilot and see what a well-behaved contact does.
 - The sensitivity pilot has not been rerun with failure types and tilt saved.
 - Whether real grapple fixtures can be tilted into the rim at all at these tumble rates has not been researched. Canadarm2's end effector was tested to 15° of tilt at capture (Walker and Vandersluis), which is larger than the 5 to 12° at which this model's plate meets its rim. That suggests the modelled rim or plate geometry is tighter than the real one. The plate radius, rim radius, and pin length here are not sourced.
+
+## 2026-10-11 · A rim the plate can sit on, and the lost captures disappear
+
+**Goal.** Fix the plate-on-rim contact found in the load pilot, and see what a well-behaved contact does with a tilted plate.
+
+**Changed in the model.**
+
+- The fixture plate now seats on a ring of 32 spheres set into the rim, their tops in the mouth plane where the box tops were. Each sphere gives the plate one contact with one normal. The plate collides with the spheres and nothing else; nothing else collides with the spheres. The wall boxes still form the cavity for the pin and knob.
+- `scene.build_model(rim="boxes")` builds the rim as it was, to reproduce the failure.
+- Seated depth, masses, and every other contact are unchanged. The 51 existing checks pass without edits.
+
+**Same attempt, before and after.** Scenario 4 of the harsh batch, vehicle tumbling at 1.9°/s:
+
+| | Box-top rim | Sphere rim |
+|---|---|---|
+| Plate meets the rim | 7.0 s after firing, at 11° of tilt | between 7.5 and 8.0 s, at about 12° |
+| Largest force at the rim before latching | 7 MN | about 3 kN, sampled every half second |
+| Tilt afterwards | grows to 33° as the vehicle is thrown off | falls to 0° by 12.5 s as pull-in levers the plate flat |
+| Vehicle speed | 2 to 25 cm/s in a tenth of a second | stays under 2.5 cm/s, at rest by 20 s |
+| Outcome | lost | captured |
+
+**Load pilot, rerun** (`docs/data/pilot_load.csv`; the earlier table is now `pilot_load_box_rim.csv`).
+
+| | Box-top rim | Sphere rim |
+|---|---|---|
+| Default arm: captured / lost, of 30 snared | 3 / 27 | 30 / 0 |
+| Limp arm: captured / lost, of 30 snared | 7 / 23 | 30 / 0 |
+| Largest tilt while held, captured attempts | up to 4.7° | 3.7 to 14.1°, median 10° |
+| Largest bar force | up to 147 kN | 4.9 to 5.0 kN, the pull-in drive's own limit |
+| Largest rim force | up to 2.3 MN | 69 kN, the latches |
+
+One attempt in each variant fires and misses, as before.
+
+**Lost-capture pilot, rerun** (`docs/data/pilot_lost.csv`; earlier table `pilot_lost_box_rim.csv`). The same 60 harsh scenarios.
+
+| Variant | Captured | Caught, not rigid | Lost | Missed | Out of reach | Timed out |
+|---|---|---|---|---|---|---|
+| Baseline | 30 | 0 | 0 | 1 | 24 | 5 |
+| Arm limp as soon as the snare closes | 30 | 0 | 0 | 1 | 24 | 5 |
+| Contact friction 0.6 | 10 | 20 | 0 | 1 | 23 | 6 |
+| Contact friction 0.1 | 30 | 0 | 0 | 1 | 22 | 7 |
+| Snare drive 3,000 N | 30 | 0 | 0 | 1 | 24 | 5 |
+| Snare drive 750 N | 30 | 0 | 0 | 1 | 24 | 5 |
+| Perfect sensing | 30 | 1 | 0 | 0 | 23 | 6 |
+| Limp at close + perfect sensing | 29 | 2 | 0 | 0 | 23 | 6 |
+
+**What this shows.**
+
+- *The "lost" outcome was the artefact, all of it.* No variant loses a pin now. Question 2 as asked ("why do snared pins get lost?") has its answer: in this model they were lost to a contact the solver could not resolve.
+- *The limp-at-close effect in this batch was the artefact too.* It is 30 against 30 now. The pilot's headline, that going limp doubles the failure point, came from the sensitivity pilot, which has not been rerun. It should be assumed gone until it is.
+- *In this batch the capture no longer fails after the snare closes.* Every attempt that snares the pin holds it. What stops the other half is earlier: 24 give up at the edge of the arm's reach and 5 never fire. That is the arm's workspace and the controller's abort rule, at four times the tested drift.
+- *A new, physical-looking sensitivity appeared.* At friction 0.6, twenty of thirty snared attempts end caught but not rigid. The likely reason is that the tilted plate has to slide on the rim to come flat, and at 0.6 it sticks. Not checked. At 0.3 and 0.1 it slides. This is the kind of result the project was set up to find, and it sits on a surrogate (flat plate on a ring of spheres) for the cams that do this job on the real fixture.
+- *Tilt of up to 14° at the rim is levered out by a 4.9 kN pull-in.* Whether that is believable depends on plate, rim, and pin dimensions, none of which are sourced. See the research log for the same date.
+
+**Research.** A second search for fixture geometry found no dimensions. It did find the station programme's vehicle requirements (SSP 50235, 2000 baseline): hold the grapple box for 5 minutes, and stay in it for up to 90 s of free drift. Recorded in the research notes with the documents that would have the geometry.
+
+**Checks.** 52 pass. The new one replays scenario 4 and requires that the plate tilts past 10°, that the vehicle's speed never exceeds 1.5 times its speed at firing, and that the attempt ends captured.
+
+**What went wrong or is weak.**
+
+- The sensitivity pilot has not been rerun. The laptop was on battery at 34% and it needs about 20 minutes on every core. Its published table (`pilot_sensitivity_box_rim.csv`) describes the old rim. The script now also saves how attempts failed at each speed.
+- Why the solver failed on the box tops is still a likely cause, not a demonstrated one. Replacing the surface made the failure go away, which is consistent with redundant contacts and does not prove it.
+- Other contacts in the model still use cylinders against overlapping boxes, the knob inside the cavity in particular. None misbehaved in these 480 attempts. That is not a guarantee.
+- A ring of spheres is slightly bumpy. A plate sliding round the rim crosses 32 small gaps.
+- Every batch table before this entry, including R4's, was produced with the old rim.
+
+**Not done.** Experiments A and B are still undesigned. The plan's two questions need restating, since the second is answered and the first has lost its main result.

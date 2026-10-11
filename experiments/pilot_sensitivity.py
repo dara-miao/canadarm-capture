@@ -6,11 +6,13 @@ capture rate crosses 50%, by linear interpolation between the speeds tested.
 
     python experiments/pilot_sensitivity.py
 
-Writes docs/data/pilot_sensitivity.csv. A pilot: 12 scenarios per speed, one seed.
+Writes docs/data/pilot_sensitivity.csv, and how every attempt ended, by variant and
+speed, to docs/data/pilot_sensitivity_outcomes.csv. A pilot: 12 scenarios per speed, one seed.
 """
 
 import csv
 import sys
+from collections import Counter
 from pathlib import Path
 
 import numpy as np
@@ -19,6 +21,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from capture import batch  # noqa: E402
+from capture.trial import Outcome  # noqa: E402
 
 DRIFTS = [0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.15]  # [m/s]
 BASE = batch.Ranges()  # offsets, tilts, roll, and tumble at their defaults; perfect sensing
@@ -50,7 +53,7 @@ def failure_point(rates: list[float]) -> float | None:
 
 def main() -> None:
     base = batch.sample(12, BASE, seed=1)
-    out = []
+    out, outcomes = [], []
     for name, (build, config, override) in VARIANTS.items():
         scenarios = batch.matched_sweep(base, "drift", DRIFTS)
         for field, value in override.items():
@@ -60,6 +63,8 @@ def main() -> None:
         for i, _ in enumerate(DRIFTS):
             chunk = rows[i * len(base) : (i + 1) * len(base)]
             rates.append(sum(r["outcome"] == "captured" for r in chunk) / len(chunk))
+            counts = Counter(r["outcome"] for r in chunk)
+            outcomes.append({"variant": name, "drift_m_s": DRIFTS[i], **{o.value: counts.get(o.value, 0) for o in Outcome}})
         point = failure_point(rates)
         record = {"variant": name, **{f"captured_at_{v:.2f}": round(r, 2) for v, r in zip(DRIFTS, rates)},
                   "failure_point_m_s": "" if point is None else round(point, 3)}  # fmt: skip
@@ -70,6 +75,12 @@ def main() -> None:
         writer = csv.DictWriter(f, fieldnames=list(out[0]))
         writer.writeheader()
         writer.writerows(out)
+    print("wrote", path.relative_to(ROOT))
+    path = path.with_name("pilot_sensitivity_outcomes.csv")
+    with path.open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=list(outcomes[0]))
+        writer.writeheader()
+        writer.writerows(outcomes)
     print("wrote", path.relative_to(ROOT))
 
 

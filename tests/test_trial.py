@@ -8,10 +8,10 @@ import pytest
 
 from capture import batch, scene
 from capture.batch import Ranges, Scenario
-from capture.controller import Phase
+from capture.controller import CaptureController, Phase
 from capture.sensing import PinSensor, SensorConfig
 from capture import snare
-from capture.trial import Outcome, classify, is_seated
+from capture.trial import Outcome, classify, is_seated, run_trial
 
 
 @pytest.fixture(scope="module")
@@ -150,3 +150,38 @@ def test_matched_sweep_changes_only_the_named_quantity():
         for other in ("seed", "lateral_x", "tilt_y", "roll", "tumble_z", "sensor_delay"):
             assert getattr(slow, other) == getattr(fast, other) == getattr(original, other)
     assert batch.with_value(base[0], "sensor_delay", 0.4).sensor_delay == 0.4
+
+
+def test_a_tilting_fixture_plate_is_levered_straight_not_thrown_off(model):
+    # Scenario 4 of the harsh pilot batch: the vehicle tumbles at about 1.9 deg/s, so after
+    # the snare closes the fixture plate tilts some 12 degrees and meets the rim. On the
+    # wall boxes' tops that contact returned forces of up to 2 MN and threw the vehicle
+    # off at 25 cm/s (build log, 2026-10-11). On the rim spheres pull-in straightens it.
+    harsh = Ranges(
+        drift=0.122, tumble=np.radians(2.0),
+        sensor_delay=0.5, sensor_rate=10.0, sensor_pos_noise=0.01, sensor_angle_noise=np.radians(1.0),
+    )  # fmt: skip
+    s = batch.sample(60, harsh, seed=0)[4]
+    data = mujoco.MjData(model)
+    scene.reset(model, data, lateral=(s.lateral_x, s.lateral_y), tilt=(s.tilt_x, s.tilt_y), roll=s.roll)
+    scene.set_vehicle_velocity(
+        model, data, drift=(s.drift_x, s.drift_y, s.drift_z), tumble=(s.tumble_x, s.tumble_y, s.tumble_z)
+    )
+    sensor = PinSensor(
+        model, SensorConfig(s.sensor_delay, s.sensor_rate, s.sensor_pos_noise, s.sensor_angle_noise), seed=s.seed
+    )
+    controller = CaptureController(model, sensor=sensor)
+    vehicle = model.body("vehicle").id
+    tilt, speed = [], []
+
+    def after_step(d):
+        if controller.t_trigger is not None:
+            v = np.empty(6)
+            mujoco.mj_objectVelocity(model, d, mujoco.mjtObj.mjOBJ_BODY, vehicle, v, 0)
+            tilt.append(scene.pin_axis_error(model, d))
+            speed.append(np.linalg.norm(v[3:]))
+
+    result = run_trial(model, data, controller, after_step=after_step)
+    assert np.degrees(max(tilt)) > 10  # the plate did tilt onto the rim
+    assert max(speed) < 1.5 * speed[0]  # and nothing added energy to the vehicle
+    assert result.outcome is Outcome.CAPTURED
