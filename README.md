@@ -1,10 +1,10 @@
 # canadarm-capture
 
-A MuJoCo case study of a spacecraft capture. A simplified model of a space station arm catches a free-drifting cargo vehicle; the project looks at how that model succeeds and fails, and how much the answers depend on its own assumptions.
+A MuJoCo case study of a spacecraft capture. A simplified model of a space station arm catches a free-drifting cargo vehicle. The question behind it is general: when a contact-rich simulation gives a result, how do you tell whether it is physics or an artefact of how contact was modelled, and which modelling choices does the result depend on?
 
 Inspired by Canadarm2 capturing Cygnus, which the real arm does routinely. This project does not reproduce that system's flight limits, and a failure here is a failure of this model.
 
-**Status:** in progress. The arm approaches a drifting, tumbling vehicle from the 10 m capture point, snares its grapple pin, pulls it in, and latches, with delayed and noisy sensing. A batch runner records how each attempt ends and at which stage it failed. The systematic experiments have not been run yet. See the [research notes](docs/RESEARCH.md), the [plan](docs/PLAN.md), and the [build log](docs/DEVLOG.md).
+**Status:** in progress. The arm approaches a drifting, tumbling vehicle from the 10 m capture point, snares its grapple pin, pulls it in, and latches, with delayed and noisy sensing. A batch runner records how each attempt ends and at which stage it failed. Pilot runs found, and fixed, a contact failure in the model that had looked like a physical failure mode. The systematic experiments have not been run yet. See the [research notes](docs/RESEARCH.md), the [plan](docs/PLAN.md), and the [build log](docs/DEVLOG.md).
 
 ![Project plan](docs/media/plan.svg)
 
@@ -30,6 +30,12 @@ That runs with plain stand-in shapes. To use the real 3D models, fetch them once
 ```bash
 .venv/bin/pip install -e ".[assets]"
 .venv/bin/python scripts/fetch_assets.py
+```
+
+For a starry background in place of plain black (an invented sky, generated locally):
+
+```bash
+.venv/bin/python scripts/make_sky.py
 ```
 
 To watch a capture interactively on macOS:

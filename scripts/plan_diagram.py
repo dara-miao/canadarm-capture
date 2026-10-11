@@ -23,7 +23,7 @@ EXPERIMENTS = [
 ]
 
 # One line on what is happening right now, shown under the title.
-NOW = "Rim contact fixed: no snared pin is lost.  Next: rerun the sensitivity pilot, then restate the questions."
+NOW = "New question: is a simulated contact result physics or artefact?  Next: Dara works through the model, contact first."
 
 W, H = 1600, 860
 BG, CARD, EDGE = "#0f1b2d", "#1b2a40", "#2b3d57"

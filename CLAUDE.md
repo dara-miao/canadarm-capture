@@ -2,6 +2,12 @@
 
 MuJoCo study of a station arm capturing a free-floating vehicle. Portfolio project; the build process is documented as carefully as the code.
 
+The question (agreed 2026-10-11): when a contact-rich simulation gives a result, how do you tell whether it is physics or an artefact of how contact was modelled, and which modelling choices is the result most sensitive to? The capture is the case study. It solves no problem for the space industry.
+
+## How to work with Dara
+
+Dara wants to be the one who builds this and to understand the system design well enough to explain it. Explain before changing. Prefer walking Dara through a change, or having them make it and predict the result, over doing it silently. The plan lists five layers (world, contact, machine, brain, experiment); the agreed path is to go through them one at a time, starting with contact.
+
 ## Documentation routine
 
 Do this as part of every piece of work, not at the end:
@@ -20,6 +26,7 @@ Do this as part of every piece of work, not at the end:
 - Renders: `.venv/bin/python scripts/render_scene.py`
 - Plan diagram: `.venv/bin/python scripts/plan_diagram.py`
 - Fetch 3D models (git-ignored, needed for mesh renders): `.venv/bin/python scripts/fetch_assets.py`
+- Starry background (git-ignored, appearance only): `.venv/bin/python scripts/make_sky.py`
 - Interactive viewer: `.venv/bin/mjpython scripts/view.py`
 
 ## Constraints
@@ -46,6 +53,6 @@ Read `docs/PLAN.md` (questions, milestones, decisions), `docs/RESEARCH.md` (sour
 - Pilots so far are written up in the build log (entries of 2026-10-10 and 2026-10-11). Tables are in `docs/data/`; files ending `_box_rim` are from before the rim fix. Before rerunning a pilot because a table is missing, check it is not still running (`pgrep -fl experiments/pilot_`).
 - Found 2026-10-11: every "lost" capture was a numerical contact failure where the tilted fixture plate met the tops of the overlapping wall boxes. Fixed the same day: the plate now seats on a ring of spheres (`scene._add_rim`; `rim="boxes"` rebuilds the old rim). In the harsh batch all 30 snared attempts are now captured, in every variant except friction 0.6 (10 captured, 20 caught but not rigid).
 - All batch results from before the fix, including the sensitivity pilot's "limp at close doubles the failure point", describe the old rim. `docs/data/pilot_sensitivity.csv` does not exist yet: the sensitivity pilot still has to be rerun (about 20 minutes on all cores; it was held because the laptop was on low battery).
-- Question 2 in the plan is answered and question 1 has lost its main pilot result. The questions need restating with the user before experiments A and B are designed. Do not run them unasked.
+- The plan's question was restated on 2026-10-11 (see the top of this file). Experiments A, B, and C are to be redesigned around it after Dara has worked through the layers. Do not run them unasked.
 - When investigating a failure, log contact forces and kinetic energy before explaining it. Three explanations of lost pins were written before anyone did.
 - Two Claude Code sessions once edited this repository at the same time and their work was mixed in one commit. Check `git status` and `git log` before editing.

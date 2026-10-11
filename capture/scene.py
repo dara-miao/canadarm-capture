@@ -108,6 +108,19 @@ def _add_rim(spec: mujoco.MjSpec) -> None:
     plate.contype, plate.conaffinity = 0, RIM_BIT
 
 
+SKY = MESH_DIR / "sky.png"  # painted by scripts/make_sky.py
+
+
+def _use_sky(spec: mujoco.MjSpec) -> None:
+    """Replace the flat black background with the painted starry sky. Appearance only."""
+    sky = next(t for t in spec.textures if t.type == mujoco.mjtTexture.mjTEXTURE_SKYBOX)
+    sky.builtin = mujoco.mjtBuiltin.mjBUILTIN_NONE
+    sky.file = str(SKY)
+    sky.gridsize = [6, 1]
+    sky.gridlayout = "RLUDFB"
+    sky.width = sky.height = 0
+
+
 def meshes_available() -> bool:
     names = [*geometry.ARM_MESHES.values(), *geometry.VEHICLE_MESHES, *geometry.STATION_MESHES]
     return all((MESH_DIR / f"{n}.stl").exists() for n in names)
@@ -192,6 +205,8 @@ def build_model(
         meshes = meshes_available()
     if meshes:
         _use_meshes(spec)
+    if meshes and SKY.exists():
+        _use_sky(spec)
     return spec.compile()
 
 

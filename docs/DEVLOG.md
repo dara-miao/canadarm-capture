@@ -807,3 +807,23 @@ One attempt in each variant fires and misses, as before.
 - Every batch table before this entry, including R4's, was produced with the old rim.
 
 **Not done.** Experiments A and B are still undesigned. The plan's two questions need restating, since the second is answered and the first has lost its main result.
+
+## 2026-10-11 · Stepping back: what the project is for
+
+**Why.** Dara stopped the work to ask what problem this solves, why this industry, whether the real operation is already solved, and how any of it connects to physical AI and physics simulation. The plan's two questions had become specific to this model, and the work had been running ahead of Dara's own understanding of it.
+
+**Answers, in short.**
+
+- It solves no problem for the space industry. Canadarm2 does this routinely with a forgiving mechanism, a cooperative target, and a trained operator.
+- The scenario was chosen because it is harder and more consequential than a desk arm and a mug, and because zero gravity leaves contact as nearly the only thing going on.
+- The most useful thing produced so far is not about capture. It is the lost-pin episode: a convincing failure mode, three wrong physical explanations, and a cause that was numerical.
+
+**The new question.** When a contact-rich simulation gives a result, how do you tell whether it is physics or an artefact of how contact was modelled, and which modelling choices is the result most sensitive to? It replaces the two earlier questions, which are kept in the plan for the record.
+
+**How the work changes.** Dara builds and Claude explains. The plan now has a map of five layers (world, contact, machine, brain, experiment) and the agreed path is to go through them one at a time, starting with contact. The sensitivity pilot waits until Dara can say what it measures.
+
+**Uncertainty.** Dara's comparison with physics labs is the right one, and is now in the plan: a guessed number is a measurement with a wide uncertainty, and a sensitivity run is how its effect on the result is found.
+
+**Also built: a sky.** The background was flat black. `scripts/make_sky.py` paints a cube map of about 30,000 stars, a band of glow with dust lanes, and four faint galaxies, and the scene uses it when the file exists. It is invented, not a map of the real sky, and changes nothing in the physics. Checked by rendering wide views across the cube's edges and corners: the band is continuous. A real camera exposed for sunlit hardware would show few stars or none, and the Earth, which fills much of the real view, is not drawn.
+
+**Checks.** 52 pass.
