@@ -676,3 +676,67 @@ Bar position runs from 0 (fully open, the joint's stop) to 8 cm (fully closed). 
 **Checks.** 51 pass.
 
 **Not changed.** The model and the controller.
+
+## 2026-10-11 · Load pilot: lost pins are a contact blow-up, not an overloaded snare
+
+**Goal.** Measure what loads the snare after it closes, and test the hypothesis from the pilot entry: that the vehicle's momentum relative to the station has to be absorbed through the snare, and that this is what pulls the pin out.
+
+**Built.**
+
+- `run_trial` takes an `after_step` callback, called once each step is complete. Contact forces can only be read correctly at that point. Nothing else in the model or controller changed.
+- `experiments/pilot_load.py`: the 60 harsh scenarios, with the default arm and with the arm limp from snare closure. From the moment the snare fires it logs the vehicle's speed and spin relative to the station, the force the snare bars put on the pin, the force between the vehicle and the rest of the end effector, and the tilt between the pin and the end effector's axis. One row per attempt in which the snare fired, in `docs/data/pilot_load.csv`.
+
+**Result.** Outcome counts match the lost-capture pilot: 3 captured and 27 lost by default, 7 and 23 with the limp arm.
+
+| | Default arm, captured (3) | Default arm, lost (27) | Limp arm, captured (7) | Limp arm, lost (23) |
+|---|---|---|---|---|
+| Vehicle speed at closure | 6.8 to 7.9 cm/s | 2.0 to 11.8 cm/s | 6.2 to 8.1 cm/s | 2.0 to 11.8 cm/s |
+| Vehicle spin at closure | 1.2 to 1.8°/s | 0.9 to 2.6°/s | 0.9 to 1.8°/s | 1.3 to 2.6°/s |
+| Tilt at closure | under 0.6° | under 3.6°, median 0.7° | under 0.6° | under 3.6°, median 0.7° |
+| Largest tilt while held | 3.4 to 4.7° | 29 to 47° | 0.8 to 4.5° | 31 to 47° |
+| Tilt when the end effector first pushed on the vehicle with over 10 kN | (only the latches, at 0°) | 5.2 to 11.8°, median 6.2° | (only the latches, at 0°) | 5.2 to 12.0°, median 6.2° |
+| Time of that, after firing | | 3.8 to 9.7 s, median 6.3 s | | 3.6 to 9.8 s, median 6.1 s |
+| Largest bar force before that | 4.9 kN | 0.5 to 27.8 kN, median 5.6 kN | 4.9 kN | 0.5 to 7.9 kN, median 6.5 kN |
+| Largest force from the rest of the end effector | 69 kN (latches) | 73 kN to 2.3 MN, median 0.6 MN | 69 kN (latches) | 86 kN to 1.5 MN, median 0.8 MN |
+| Vehicle speed when the pin left, or at the end | under 0.7 cm/s | 14 to 134 cm/s, median 56 cm/s | under 1.1 cm/s | 9 to 121 cm/s, median 78 cm/s |
+| Vehicle spin then | under 0.1°/s | 17 to 199°/s, median 71°/s | under 0.1°/s | 25 to 291°/s, median 103°/s |
+
+Every one of the 50 lost attempts follows the same sequence:
+
+1. The snare closes on the pin with the pin nearly on axis.
+2. The vehicle goes on tumbling. Three bars around a round pin hold a point; they do not stop rotation. The tilt between the pin and the end effector grows at about the tumble rate.
+3. After a median of 6 s the tilt reaches 5 to 12° and the fixture's plate meets the end effector's rim.
+4. Within a few hundredths of a second the contact force there reaches hundreds of kilonewtons to meganewtons, and the vehicle leaves at several times the speed and tens of times the spin it arrived with. The bars are forced open on the way out.
+
+Every captured attempt stayed under 4.7° of tilt, and its spin was down to 0.3°/s by the time the latches came on.
+
+**Step 4 is not physics.** A contact cannot give a vehicle more kinetic energy than it had. In scenario 4, logged step by step:
+
+- The plate touches the rim at 7.00 s after firing. For 0.1 s the contact behaves: penetration grows smoothly to 3.3 mm and the force to 578 N on each of two wall boxes.
+- At 7.108 s a third wall box comes into contact at 0.04 mm of penetration. On that step the forces go to 245 kN, 245 kN, and 485 kN. Penetration did not jump.
+- Sixteen milliseconds later they are 1.5 to 1.8 MN at under 5 mm of penetration, and the model's kinetic energy has gone from 15 J to 116 J.
+
+The first two wall boxes report identical penetration and force throughout. The cavity wall is a ring of 16 boxes that overlap at their edges, so the plate's edge meets two of them at the same place. That is the likely cause: redundant contacts that the solver cannot resolve once a third arrives at a different angle. It is not established. The solver's handling of a thin cylinder against boxes is the other candidate.
+
+**What this does to earlier explanations.**
+
+- *The momentum hypothesis (pilot entry) is not supported.* Before the plate meets the rim the bars carry a median of 5.6 kN, most of it the pull-in drive's own 4.9 kN, and the vehicle's speed has barely changed (median 7.3 cm/s at closure, 5.2 cm/s when the plate meets the rim). The snare is not being overloaded by momentum in that time. One attempt reached 27.8 kN first and may be an exception.
+- *"Forced apart against the drive" (R4 entry) and the soft stop and coupling (follow-up entry) are consequences.* The bars open because the blow-up drives the pin through them.
+- *Why the limp arm helps is now a guess with a mechanism.* A limp arm can be turned by the tumbling vehicle, so the tilt grows more slowly. Four more attempts stay under 5° until the latches hold. Not tested directly.
+- *Why friction 0.6 helped is open again.*
+
+**What it means for the two questions.**
+
+- Question 2 has a first answer, for this model: snared pins are lost when tumble tilts the fixture plate into the rim before pull-in has seated it, and what happens next is a numerical failure. What a sound contact would do at that point, lever the fixture straight or pry the pin out, is exactly the question, and this model cannot answer it yet.
+- Question 1's pilot numbers need rereading. The harsh batch tumbles at up to 2°/s. The sensitivity pilot tumbles at up to 0.5°/s and saved no failure types, so whether its 6 cm/s boundary is this same blow-up is unknown.
+- The "lost" counts in every batch so far, including the R4 table, count this artefact.
+
+**What went wrong.** Three explanations for lost pins were written down before anyone logged a contact force. The second session checked the bars and the drive and stopped there. The energy check that settles it took one replay.
+
+**Checks.** 51 pass. The 62 rows are 31 fired attempts per variant; the other 29 scenarios never fire the snare.
+
+**Not done, and not decided.**
+
+- No fix. Candidates: build the cavity wall so that the plate meets one surface at a time, or give the rim a single collision ring; then rerun this pilot and see what a well-behaved contact does.
+- The sensitivity pilot has not been rerun with failure types and tilt saved.
+- Whether real grapple fixtures can be tilted into the rim at all at these tumble rates has not been researched. Canadarm2's end effector was tested to 15° of tilt at capture (Walker and Vandersluis), which is larger than the 5 to 12° at which this model's plate meets its rim. That suggests the modelled rim or plate geometry is tighter than the real one. The plate radius, rim radius, and pin length here are not sourced.

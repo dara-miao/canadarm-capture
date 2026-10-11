@@ -35,7 +35,7 @@ Do this as part of every piece of work, not at the end:
 - No `Co-Authored-By` line on commits. The README's "How this was built" section credits Claude Code instead.
 - Update `docs/PLAN.md`, `docs/DEVLOG.md`, and the plan diagram in the same commit as the milestone they describe.
 
-## Where things stand (updated 2026-10-10)
+## Where things stand (updated 2026-10-11)
 
 Read `docs/PLAN.md` (questions, milestones, decisions), `docs/RESEARCH.md` (sources and numbers), and the last few entries of `docs/DEVLOG.md` before doing anything.
 
@@ -43,6 +43,9 @@ Read `docs/PLAN.md` (questions, milestones, decisions), `docs/RESEARCH.md` (sour
 - Two questions lead the project, both written at the top of the plan:
   1. Which of the model's assumptions decide where the simulated capture fails? (`experiments/pilot_sensitivity.py`)
   2. Why do snared pins get lost? (`experiments/pilot_lost.py`)
-- Both pilots are finished and written up in the last two build log entries. Summary tables are in `docs/data/`. Before rerunning a pilot because a table is missing, check it is not still running (`pgrep -fl experiments/pilot_`).
-- Pilot findings in one line each: going limp when the snare closes doubles the drift speed at which capture fails (6 to 12 cm/s); friction, snare drive force, arm speed, and observation delay each move it by 1 cm/s or less; lost pins escape by pushing the snare bars past their soft open stop and apart from each other, which is an artefact of the rigid-bar snare. `experiments/replay_lost.py` shows this for single attempts.
-- Open, for the user to decide: whether "limp at close" becomes the default, whether to harden the snare's stops and coupling, and what the full experiments A and B should be. Do not change the model or run the experiments unasked.
+- Three pilots are finished and written up in the build log (entries of 2026-10-10 and 2026-10-11). Tables are in `docs/data/`. Before rerunning a pilot because a table is missing, check it is not still running (`pgrep -fl experiments/pilot_`).
+- Main finding so far (`experiments/pilot_load.py`): every lost capture in the harsh batch is a numerical contact failure. The vehicle keeps tumbling after the snare closes, the fixture plate tilts 5 to 12° into the end effector's rim, and the solver returns forces up to 2.3 MN that add energy and throw the vehicle off. Earlier explanations (relative speed, snare drive, soft stops, momentum) are superseded. "Lost" counts in all batches so far count this artefact.
+- Likely cause, not established: the cavity wall's 16 overlapping boxes (`scene._add_cavity_wall`) give redundant contacts with the plate.
+- Sensitivity pilot: going limp when the snare closes moved the failure point from 6 to 12 cm/s of drift; other changes moved it by 1 cm/s or less. It saved no failure types, so how much of that is the same artefact is unknown.
+- Open, for the user to decide: how to fix the plate-on-rim contact, then whether to rerun the pilots. Experiments A and B are on hold until then. Do not change the model or run experiments unasked.
+- Two Claude Code sessions once edited this repository at the same time and their work was mixed in one commit. Check `git status` and `git log` before editing.

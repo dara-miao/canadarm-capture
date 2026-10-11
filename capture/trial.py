@@ -129,13 +129,21 @@ def run_trial(
     controller: CaptureController,
     max_time: float = 180.0,
     on_step: Callable[[mujoco.MjData], None] | None = None,
+    after_step: Callable[[mujoco.MjData], None] | None = None,
 ) -> TrialResult:
-    """Step the simulation from its current state until the controller finishes or time runs out."""
+    """Step the simulation from its current state until the controller finishes or time runs out.
+
+    on_step is called once the controller has set its commands, before the step is
+    completed. after_step is called when the step is complete, which is when the contact
+    forces in data belong to the contacts in data. It is not called during the retention check.
+    """
     controller.reset(data)
     t0 = data.time
     while controller.phase not in (Phase.DONE, Phase.ABORTED) and data.time - t0 < max_time:
         _step(model, data, controller, on_step)
         mujoco.mj_step2(model, data)
+        if after_step is not None:
+            after_step(data)
 
     mujoco.mj_forward(model, data)
     duration = data.time - t0
