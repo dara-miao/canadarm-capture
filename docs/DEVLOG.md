@@ -835,6 +835,8 @@ One attempt in each variant fires and misses, as before.
 - The collision shape is the object's surface as far as physics is concerned. If it fills a hole or rounds an edge, the simulation gets that interaction wrong and nothing later corrects it.
 - Convex means no dents or hollows, not round. A box is convex.
 - There is a middle ground between one blob and a full mesh: several convex pieces fixed together. That is what this model's end effector is.
+- The part that clicked for me: each piece has to be convex, but the object built from them does not. An open box made of five flat slabs is hollow, because no slab fills the inside. My end effector's cavity is the same idea, 16 boxes in a ring.
+- What that costs is seams. Where two pieces meet there is an edge or an overlap the real object does not have. My lost-pin bug was at one: the plate touched two overlapping wall boxes in the same place.
 - Needing convex shapes is a property of particular engines and algorithms, MuJoCo among them. It is not a law of physics.
 - Tools that split a mesh into convex pieces automatically can fill in the openings that make an object work. A 2022 paper (CoACD) is about that problem.
 
