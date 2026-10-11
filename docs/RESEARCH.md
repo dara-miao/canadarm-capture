@@ -16,6 +16,8 @@ Every claim carries one of four labels.
 | **Assumed** | No source. A value chosen for the model |
 | **Disputed** | Sources disagree |
 
+Perplexity searches were mine. Sources were opened and checked with Claude Code, so "Read" means the source was opened for this project, not that I have read every page myself.
+
 Numbers are given exactly as the source prints them, with its units. Wording is mostly paraphrased; short quotations are kept where the exact words matter, with the author named. Long passages are not copied, because this repository is public and most of these papers are under copyright.
 
 A number being published does not make it a hardware specification. Several values below are inputs that a modelling paper chose, or starting guesses for a fitting procedure. The "what it is" column says which.
@@ -49,6 +51,20 @@ Three clarifications matter for the model:
 **Limp mode.** One of the arm's non-motion modes. Chang and Marquez (2018) list four: safed, brakes on, standby (motors hold position), and limp, in which the "arm joints are passively compliant". During rigidizing the arm is limp so the LEE can pull itself into line with the fixture instead of fighting the arm.
 
 **A position command is not a force guarantee.** A controller that insists on a position regardless of contact produces whatever force that takes. Contact-rich control (impedance control, hybrid force and position control) shapes how the robot yields. This is the shared ground with manipulation on Earth: in both, success depends on geometry, friction, compliance, and control response together, not on position accuracy alone.
+
+**Collision geometry is a modelling choice.** A simulator keeps two versions of every object: the detailed model that is drawn, and a simpler shape that physics uses for contact. The simulation's idea of an object's surface is the second one. If that shape fills in a hole or rounds off an edge, nothing later in the calculation can put it back.
+
+- *What the detector hands on.* For each contact, a point, a direction (the normal), and a distance or depth. MuJoCo "works with point contacts" (its documentation). The solver then turns those into forces. So a point, an edge, and a flat face can give different contact directions and different outcomes.
+- *Two kinds of simplification, easy to confuse.* A rough bounding box is used only to decide which pairs are worth checking (the broad phase). The collision shape itself is what the careful check (the narrow phase) uses, and simplifying that one changes the result.
+- *Convex does not mean round.* A shape is convex if a straight line between any two points inside it stays inside. A box with sharp corners is convex. A mug, a tube, and a bowl are not.
+- *Why engines like convex shapes.* The standard fast distance algorithm (GJK) asks a shape for its farthest point in a given direction. For a convex shape that is enough to find the distance. For a dented shape those points describe the shape's hull, with the dents filled in.
+- *Three ways to represent an object,* from cheapest to most detailed: one simple shape; several convex pieces fixed together (a compound); a full triangle mesh or a distance field. The test for which to use is whether removing a detail would change the contact outcome that matters. More detail is not automatically more accurate or more stable.
+- *The restriction belongs to the engine, not to physics.* Some engines collide concave meshes or distance fields directly. MuJoCo does not: its documentation says it "only supports convex geom-geom collisions", replaces a non-convex mesh with its convex hull, and expects hollow objects to be built as a union of convex pieces on one body.
+- *Convex pieces, concave whole.* Each piece has to be convex; the object built from them does not. An open box made of five slabs is hollow because no slab fills the inside.
+- *The cost is seams.* Where two pieces meet there is an edge or an overlap that the real object does not have, and contact near it can misbehave. This model's lost-pin failure was at one: the plate touched two overlapping wall boxes in the same place.
+- *Automatic splitting can erase what matters.* Tools that cut a mesh into convex pieces can still bridge an opening. Wei et al. (2022) built CoACD around exactly that: earlier methods may end up "filling a toaster's slots". On their project page, a drawer handle whose openings survive the split lets a simulated robot open the drawer more often than one whose openings were filled.
+
+*In this model.* The end effector's cavity is a compound: a ring of 16 boxes. The pin's tip was changed from a ball to a flat-backed disc because the snare bars wedged apart on the ball. The rim was changed from the box tops to a ring of spheres because the plate's contact with two overlapping boxes broke the solver. Each was a choice of collision shape, and each changed the result. A natural experiment for the project's question: represent the same surface several ways and see which results survive.
 
 **Where the Earth analogy stops.** On Earth the workpiece is usually held by something. Here the target is free, so contact can send it out of reach. And Canadarm2 stands on a 400-tonne station, unlike a small servicing satellite whose own body moves when its arm does. Papers about free-floating robot bases do not transfer directly.
 
@@ -112,6 +128,22 @@ A MuJoCo toolkit for small free-flying satellites: control, learning on GPU, con
 - It involves thruster-driven free-flyers. There is no robot arm and no grapple fixture.
 - It notes that MuJoCo Warp is a GPU implementation of MuJoCo built on NVIDIA Warp. This matters for experiment C: rerunning in Newton with that solver would largely be comparing MuJoCo with itself.
 
+**MuJoCo documentation, "Overview" and "Computation" chapters.** [mujoco.readthedocs.io](https://mujoco.readthedocs.io/en/stable/overview.html). Checked for how the engine treats collision shapes: convex shapes only, a non-convex mesh replaced by its convex hull, hollow objects as a union of convex pieces, contacts as points with a frame and a distance, and contact that allows some penetration.
+
+**Wei, Liu, Ling, and Su (2022), project page.** "Approximate Convex Decomposition for 3D Meshes with Collision-Aware Concavity and Tree Search." ACM Transactions on Graphics 41(4). [colin97.github.io/CoACD](https://colin97.github.io/CoACD/). The authors' summary and examples, not the paper. States the problem (earlier splitting methods lose functional details such as openings), the three changes they make, and the drawer-handle comparison with V-HACD. The page gives no success-rate numbers.
+
+### Reported, on collision geometry
+
+From a Perplexity conversation on 2026-10-11. The MuJoCo and CoACD points above were checked; these were not.
+
+| Claim | Attributed to | Status |
+|---|---|---|
+| GJK finds the distance between two convex shapes by asking each for its farthest point in a direction, without building their Minkowski difference | Gilbert, Johnson, and Keerthi (1988), via Wikipedia | Reported |
+| V-HACD splits a shape using a voxel grid; finer settings keep more detail and take longer | V-HACD's documentation | Reported |
+| Unity does not allow a concave mesh collider on a body that moves under physics, and recommends compound colliders | Unity manual | Reported. Engine-specific |
+| PhysX supports signed-distance-field collision for moving non-convex objects | NVIDIA Omniverse documentation | Reported |
+| Rule of thumb: simple or compound shapes for moving objects, detailed meshes for stationary surroundings | Unity and PhysX documentation | Reported |
+
 ### Known but not read
 
 | Source | Why it matters | Status |
@@ -126,6 +158,9 @@ A MuJoCo toolkit for small free-flying satellites: control, learning on GPU, con
 | NSTS 07700, Volume XIV, Appendix 8, "Payload Deployment and Retrieval System" | The Shuttle programme's definition of the standard grapple fixture and the end effector's capture envelope. Named by SSP 50235 as the requirement for a flight releasable grapple fixture | Not found online. SSP 50235 prints the volume as "XIX"; other sources say XIV |
 | NSTS 21000-IDD-ISS, section 14 | Named by SSP 50235 alongside it | Not found online |
 | SSP 42004, "Mobile Servicing System to User Interface Control Document (Generic)", and SSP 41167, the MSS segment specification | Canadarm2's own interface and payload-handling requirements. The likeliest home of the LEE's capture envelope and allowed rates | Not found online |
+| Gilbert, Johnson, and Keerthi (1988), "A Fast Procedure for Computing the Distance Between Complex Objects in Three-Dimensional Space" | The distance algorithm behind most convex collision detection | Not read |
+| Mamou, V-HACD | The widely used tool for splitting a mesh into convex pieces | Documentation reported, not read |
+| Todorov, Erez, and Tassa (2012), "MuJoCo: A Physics Engine for Model-Based Control" | The engine's own paper: its contact formulation and why | Abstract reported, not read |
 | US patent 4929009A, "End effector" | Design description of the snare and latch mechanism | Reported, not read |
 | "Canadarm: The SRMS Technical Details", IEEE | Shuttle arm figures | Reported, not read. Gives a rigidize load in "kg", which is not a force unit |
 
@@ -269,7 +304,7 @@ So the honest reason for the project is this: an established capture operation i
 Three things follow.
 
 - **A failure in the model is not a weakness in Canadarm2.** When the model fails at four times the tested drift and tumble, that is a failure regime of this mechanism, this controller, and these assumptions.
-- **"I cannot find a public answer" is not "the field has no answer."** The real limits may be fully characterised in requirements, tests, and procedures that are not public.
+- **"No public answer could be found" is not "the field has no answer."** The real limits may be fully characterised in requirements, tests, and procedures that are not public.
 - **No gap needs declaring in advance.** If the experiments turn up something reproducible and useful, such as an outcome boundary that moves a lot under a seemingly minor approximation, that finding is the contribution. Until then the project stands as an engineering study with a transparent model, careful experiments, clear failure analysis, and stated limits.
 
 ### The gap is narrower than "nobody has done this"
@@ -369,27 +404,31 @@ Applied on 2026-10-10 unless marked otherwise. The build log has the details and
 
 ## 9. Research log
 
-**2026-10-10, session 1 (Claude).** Read the user's notes on NVIDIA's simulation stack and physics simulation basics. Found the 1982 Shuttle end-effector paper, the 2023 cable-simulation abstract, and the CSA comparison table. Could not open the 2010 "Cosmic Catch" paper or the JAXA 2009 abstract's full text.
+**2026-10-10, session 1.** Started from my notes on NVIDIA's simulation stack and physics simulation basics. Found the 1982 Shuttle end-effector paper, the 2023 cable-simulation abstract, and the CSA comparison table. Could not open the 2010 "Cosmic Catch" paper or the JAXA 2009 abstract's full text.
 
-**2026-10-10, session 2 (Dara, via Perplexity).** Three searches: the physics of free-flyer capture and its link to contact-rich manipulation; a hunt for the missing numbers; and newer work from 2018 to 2026. Found Honda et al. (2014) and Chang and Marquez (2018), and the lead to Walker and Vandersluis (1995). Established that the three highest-priority numbers are not in the accessible literature.
+**2026-10-10, session 2, Perplexity searches.** Three searches: the physics of free-flyer capture and its link to contact-rich manipulation; a hunt for the missing numbers; and newer work from 2018 to 2026. Found Honda et al. (2014) and Chang and Marquez (2018), and the lead to Walker and Vandersluis (1995). Established that the three highest-priority numbers are not in the accessible literature.
 
-**2026-10-10, session 2 (Claude).** Opened and read Honda et al., Chang and Marquez, and Walker and Vandersluis. Every number Perplexity reported from the first two matched the source. Walker and Vandersluis had not been read by anyone yet and turned out to hold the Canadarm2-specific end-effector figures: 4,893 N rigidize preload, 64,054 N latch load, the 30 s capture requirement, and the worst-case test conditions with their back-drive loads.
+**2026-10-10, session 2, sources checked.** Opened and read Honda et al., Chang and Marquez, and Walker and Vandersluis. Every number Perplexity reported from the first two matched the source. Walker and Vandersluis had not been read by anyone yet and turned out to hold the Canadarm2-specific end-effector figures: 4,893 N rigidize preload, 64,054 N latch load, the 30 s capture requirement, and the worst-case test conditions with their back-drive loads.
 
-**2026-10-10, session 3 (Dara, via Perplexity).** A critique of the plan and README, drawing on mjorbit, SmallSatSim, and Freer et al. Main points: the gap is narrower than "no MuJoCo capture simulator exists"; the plan mixed three kinds of envelope; the rigid-bar mechanism and the controller are both part of any result; "captured" needs a retention criterion; teleoperation latency is not sensor delay; compliance and the second-engine comparison were underspecified.
+**2026-10-10, session 3, Perplexity critique.** A critique of the plan and README, drawing on mjorbit, SmallSatSim, and Freer et al. Main points: the gap is narrower than "no MuJoCo capture simulator exists"; the plan mixed three kinds of envelope; the rigid-bar mechanism and the controller are both part of any result; "captured" needs a retention criterion; teleoperation latency is not sensor delay; compliance and the second-engine comparison were underspecified.
 
-**2026-10-10, session 3 (Claude).** Checked the critique's claims about mjorbit and SmallSatSim against the papers through a summarising fetch; they held. Added section 7 and six rows to section 8, and revised the plan: reframed the question as a robustness study, added definitions and an explicit scope list, marked two decisions as superseded, split the values the model uses by where they come from, and tightened experiments A, B, and C.
+**2026-10-10, session 3, sources checked.** Checked the critique's claims about mjorbit and SmallSatSim against the papers through a summarising fetch; they held. Added section 7 and six rows to section 8, and revised the plan: reframed the question as a robustness study, added definitions and an explicit scope list, marked two decisions as superseded, split the values the model uses by where they come from, and tightened experiments A, B, and C.
 
 *A caution about the Perplexity text itself.* Several of its citation links pointed at the wrong work: statements about SmallSatSim linked to the Honda paper, statements about Honda linked to an unrelated journal page, and statements about Freer linked to the cable-simulation abstract. The claims were right where checked, but the links cannot be relied on to find the source. This is the reason for the Reported label.
 
-**2026-10-10, session 4 (Dara, via Perplexity).** Further reading on why capture fails and on what ground tests can and cannot show: Christidi-Loumpasefski et al. (2024) on contact time under mass uncertainty; Li et al. (2021) on air-bearing supports changing measured vibration; a 1993 NASA report and an ESA presentation on planar testbeds; a lead on snare capture strategy. Main ideas: capture is a race between engagement and separation; there are two kinds of uncertainty; there is no single tolerance number.
+**2026-10-10, session 4, Perplexity searches.** Further reading on why capture fails and on what ground tests can and cannot show: Christidi-Loumpasefski et al. (2024) on contact time under mass uncertainty; Li et al. (2021) on air-bearing supports changing measured vibration; a 1993 NASA report and an ESA presentation on planar testbeds; a lead on snare capture strategy. Main ideas: capture is a race between engagement and separation; there are two kinds of uncertainty; there is no single tolerance number.
 
-**2026-10-10, session 4 (Claude).** Downloaded and read the Christidi-Loumpasefski manuscript; the reported numbers matched. Could not open Li et al. (a browser check blocked it), so it stays Reported, as do the NASA report, the ESA presentation, and the snare-strategy lead. Added the "capture is a race" idea to section 2, four subsections to section 7, and one row to section 8.
+**2026-10-10, session 4, sources checked.** Downloaded and read the Christidi-Loumpasefski manuscript; the reported numbers matched. Could not open Li et al. (a browser check blocked it), so it stays Reported, as do the NASA report, the ESA presentation, and the snare-strategy lead. Added the "capture is a race" idea to section 2, four subsections to section 7, and one row to section 8.
 
-**2026-10-10, session 5 (Dara, via Perplexity).** Dara objected that Canadarm2 already captures spacecraft, so the project cannot be motivated as solving that. Perplexity agreed and revised its assessment: the earlier framing overstated a mission need. The project is a case study for learning and for testing a model's assumptions. Whether it becomes research with a new finding is open.
+**2026-10-10, session 5, Perplexity discussion.** I objected that Canadarm2 already captures spacecraft, so the project cannot be motivated as solving that. Perplexity agreed and revised its assessment: the earlier framing overstated a mission need. The project is a case study for learning and for testing a model's assumptions. Whether it becomes research with a new finding is open.
 
-**2026-10-10, session 5 (Claude).** Agreed and adopted. Added the first subsection of section 7 and revised the plan's "Why this project" and the README to match. The operational facts cited (routine captures, agency training simulators) are recorded as reported.
+**2026-10-10, session 5, follow-up.** Adopted. Added the first subsection of section 7 and revised the plan's "Why this project" and the README to match. The operational facts cited (routine captures, agency training simulators) are recorded as reported.
 
-**2026-10-11 (Claude).** Prompted by the load pilot, which found that everything after snare closure turns on the fixture plate meeting the end effector's rim. Searched again for fixture and end-effector geometry and for allowed rates at capture. Found no dimensions. Found and read the capture paragraphs of SSP 50235 (2000 baseline), which gives two vehicle-side requirements (5 minutes in the grapple box, up to 90 s of free drift) and names the documents that define the fixture. Two patents and a 2019 interoperability standard were checked through summaries or text search and gave nothing dimensional. One result was a wrong lead: NTRS 19930013102 is a one-page abstract about a magnetic end effector.
+**2026-10-11, geometry search.** Prompted by the load pilot, which found that everything after snare closure turns on the fixture plate meeting the end effector's rim. Searched again for fixture and end-effector geometry and for allowed rates at capture. Found no dimensions. Found and read the capture paragraphs of SSP 50235 (2000 baseline), which gives two vehicle-side requirements (5 minutes in the grapple box, up to 90 s of free drift) and names the documents that define the fixture. Two patents and a 2019 interoperability standard were checked through summaries or text search and gave nothing dimensional. One result was a wrong lead: NTRS 19930013102 is a one-page abstract about a magnetic end effector.
 
 *What the sources do say about tilt.* Walker and Vandersluis and the patents agree that the fixture's cam arms, mating with features in the end effector during pull-in, are what remove angular misalignment. The model has no cams. Its flat plate levering on the rim does the same job by a different route, with dimensions that are not sourced. Treat any result about tilt during pull-in as a property of that substitute.
+
+**2026-10-11, collision geometry.** Started from a question of mine: if physics uses simple shapes underneath, how can it reflect a sharp or oddly shaped edge, and why must the shapes be convex? A Perplexity conversation gave the outline: the detector hands the solver a point, a direction, and a distance; a bounding box for filtering is not the same as the collision shape; convex does not mean round; an object can be one shape, several convex pieces, or a mesh; and the convex restriction belongs to particular engines. The MuJoCo points were then checked against its documentation and the CoACD points against the authors' project page, and both held. The rest is recorded as reported. Added an idea to section 2 and the sources to section 3.
+
+*Why this matters here.* It is the project's question in small. The model has already changed a collision shape three times (the cavity, the pin's tip, the rim), and the result changed each time.
 

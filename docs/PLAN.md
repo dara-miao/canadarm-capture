@@ -29,7 +29,7 @@ Canadarm2 already captures cargo vehicles such as Cygnus, routinely. This projec
 
 The scenario is chosen because it is harder than an arm on a desk picking up a mug, and it is real. The target weighs seven tonnes and is free to move. In zero gravity nothing holds it still, so a touch in the wrong place pushes it away, next to a crewed station. Reaching the target is only the start: the arm has to make and keep contact with it. And zero gravity strips away almost everything except contact, which makes it a clean place to see what a simulator's contact model is doing.
 
-There is also a personal aim. Dara is not from the space industry, and is building this to learn, by trying to replicate a real operation, everything a contact-rich simulation has to get right. The interest behind it is physical AI: robots are trained and tested in simulation, which only works if the simulated contact can be trusted.
+There is also a personal aim. I am not from the space industry. I am building this to learn, by trying to replicate a real operation, everything a contact-rich simulation has to get right. My interest behind it is physical AI: robots are trained and tested in simulation, which only works if the simulated contact can be trusted.
 
 The project is worthwhile if the model is transparent, the experiments are careful, the failures are explained, and the limits are stated. No literature gap is claimed in advance.
 
@@ -48,6 +48,16 @@ Every design decision in this project belongs to one of five layers.
 The first four layers are where modelling choices live. The fifth is how to find out which of them a result depends on.
 
 **Uncertainty.** Each number in the model is measured, required, borrowed, or guessed, and the tables below say which. A guessed number is treated like a measurement with a wide uncertainty in a physics lab: vary it across its plausible range and see how far the result moves. That is what the sensitivity experiments are.
+
+Three habits from the uncertainty guide in my first-year physics course apply directly:
+
+- *State a value with its uncertainty.* A capture rate from 12 attempts is not "50%"; one attempt either way is 8 points. Results should say how many attempts they rest on.
+- *A measurement made once gets its uncertainty from how it was made.* That is every guessed number here: the joint rate cap, the friction, the plate's radius. Each needs a plausible range, not just a value.
+- *The largest percentage uncertainty dominates.* A lab calculation finds this with a formula. A simulation has no formula, so the same thing is found by changing one number and rerunning.
+
+And one about significant figures. Several sourced values look more exact than they are, because they are round numbers in pounds and feet converted to metric: 4,893 N is 1,100 lbf, 64,054 N is 14,400 lbf, 1,627 N m is 1,200 ft lbf, 474.5 N m is 350 ft lbf, and 0.031 m/s is 0.1 ft/s. They are good to two or three figures, not four or five.
+
+**Weight and mass.** In orbit nothing has weight, so nothing presses on anything by itself; every contact force comes from a motor or from motion. Mass is unchanged and matters as much as ever: it sets how much a push changes an object's motion. The vehicle (7,000 kg) is about five times the arm's moving mass (about 1,400 kg, a guess), so the same push moves the arm far more than the vehicle.
 
 ## Definitions
 
@@ -104,7 +114,8 @@ A capture also has three stages of "done":
 
 Notes on the experiments:
 
-- **After the rim fix (2026-10-11).** With the plate seating on a ring of spheres, no pin is lost in any variant of the harsh batch: all 30 snared attempts are captured. The sensitivity pilot's main result came from the old rim and has to be rerun. New leads: at friction 0.6, 20 of 30 snared attempts end caught but not rigid; and half the harsh batch never reaches the pin at all. Experiments A, B, and C are to be redesigned around the question at the top of this plan, after Dara has worked through the model's layers.
+- **After the rim fix (2026-10-11).** With the plate seating on a ring of spheres, no pin is lost in any variant of the harsh batch: all 30 snared attempts are captured. The sensitivity pilot's main result came from the old rim and has to be rerun. New leads: at friction 0.6, 20 of 30 snared attempts end caught but not rigid; and half the harsh batch never reaches the pin at all. Experiments A, B, and C are to be redesigned around the question at the top of this plan, after I have worked through the model's layers.
+- **A candidate experiment from the research on collision shapes (2026-10-11).** Build the same contact surface several ways, for example the rim as box tops, as a ring of spheres, and as one mesh or a finer ring, and the cavity wall with 8, 16, and 32 boxes, and record which results change. It asks the project's question directly: does the result belong to the physics or to the shape chosen to stand in for it? Not yet designed or agreed.
 - **After the load pilot (2026-10-11).** Every lost capture in the harsh batch ended in a numerical contact failure: tumble tilted the fixture plate into the end effector's rim, and the solver returned meganewton forces that threw the vehicle off. "Lost" counts before the rim fix measure that artefact.
 - **After the pilots.** Experiments A and B are not yet redesigned. The pilots found that the largest effect by far is a controller choice (when the arm goes limp), and that lost pins escape through soft stops and bar coupling in the rigid-bar snare. Both need deciding on before the full experiments are fixed. See the last two build log entries of 2026-10-10.
 
@@ -164,7 +175,8 @@ Notes on the experiments:
 | 2026-10-11 | Hold the full experiments until the plate-on-rim contact is fixed | The load pilot showed all 50 lost captures in the harsh batch end in a solver blow-up at that contact | Done the same day |
 | 2026-10-11 | Fixture plate seats on a ring of 32 spheres, and collides with nothing else | The tops of the overlapping wall boxes gave the plate redundant contacts that the solver resolved with forces of up to 2.3 MN | Current. `rim="boxes"` rebuilds the old rim |
 | 2026-10-11 | One general question replaces the two specific ones: is a contact-rich result physics or artefact, and what is it sensitive to? | The capture solves no problem for the space industry. The answer should carry across physical AI and physics simulation | Current |
-| 2026-10-11 | Dara builds and Claude explains: work through the five layers one at a time, starting with contact | The point of the project is to learn the system design well enough to explain it | Current |
+| 2026-10-11 | I build, with Claude Code explaining and reviewing: work through the five layers one at a time, starting with contact | The point of the project is to learn the system design well enough to explain it | Current |
+| 2026-10-11 | The plan, research notes, and build log are written as my notes, not narrated by the assistant | They are my documents and I need to be able to speak to all of it | Current |
 | 2026-10-11 | Painted starry background, generated by `scripts/make_sky.py` | The scene was black. Appearance only; an invented sky, not a star map | Current |
 | 2026-10-10 | Treat the station as fixed and the arm as rigid | The station is about 60 times heavier than the vehicle; arm flexibility is left out to keep the first version simple | Current |
 

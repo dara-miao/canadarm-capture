@@ -48,7 +48,7 @@ Dated entries, newest last. Each one records what was built, why, what the check
 | Arm holds the ready pose for 10 s | Within 1e-6 rad |
 | Arm follows a 0.1 rad step on every joint | Settles within 5e-3 rad in 30 s |
 
-**What went wrong.** The first build had a 17.2 m arm instead of 17.6 m. I had mis-added the segment lengths, and the reach test caught it. Fixed by lengthening each boom from 7.1 m to 7.3 m.
+**What went wrong.** The first build had a 17.2 m arm instead of 17.6 m. The segment lengths had been added up wrongly, and the reach test caught it. Fixed by lengthening each boom from 7.1 m to 7.3 m.
 
 **Not done yet.**
 
@@ -85,7 +85,7 @@ Two changes fixed it, both with a physical justification:
 1. *Flat-backed knob instead of a ball.* A flat face pushes back along the pin axis only, so it cannot spread the bars.
 2. *Stiff snare drive.* Force limit raised from 300 N to 1,500 N and gain from 2e4 to 1e5 N/m, with 5 kg of reflected inertia on each bar. The real drive is geared and does not get pushed open.
 
-I also put the three bars in one plane. They had been stacked 14 mm apart so they could cross, which loaded the knob off-centre. They do not collide with each other, so one plane works.
+The three bars also went into one plane. They had been stacked 14 mm apart so they could cross, which loaded the knob off-centre. They do not collide with each other, so one plane works.
 
 **Checks (all pass, 14 in total with milestone 1).**
 
@@ -254,7 +254,7 @@ The approach and capture tests passed unchanged on the new arm.
 - *Which way is down.* The truss sits on one side of the module axis. On the real station the truss is on the space-facing side, so the opposite side faces Earth.
 - *Which end is forward.* Cross-sections along the module axis show where the two side-mounted laboratories (Kibo and Columbus) attach. That is the forward node, Harmony.
 
-**What went wrong.** The first placement had forward and aft swapped. I misread which way a rendered view was facing, and the arm ended up floating a metre off the Russian segment. The render made the mistake obvious. Fixed by measuring cross-sections instead of reading the picture.
+**What went wrong.** The first placement had forward and aft swapped. A rendered view was misread for which way it faced, and the arm ended up floating a metre off the Russian segment. The render made the mistake obvious. Fixed by measuring cross-sections instead of reading the picture.
 
 **Placement.** The arm's base sits on the Earth-facing side of Harmony, and the vehicle is captured about 9 m below it. Cygnus is captured roughly 10 m below the station, so the direction is right. The exact fixture the real arm stands on for these captures is not sourced.
 
@@ -318,7 +318,7 @@ The 1982 paper is about the Shuttle arm's end effector, not Canadarm2's. Canadar
 
 **Goal.** Start each attempt the way a real capture starts: the vehicle holding at the capture point, and the arm reaching out to it.
 
-**What is published.** Cygnus stops at a capture point about 10 m from the station (12 m for the larger Cygnus XL), switches its thrusters off, and drifts while the arm grapples it. Nothing I could access gives the distance the arm waits from the grapple fixture beforehand, or the vehicle's leftover drift rates. The one operations paper on Canadarm2's first free-flyer capture (Lucier and Smith, 2010) is restricted.
+**What is published.** Cygnus stops at a capture point about 10 m from the station (12 m for the larger Cygnus XL), switches its thrusters off, and drifts while the arm grapples it. Nothing accessible gives the distance the arm waits from the grapple fixture beforehand, or the vehicle's leftover drift rates. The one operations paper on Canadarm2's first free-flyer capture (Lucier and Smith, 2010) is restricted.
 
 **Built.**
 
@@ -414,7 +414,7 @@ All batches used offsets up to 0.1 m and tilts up to 15°, the sourced capture l
 
 **Built.** `docs/RESEARCH.md`: a plain-language account of the operation, the sources with a note on how far each can be trusted, tables of numbers with where each comes from and what kind of number it is, disagreements between sources, what is still unknown, and what the findings imply for the model.
 
-**How the research was done.** Dara ran three Perplexity searches. Those surfaced two sources I had not found, and a lead to a third. I then opened and read all three, so the notes can distinguish what has been checked against the source from what has only been reported.
+**How the research was done.** I ran three Perplexity searches. Those surfaced two sources the first pass had missed, and a lead to a third. All three were then opened and read, so the notes can distinguish what has been checked against the source from what has only been reported.
 
 | Source | Found by | Read? | Result |
 |---|---|---|---|
@@ -435,7 +435,7 @@ All batches used offsets up to 0.1 m and tilts up to 15°, the sourced capture l
 
 ## 2026-10-10 · Reframing after a critique
 
-**Input.** Dara ran the plan and README through Perplexity for a critique against recent work. I checked its claims about the two 2026 MuJoCo space-robotics tools (mjorbit and SmallSatSim) against the papers, and they held.
+**Input.** I ran the plan and README through Perplexity for a critique against recent work. Its claims about the two 2026 MuJoCo space-robotics tools (mjorbit and SmallSatSim) were checked against the papers, and they held.
 
 **What changed in how the project is described.**
 
@@ -456,7 +456,7 @@ All batches used offsets up to 0.1 m and tilts up to 15°, the sourced capture l
 
 ## 2026-10-10 · More reading: why capture fails, and what ground tests show
 
-**Input.** A fourth Perplexity search from Dara. I read the main paper (Christidi-Loumpasefski et al., 2024) and its numbers matched. The second (Li et al., 2021) sits behind a browser check, so it is recorded as reported.
+**Input.** A fourth Perplexity search. The main paper (Christidi-Loumpasefski et al., 2024) was read and its numbers matched. The second (Li et al., 2021) sits behind a browser check, so it is recorded as reported.
 
 **Ideas added to the research notes.**
 
@@ -516,7 +516,7 @@ The last row is a limit of this model. Real snare cables would not open that way
 
 In the first two batches every attempt was engaged, seated, latched, and retained, and the pin stayed catchable for the whole 2 s of closing. The largest tilt in any retention check was 0.007°.
 
-**What happened in the harsh batch.** Before this update it gave 12 captured, 10 caught but not rigid, and 12 missed. Now it gives 3 captured and 27 lost. I replayed eight of the lost attempts:
+**What happened in the harsh batch.** Before this update it gave 12 captured, 10 caught but not rigid, and 12 missed. Now it gives 3 captured and 27 lost. Eight of the lost attempts, replayed:
 
 - In all eight the snare closed on the pin. The pin left 4 to 9 s after firing, during the pause or the pull-in.
 - When the snare finished closing, the pin was still moving at 2.6 to 9.9 cm/s relative to the end effector. The arm stops tracking at that moment.
@@ -581,7 +581,7 @@ The 60 harsh scenarios (drift to 0.122 m/s, tumble to 2°/s, delayed and noisy s
 | Perfect sensing | 5 | 0 | 26 | 0 | 23 | 6 | 0.9 cm/s |
 | Limp at close, and perfect sensing | 11 | 0 | 20 | 0 | 23 | 6 | 0.9 cm/s |
 
-**My earlier explanation was wrong on two counts.** In the R4 entry I said pins were lost because the snare closed on a pin still moving at several centimetres per second relative to the end effector, and that the bars then gave way against their 1,500 N drive.
+**The earlier explanation was wrong on two counts.** The R4 entry said pins were lost because the snare closed on a pin still moving at several centimetres per second relative to the end effector, and that the bars then gave way against their 1,500 N drive.
 
 - *Relative speed at closure is not the cause.* Perfect sensing cut that speed from 5.8 to 0.9 cm/s and the lost count barely moved, from 27 to 26.
 - *The drive's force limit is not what gives way.* Halving it or doubling it changed nothing.
@@ -637,7 +637,7 @@ Every variant captured all 12 at 2 cm/s.
 
 ## 2026-10-10 · Follow-up: what gives way in the snare
 
-**Why this entry exists.** Two Claude Code sessions were working in this repository at once. The entry above was written by the one that started the pilots. This one comes from a second session that checked the snare-drive puzzle while the sensitivity pilot ran. Both sets of notes went into the same commit, with the results written up twice. This entry now keeps only what the one above does not have.
+**Why this entry exists.** I had two Claude Code sessions open on this repository at once. The entry above came out of the one that started the pilots. This one comes from the second, which checked the snare-drive puzzle while the sensitivity pilot ran. Both sets of notes went into the same commit, with the results written up twice. This entry now keeps only what the one above does not have.
 
 **The question.** The entry above leaves open what sets the load at which the bars open, since the drive's force limit does not, and names the bar coupling as the first thing to check.
 
@@ -810,7 +810,7 @@ One attempt in each variant fires and misses, as before.
 
 ## 2026-10-11 · Stepping back: what the project is for
 
-**Why.** Dara stopped the work to ask what problem this solves, why this industry, whether the real operation is already solved, and how any of it connects to physical AI and physics simulation. The plan's two questions had become specific to this model, and the work had been running ahead of Dara's own understanding of it.
+**Why.** I stopped the work to ask what problem this solves, why this industry, whether the real operation is already solved, and how any of it connects to physical AI and physics simulation. The plan's two questions had become specific to this model, and the work had been running ahead of my own understanding of it.
 
 **Answers, in short.**
 
@@ -820,10 +820,33 @@ One attempt in each variant fires and misses, as before.
 
 **The new question.** When a contact-rich simulation gives a result, how do you tell whether it is physics or an artefact of how contact was modelled, and which modelling choices is the result most sensitive to? It replaces the two earlier questions, which are kept in the plan for the record.
 
-**How the work changes.** Dara builds and Claude explains. The plan now has a map of five layers (world, contact, machine, brain, experiment) and the agreed path is to go through them one at a time, starting with contact. The sensitivity pilot waits until Dara can say what it measures.
+**How the work changes.** I build, and use Claude Code to explain and review. The plan now has a map of five layers (world, contact, machine, brain, experiment) and the agreed path is to go through them one at a time, starting with contact. The sensitivity pilot waits until I can say what it measures.
 
-**Uncertainty.** Dara's comparison with physics labs is the right one, and is now in the plan: a guessed number is a measurement with a wide uncertainty, and a sensitivity run is how its effect on the result is found.
+**Uncertainty.** This is the same idea as uncertainty in a physics lab, and it is now in the plan: a guessed number is a measurement with a wide uncertainty, and a sensitivity run is how its effect on the result is found.
 
 **Also built: a sky.** The background was flat black. `scripts/make_sky.py` paints a cube map of about 30,000 stars, a band of glow with dust lanes, and four faint galaxies, and the scene uses it when the file exists. It is invented, not a map of the real sky, and changes nothing in the physics. Checked by rendering wide views across the cube's edges and corners: the band is continuous. A real camera exposed for sunlit hardware would show few stars or none, and the Earth, which fills much of the real view, is not drawn.
 
 **Checks.** 52 pass.
+
+## 2026-10-11 · Collision shapes, and whose notes these are
+
+**What I learned.** I had not known that a simulator collides simple hidden shapes, not the models it draws. Following that up, in conversation and with Perplexity:
+
+- The collision shape is the object's surface as far as physics is concerned. If it fills a hole or rounds an edge, the simulation gets that interaction wrong and nothing later corrects it.
+- Convex means no dents or hollows, not round. A box is convex.
+- There is a middle ground between one blob and a full mesh: several convex pieces fixed together. That is what this model's end effector is.
+- Needing convex shapes is a property of particular engines and algorithms, MuJoCo among them. It is not a law of physics.
+- Tools that split a mesh into convex pieces automatically can fill in the openings that make an object work. A 2022 paper (CoACD) is about that problem.
+
+The details and sources are in the research notes, section 2 and section 3. The MuJoCo and CoACD points were checked against the sources; the rest is reported.
+
+**Why it matters for this project.** It is the question in small. This model has changed a collision shape three times, and each time the result changed: the cavity built from boxes, the pin's tip from a ball to a disc, the rim from box tops to spheres. An experiment that builds the same surface several ways is now a candidate in the plan.
+
+**Notes added to the plan.**
+
+- Weight and mass: in orbit nothing has weight, so every contact force comes from a motor or from motion. Mass still decides how much a push changes an object's motion.
+- Three habits from my first-year uncertainty guide that apply here, and one finding from its section on significant figures: several of the model's sourced values are round numbers in pounds and feet converted to metric (4,893 N is 1,100 lbf; 64,054 N is 14,400 lbf), so they are good to two or three figures.
+
+**Voice.** These documents had been written from the assistant's point of view, referring to me by name. They are now my notes: plain where they are just notes, first person where they are mine. Work I did not do by hand is described without an "I". The README says how the project was built.
+
+**Not changed.** The model and the code.
