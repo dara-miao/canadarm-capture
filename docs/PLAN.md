@@ -106,11 +106,64 @@ A capture also has three stages of "done":
 | P | Pilots for the two questions | Done (2026-10-10) | Both pilots run and written up; summary tables in `docs/data/` |
 | P2 | Load pilot: what happens after the snare closes | Done (2026-10-11) | Forces, vehicle motion, and tilt logged for the harsh batch; table in `docs/data/pilot_load.csv` |
 | R5 | Fix the plate-on-rim contact | Done (2026-10-11) | Plate seats on a ring of spheres; load and lost-capture pilots rerun; a replay of the failing attempt is a test |
-| P3 | Rerun the sensitivity pilot on the fixed model | Next | Table and failure types by speed in `docs/data/` |
-| 5 | Experiment A: closed-loop capture envelope | Planned, to be redesigned after P3 | Outcome maps from separate, matched sweeps of drift, tumble, offset, and tilt, so their effects are not confounded |
-| 6 | Experiment B: parameter sensitivity | Planned | Matched trials varying friction, one *named* form of compliance, and observation staleness |
-| 7 | Experiment C: matched-model comparison in a second engine | Planned | The same dynamic model run in Newton, after checking the two models are equivalent |
+| P3 | Rerun the sensitivity pilot on the fixed model | Done (2026-10-11) | Table and failure types by speed in `docs/data/` |
+| 5 | Experiment A: artefact checks | Proposed | Every attempt is checked for signs that it is not physics. The checks flag the old rim's failures and stay quiet on the fixed model |
+| 6 | Experiment B: same surface, different representation | Proposed | One contact surface or numerical setting changed at a time, with everything physical held fixed; a table of which results survive |
+| 7 | Experiment C: sensitivity to the physical unknowns | Proposed | Each guessed number moved across a stated plausible range; a ranking with uncertainty, set beside experiment B's |
 | 8 | Write-up | Planned | README with results, figures, and video, stating what the results are conditional on |
+
+## Proposed experiments
+
+Proposed on 2026-10-11, not yet agreed. Together they answer the question at the top: A is *how to tell*, and B against C is *what the result is sensitive to*.
+
+**The headline comparison.** Is the result moved more by how contact is represented (B) or by the physical numbers nobody knows exactly (C)? If B's largest effect is as big as C's, a sensitivity ranking from one representation cannot be trusted. The pilots already hint at this: fixing one surface changed which parameter mattered most.
+
+**Shared set-up.**
+
+- *Scenarios.* A matched drift sweep at 4, 8, 12, and 16 cm/s, 30 scenarios at each, two seeds: 240 attempts per condition. Tumble up to 2 deg/s, so the plate does tilt onto the rim. Offsets, tilt, and roll at the tested worst case. The pilot shows outcomes are mixed in this range, which they have to be for anything to be able to move them.
+- *One change at a time,* on the same scenarios, so attempts can be compared in pairs.
+- *What is reported.* Counts with the number of attempts behind them, an interval on each rate, and for each change how many individual attempts flipped outcome in each direction.
+- *The noise floor.* One condition changes nothing meaningful: every start position is nudged by a thousandth of a millimetre. However many outcomes flip there is what "no effect" looks like, and anything smaller is not a finding.
+
+**Experiment A: artefact checks.** Built into every attempt, so it costs no extra runs. An attempt is flagged if:
+
+| Check | Flag when |
+|---|---|
+| Solver warning | MuJoCo reports an unstable step |
+| Impossible force | A contact force exceeds 150 kN, about twice everything the machine can apply (latches 64 kN, pull-in 4.9 kN) |
+| Energy from nowhere | The vehicle moves faster than 1.5 times its fastest speed before first contact |
+| Deep overlap | Two shapes overlap by more than 1 cm |
+| Broken stop | A joint is more than 5 mm past its limit |
+
+The test of the checks: run the harsh batch on the old rim (`rim="boxes"`), where 50 attempts are known to be artefacts, and on the fixed model. Report how many of the 50 are flagged and how many clean attempts are flagged by mistake. The thresholds above are first guesses and may need moving; if they do, that is recorded.
+
+**Experiment B: same surface, different representation.** Each row changes how something is represented and nothing about the object it stands for.
+
+| What changes | Settings | Why |
+|---|---|---|
+| The rim | box tops; 16, 32, or 64 spheres | The surface that failed. 32 is today's model |
+| The cavity wall | 8, 16, or 32 boxes | More pieces is a rounder tube and more seams. 16 is today's |
+| The time step | 2, 1, or 0.5 ms | A smaller step should change nothing if the result is physics |
+| Contact stiffness | the default time constant, and half of it | How hard overlap is pushed back |
+| Noise floor | start nudged by a thousandth of a millimetre | See above |
+
+A result *survives* if no setting moves it by more than the noise floor. A second engine is the largest representation change there is, and belongs here as a later extension, not as its own experiment.
+
+**Experiment C: sensitivity to the physical unknowns.** Each row is a number the model guesses or borrows, with a range it could plausibly lie in. The ranges are first proposals and are mine to set.
+
+| Number | In the model | Proposed range | Kind |
+|---|---|---|---|
+| Contact friction | 0.3 | 0.1 to 0.6 | A modelling paper's input |
+| Joint rate cap | 0.03 rad/s | 0.015 to 0.06 | Invented |
+| Pull-in force | 4,893 N | 3,560 (the Shuttle value) to 6,100 | Sourced; range is a guess |
+| Joint back-drive friction | 200 N m | 100 to 400 | Derived from one test load |
+| Vehicle mass | 7,000 kg | 5,000 to 8,050 (published loaded mass) | Approximate |
+| Observation delay | 0 | 0 to 1.0 s | Exploratory |
+| Snare drive force | 1,500 N | 750 to 3,000 | Invented. Expected to do nothing: a check that the method can report "no effect" |
+
+**Size.** About 20 conditions of 240 attempts. At the pilots' speed that is roughly one and a half to two hours of computing on mains power, in two or three sittings.
+
+**What would count as an answer.** A table of checks that catch a known artefact and how often they cry wolf; a list of results that do and do not survive a change of representation; a ranking of the physical unknowns with uncertainty; and one sentence comparing the two.
 
 Notes on the experiments:
 
@@ -119,8 +172,10 @@ Notes on the experiments:
 - **After the load pilot (2026-10-11).** Every lost capture in the harsh batch ended in a numerical contact failure: tumble tilted the fixture plate into the end effector's rim, and the solver returned meganewton forces that threw the vehicle off. "Lost" counts before the rim fix measure that artefact.
 - **After the pilots.** Experiments A and B are not yet redesigned. The pilots found that the largest effect by far is a controller choice (when the arm goes limp), and that lost pins escape through soft stops and bar coupling in the rigid-bar snare. Both need deciding on before the full experiments are fixed. See the last two build log entries of 2026-10-10.
 
-- **Experiment B.** "Compliance" can mean contact softness at the pin and bars, snare-drive stiffness, pull-in-drive stiffness, joint-servo stiffness, or structural flexibility of the arm or fixture. They are not interchangeable. The experiment will vary a named one. Candidates that the model can express today are contact softness and joint-servo stiffness. Fixture base stiffness is the one Honda et al. found most influential, and would need adding to the model.
-- **Experiment C.** The comparison is between matched dynamic models, not matching appearances. Before comparing, check that masses and inertias, joint axes and limits, collision shapes, actuator laws and saturation, contact and friction definitions, initial conditions, controller and sensor timing, and success criteria are the same. Newton's default rigid-body solver is a port of MuJoCo, so the run must use a different solver or contact model to be an independent check. Agreement would show consistency under shared assumptions, not validity. Disagreement would flag something to investigate, not say which engine is right.
+The notes below were written for the earlier experiments A, B, and C, and are kept because the cautions still apply.
+
+- **Experiment B (earlier design).** "Compliance" can mean contact softness at the pin and bars, snare-drive stiffness, pull-in-drive stiffness, joint-servo stiffness, or structural flexibility of the arm or fixture. They are not interchangeable. The experiment will vary a named one. Candidates that the model can express today are contact softness and joint-servo stiffness. Fixture base stiffness is the one Honda et al. found most influential, and would need adding to the model.
+- **Experiment C (earlier design: a second engine).** The comparison is between matched dynamic models, not matching appearances. Before comparing, check that masses and inertias, joint axes and limits, collision shapes, actuator laws and saturation, contact and friction definitions, initial conditions, controller and sensor timing, and success criteria are the same. Newton's default rigid-body solver is a port of MuJoCo, so the run must use a different solver or contact model to be an independent check. Agreement would show consistency under shared assumptions, not validity. Disagreement would flag something to investigate, not say which engine is right.
 
 ## Decisions
 
@@ -178,6 +233,7 @@ Notes on the experiments:
 | 2026-10-11 | I build, with Claude Code explaining and reviewing: work through the five layers one at a time, starting with contact | The point of the project is to learn the system design well enough to explain it | Current |
 | 2026-10-11 | The plan, research notes, and build log are written as my notes, not narrated by the assistant | They are my documents and I need to be able to speak to all of it | Current |
 | 2026-10-11 | Painted starry background, generated by `scripts/make_sky.py` | The scene was black. Appearance only; an invented sky, not a star map | Current |
+| 2026-10-11 | Proposed: three experiments (artefact checks, representation, physical sensitivity), with the second engine folded into the second as an extension | They answer the two halves of the question, and B against C is the comparison that carries beyond this model | Proposed, not yet agreed |
 | 2026-10-10 | Treat the station as fixed and the arm as rigid | The station is about 60 times heavier than the vehicle; arm flexibility is left out to keep the first version simple | Current |
 
 ## Values the model uses, by where they come from

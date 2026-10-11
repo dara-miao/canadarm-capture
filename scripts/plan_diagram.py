@@ -17,13 +17,13 @@ STAGES = [
     ("4 · REPEATABLE TRIALS", "Measure outcomes", "Success criteria · failure types", "Outcome labels · batches · sensing", "done"),
 ]
 EXPERIMENTS = [
-    ("5 · EXPERIMENT A", "Closed-loop envelope", "Separate sweeps: drift, tumble, offset", "Map where and how it fails", "next"),
-    ("6 · EXPERIMENT B", "Parameter sensitivity", "One change per matched trial", "Friction · named compliance · delay", "planned"),
-    ("7 · EXPERIMENT C", "Matched-model check", "Same dynamics in a second engine", "Does the result survive?", "planned"),
+    ("5 · EXPERIMENT A", "Artefact checks", "Force, energy, overlap on every attempt", "Do they catch the known failure?", "next"),
+    ("6 · EXPERIMENT B", "Same surface, new shape", "Rim · wall · time step · stiffness", "Which results survive?", "planned"),
+    ("7 · EXPERIMENT C", "Physical unknowns", "Each guessed number across its range", "Ranking, set beside experiment B", "planned"),
 ]
 
 # One line on what is happening right now, shown under the title.
-NOW = "New question: is a simulated contact result physics or artefact?  Next: Dara works through the model, contact first."
+NOW = "Question: is a simulated contact result physics or artefact?  Three experiments proposed; not yet agreed."
 
 W, H = 1600, 860
 BG, CARD, EDGE = "#0f1b2d", "#1b2a40", "#2b3d57"

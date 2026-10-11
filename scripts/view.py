@@ -29,9 +29,10 @@ FRAME_TIME = 1 / 60
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--speed", type=float, default=4.0, help="playback speed relative to real time")
+    parser.add_argument("--shapes", action="store_true", help="show the collision shapes instead of the 3D models")
     args = parser.parse_args()
 
-    model = scene.build_model()
+    model = scene.build_model(meshes=not args.shapes)
     data = mujoco.MjData(model)
     controller = CaptureController(model)
     steps_per_frame = max(1, int(round(args.speed * FRAME_TIME / model.opt.timestep)))
@@ -50,6 +51,7 @@ def main() -> None:
                 start = time.perf_counter()
                 for _ in range(steps_per_frame):
                     mujoco.mj_step1(model, data)
+                    data.qfrc_applied[:] = 0  # the controller re-adds its latch force every step
                     controller.step(data)
                     mujoco.mj_step2(model, data)
                 if controller.phase is Phase.DONE and hold_until is None:

@@ -852,3 +852,47 @@ The details and sources are in the research notes, section 2 and section 3. The 
 **Voice.** These documents had been written from the assistant's point of view, referring to me by name. They are now my notes: plain where they are just notes, first person where they are mine. Work I did not do by hand is described without an "I". The README says how the project was built.
 
 **Not changed.** The model and the code.
+
+## 2026-10-11 · Sensitivity pilot rerun, a viewer bug, and three proposed experiments
+
+**Sensitivity pilot on the fixed model.** Same design as before: drift swept from 2 to 15 cm/s over 12 matched scenarios, perfect sensing, one assumption changed at a time. Captures out of 12 at each speed. `docs/data/pilot_sensitivity.csv`, with failure types in `pilot_sensitivity_outcomes.csv`; the earlier table is `pilot_sensitivity_box_rim.csv`.
+
+| Variant | 2 | 4 | 6 | 8 | 10 | 12 | 15 cm/s | Fails at (old rim) | Fails at (fixed) | How it fails now |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Baseline | 12 | 12 | 12 | 12 | 10 | 9 | 6 | 6.0 | 15 or above | Out of reach |
+| Arm limp as soon as the snare closes | 12 | 12 | 12 | 12 | 10 | 9 | 6 | 12.0 | 15 or above | Identical to baseline |
+| Contact friction 0.6 | 12 | 9 | 6 | 5 | 4 | 3 | 0 | 6.9 | 6.0 | Caught, not rigid |
+| Contact friction 0.1 | 12 | 12 | 12 | 12 | 10 | 9 | 6 | 5.7 | 15 or above | Identical to baseline |
+| Joint rate cap halved | 12 | 10 | 9 | 6 | 2 | 3 | 0 | 5.2 | 8.0 | Timed out, out of reach |
+| Joint rate cap doubled | 12 | 12 | 12 | 12 | 12 | 11 | 11 | 6.0 | above 15 | Almost nothing fails |
+| Observation delay 0.5 s | 12 | 12 | 12 | 12 | 10 | 8 | 4 | 5.1 | 13.5 | |
+| Observation delay 1.0 s | 12 | 12 | 9 | 5 | 4 | 3 | 1 | 5.0 | 7.5 | Missed |
+| Snare drive 750 N or 3,000 N | 12 | 12 | 12 | 12 | 10 | 9 | 6 | 6.0 | 15 or above | Identical to baseline |
+| Estimator gain 0.05 or 1.0 | 12 | 12 | 12 | 12 | 10 | 9 | 6 | 6.0 | 15 or above | Identical to baseline |
+
+"Fails at" is the drift speed where captures fall through half. One attempt is 8 points.
+
+**The ranking turned over.**
+
+- On the old rim one change dominated: the arm going limp at closure doubled the failure point, and everything else was within noise. On the fixed model that change does nothing at all.
+- What matters now is different for each parameter, and each fails in its own way. A slower arm runs out of time and reach. Stale observations make the snare miss. High friction leaves the fixture caught but not pulled rigid.
+- Doubling the joint rate cap was "unexplained, no effect" before. It now removes nearly every failure. The artefact had been hiding it.
+- The baseline's limit moved from 6 cm/s to about 15 (exactly half are captured there), about five times the 3.1 cm/s the Shuttle end effector was required to handle.
+
+So the sensitivity ranking itself was an artefact of one collision surface. That is the project's question, answered once by accident.
+
+Still a pilot: 12 attempts a point, one seed, tumble only up to 0.5 deg/s. The estimator-gain rows still test nothing, because sensing is perfect in this sweep.
+
+**A viewer bug.** Opening the viewer with the new `--shapes` option produced MuJoCo's "simulation is unstable" warning. The viewer's own loop never cleared the applied forces between steps, so once the latches came on, their 64 kN was added again every step. It dates from the latch stage (R4). Batches and tests step through `run_trial`, which does clear them, so no result was affected. Fixed with one line, and the same scenario now finishes with no warning. A result that looked like the model's behaviour was an artefact of how it was being run.
+
+**Also built.** `scripts/view.py --shapes` shows the collision shapes in place of the 3D models.
+
+**Three experiments proposed.** Written up in the plan, not yet agreed:
+
+- A, artefact checks on every attempt, tested against the old rim's 50 known failures.
+- B, the same surface represented different ways (rim, cavity wall, time step, contact stiffness), to see which results survive.
+- C, each guessed physical number moved across a plausible range.
+
+The comparison that matters is B against C: does the choice of representation move the result as much as the physical unknowns do?
+
+**Checks.** 52 pass.
