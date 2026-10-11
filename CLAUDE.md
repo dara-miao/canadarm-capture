@@ -43,6 +43,6 @@ Read `docs/PLAN.md` (questions, milestones, decisions), `docs/RESEARCH.md` (sour
 - Two questions lead the project, both written at the top of the plan:
   1. Which of the model's assumptions decide where the simulated capture fails? (`experiments/pilot_sensitivity.py`)
   2. Why do snared pins get lost? (`experiments/pilot_lost.py`)
-- Both pilots are finished and written up in the build log entry "Pilot results". Summary tables are in `docs/data/`. Before rerunning a pilot because a table is missing, check it is not still running (`pgrep -fl experiments/pilot_`).
+- Both pilots are finished and written up in the last two build log entries. Summary tables are in `docs/data/`. Before rerunning a pilot because a table is missing, check it is not still running (`pgrep -fl experiments/pilot_`).
 - Pilot findings in one line each: going limp when the snare closes doubles the drift speed at which capture fails (6 to 12 cm/s); friction, snare drive force, arm speed, and observation delay each move it by 1 cm/s or less; lost pins escape by pushing the snare bars past their soft open stop and apart from each other, which is an artefact of the rigid-bar snare. `experiments/replay_lost.py` shows this for single attempts.
 - Open, for the user to decide: whether "limp at close" becomes the default, whether to harden the snare's stops and coupling, and what the full experiments A and B should be. Do not change the model or run the experiments unasked.

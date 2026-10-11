@@ -635,88 +635,44 @@ Every variant captured all 12 at 2 cm/s.
 
 **Not changed.** The model's defaults. The limp-at-close option stays off until decided.
 
-## 2026-10-10 · Pilot results
+## 2026-10-10 · Follow-up: what gives way in the snare
 
-**Goal.** Finish the two pilots and say what they do and do not show. Summary tables are in `docs/data/`.
+**Why this entry exists.** Two Claude Code sessions were working in this repository at once. The entry above was written by the one that started the pilots. This one comes from a second session that checked the snare-drive puzzle while the sensitivity pilot ran. Both sets of notes went into the same commit, with the results written up twice. This entry now keeps only what the one above does not have.
 
-Both are pilots: one seed, small counts. In the lost-capture pilot one scenario is 1.7% of 60. In the sensitivity pilot there are 12 scenarios per speed, so one scenario is 8%, and speeds are 2 cm/s apart up to 12 cm/s. Differences of one or two scenarios are not findings.
+**The question.** The entry above leaves open what sets the load at which the bars open, since the drive's force limit does not, and names the bar coupling as the first thing to check.
 
-### Why do snared pins get lost? (`experiments/pilot_lost.py`)
+**Check 1: is the option applied?** Yes. The compiled model's drive force range is ±750, ±1,500, or ±3,000 N as asked.
 
-The 60 harsh scenarios (drift to 0.122 m/s, tumble to 2°/s, degraded sensing), with one thing changed at a time.
+**Check 2: replays.** `experiments/replay_lost.py` reruns single harsh scenarios and logs the three bars and the drive after the snare has closed. Scenarios 0, 4, 5, and 6, each at 1,500 and 3,000 N. All eight runs ended lost.
 
-| Variant | Captured | Caught, not rigid | Lost | Missed | Out of reach | Timed out | Snared | Median speed at close |
-|---|---|---|---|---|---|---|---|---|
-| Baseline | 3 | 0 | 27 | 1 | 24 | 5 | 30 | 5.8 cm/s |
-| Arm limp as soon as the snare closes | 7 | 0 | 23 | 1 | 24 | 5 | 30 | 5.8 cm/s |
-| Contact friction 0.6 | 5 | 5 | 19 | 2 | 23 | 6 | 29 | 3.7 cm/s |
-| Contact friction 0.1 | 2 | 0 | 28 | 1 | 22 | 7 | 30 | 6.3 cm/s |
-| Snare drive 3,000 N | 3 | 0 | 27 | 1 | 24 | 5 | 30 | 5.8 cm/s |
-| Snare drive 750 N | 3 | 0 | 27 | 1 | 24 | 5 | 30 | 4.8 cm/s |
-| Perfect sensing | 5 | 0 | 26 | 0 | 23 | 6 | 31 | 0.9 cm/s |
-| Limp at close + perfect sensing | 11 | 0 | 20 | 0 | 23 | 6 | 31 | 0.9 cm/s |
+| Scenario | Speed at close | Bars pushed back to (1,500 N / 3,000 N) | Largest gap between bars (1,500 N / 3,000 N) |
+|---|---|---|---|
+| 0 | 9.9 cm/s | -1.4 cm / -4.0 cm | 1.5 cm / 2.4 cm |
+| 4 | 2.8 cm/s | -1.1 cm / -0.9 cm | 7.7 cm / 7.6 cm |
+| 5 | 8.1 cm/s | -0.7 cm / -1.0 cm | 0.4 cm / 1.0 cm |
+| 6 | 7.0 cm/s | -1.0 cm / +0.2 cm | 0.4 cm / 0.9 cm |
 
-"Speed at close" is the pin's speed relative to the end effector when the snare finishes closing.
+Bar position runs from 0 (fully open, the joint's stop) to 8 cm (fully closed). The bars were at 6.7 to 7.4 cm when the snare finished closing.
 
-What this shows:
+- The drive sat at its force limit in all eight runs.
+- In seven of eight the bars went *past* their open stop, by up to 4 cm. The stop is a soft joint limit and gave way.
+- In scenario 4 one bar stayed at 6.3 cm while the other two were pushed fully open. The coupling between bars gave way, as the entry above suspected. In the other three scenarios the bars stayed within 2.4 cm of each other and opened together.
 
-- *Nothing tried fixes it.* The best variant still loses 20 of 31 snared pins.
-- *The speed left over at closing is not the whole cause.* Perfect sensing lets the arm match the pin far better, 0.9 cm/s against 5.8, and 26 of 31 are still lost. Tracking only matches the pin at the end effector. The vehicle is still drifting and tumbling as a whole, and that motion has to be taken out after the arm stops following.
-- *What the arm does after closing matters most of the things tried.* Going limp at close instead of holding stiff for the 2 s pause takes captures from 3 to 7, and from 5 to 11 with perfect sensing.
-- *Friction helps a little.* At 0.6, eight fewer are lost, but five of those end caught and not rigid. This is in the direction the R4 entry guessed when the friction was halved. It does not account for most of the losses.
-- *The snare drive's force limit does not matter between 750 and 3,000 N.* The counts are identical.
+**What this establishes.** The load on the snare in these attempts is well beyond what the drive holds at either setting, which is why doubling it changes nothing. The coupling slips in some attempts but not most, so it is one route out, not the explanation. The soft open stop is a second model artefact. Real cables on a rotating ring can do neither.
 
-**Checking the snare-drive result.** Identical counts looked like an option that was not being applied. It is applied: the compiled model's force range is ±750, ±1,500, or ±3,000 N as asked. `experiments/replay_lost.py` replays lost attempts and logs the bars. For scenarios 0, 4, 5, and 6 at 1,500 and 3,000 N:
+**Not established.** How large the load is, and whether it comes from the stiff arm, the vehicle's tumble, or the pull-in drive hauling a moving vehicle. Contact forces at the pin were not logged. Four scenarios is a look, not a measurement.
 
-- The drive sat at its limit in every one, at either setting.
-- The bars were pushed fully open and then 0.4 to 4 cm *past* their open stop. The joint limit is soft and gave way.
-- In scenario 4 one bar stayed closed at 6.3 cm while the other two were pushed open: a 7.7 cm gap between bars that are meant to move as one. The coupling between the bars is a soft constraint and gave way too.
+**Two more gaps in the sensitivity pilot.**
 
-So the load on the snare in these attempts is far beyond what the drive holds at either setting, which is why doubling it changes nothing. The R4 entry said the bars are "forced apart against their 1,500 N drive". That is incomplete: the open stop and the bar-to-bar coupling are also being overpowered. Both are artefacts of the rigid-bar surrogate. Real cables on a rotating ring cannot separate from each other this way.
+- It saves capture rates only, not how failures divide between lost, out of reach, and the rest. So it cannot say whether the 6 cm/s boundary is the lost-pin mechanism or the arm running out of reach.
+- Doubling the joint rate cap changed nothing, and that is unexplained. Either the cap is not what limits the arm at these speeds or the 0.37 m/s tip speed cap binds first. Not checked.
 
-Not established: how large the load is, and whether it comes mostly from the stiff arm, the vehicle's tumble, or the pull-in drive hauling a moving vehicle. Contact forces at the pin were not logged.
+**What went wrong.**
 
-### Which assumptions move the failure point? (`experiments/pilot_sensitivity.py`)
-
-Drift swept from 2 to 15 cm/s over the same 12 scenarios, perfect sensing, default offsets, tilt, roll, and tumble. The failure point is the drift speed where the capture rate falls through 50%, by straight-line interpolation.
-
-| Variant | 2 | 4 | 6 | 8 | 10 | 12 | 15 cm/s | Failure point |
-|---|---|---|---|---|---|---|---|---|
-| Baseline | 12 | 11 | 6 | 1 | 1 | 1 | 1 | 6.0 cm/s |
-| Arm limp as soon as the snare closes | 12 | 11 | 11 | 11 | 7 | 6 | 3 | 12.0 cm/s |
-| Contact friction 0.6 | 12 | 10 | 9 | 2 | 1 | 1 | 0 | 6.9 cm/s |
-| Contact friction 0.1 | 12 | 11 | 5 | 1 | 1 | 1 | 1 | 5.7 cm/s |
-| Joint rate cap halved (0.015 rad/s) | 12 | 9 | 4 | 1 | 0 | 0 | 0 | 5.2 cm/s |
-| Joint rate cap doubled (0.06 rad/s) | 12 | 11 | 6 | 1 | 1 | 1 | 1 | 6.0 cm/s |
-| Observation delay 0.5 s | 12 | 11 | 2 | 1 | 1 | 1 | 1 | 5.1 cm/s |
-| Observation delay 1.0 s | 12 | 10 | 2 | 0 | 0 | 0 | 0 | 5.0 cm/s |
-| Snare drive 750 N | 12 | 11 | 6 | 1 | 1 | 1 | 1 | 6.0 cm/s |
-| Snare drive 3,000 N | 12 | 11 | 6 | 1 | 1 | 1 | 1 | 6.0 cm/s |
-| Estimator gain 0.05 | 12 | 11 | 6 | 1 | 1 | 1 | 1 | 6.0 cm/s |
-| Estimator gain 1.0 | 12 | 11 | 6 | 1 | 1 | 1 | 1 | 6.0 cm/s |
-
-Cells are captures out of 12.
-
-What this shows:
-
-- *The baseline fails at about 6 cm/s of drift,* roughly twice the 0.031 m/s the Shuttle end effector was required to handle. Every variant captures 12 of 12 at 2 cm/s.
-- *One change dominates.* Going limp when the snare closes moves the failure point from 6 to 12 cm/s. That is a choice in this model's invented controller, not a physical parameter.
-- *Everything else moves it by 1 cm/s or less,* which is half the spacing between tested speeds. Higher friction, a slower arm, and delayed observations all shift it in the direction expected. With 12 scenarios per speed these shifts are two to four scenarios at one speed and are not yet a ranking.
-- *Three rows are identical to the baseline,* and for different reasons. Snare drive: see above. Estimator gain: this sweep uses perfect sensing, so there is probably nothing for the estimator to smooth and the test says nothing. Doubled joint rate cap: unexplained. Either the cap is not what limits the arm at these speeds, or the 0.37 m/s tip speed cap binds first. Not checked.
-
-### Taken together
-
-Both pilots point at the same place: the seconds after the snare closes. The controller holds the arm stiff for the 2 s pause while a 7 tonne vehicle is still moving, and in this model that loads the snare past what the rigid-bar surrogate holds. The parameters the plan expected to matter, friction and drive force, matter much less than that controller choice.
-
-This is an awkward answer to the main question. The largest sensitivity found is to the controller's own logic, and the failure it triggers runs through parts of the surrogate (soft stops, bars that separate) that have no counterpart in cables. A full experiment B on this model as it stands would mostly measure that.
-
-**What went wrong or is weak.**
-
-- The sensitivity pilot saves only capture rates, not how the failures divide between lost, out of reach, and the rest. So it cannot say whether the 6 cm/s boundary is the lost-pin mechanism or the arm running out of reach. The lost-capture pilot's scenarios differ (tumble to 2°/s, degraded sensing), so its split does not carry over.
-- The estimator-gain variants should have been run with degraded sensing.
-- The project notes handed to this session said a missing table meant a pilot had not finished and should be rerun. The pilots were in fact still running. Checking for the process first avoided a duplicate run.
-- The viewer was open for the first part of the run, against the project's own rule, so the timings (13 and 20 minutes) are not clean.
+- Two sessions edited the same files without knowing about each other, and the commit mixed their work. The plan's risk and assumption notes on the soft stop and coupling come from this session; the test comment and the entry above from the other.
+- The project notes said a missing table meant a pilot had not finished and should be rerun. The pilots were still running. Checking for the process first avoided a duplicate run, and the notes now say to check.
+- The viewer was open for the first part of the pilot run, against the project's own rule.
 
 **Checks.** 51 pass.
 
-**Not done.** No model or controller change has been made. Whether to make "limp at close" the default, harden the surrogate's stops and coupling, or redesign experiments A and B around these results is for Dara to decide.
+**Not changed.** The model and the controller.
