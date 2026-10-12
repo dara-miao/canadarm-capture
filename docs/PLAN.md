@@ -109,7 +109,8 @@ A capture also has three stages of "done":
 | P3 | Rerun the sensitivity pilot on the fixed model | Done (2026-10-11) | Table and failure types by speed in `docs/data/` |
 | 5 | Experiment A: artefact checks | Done (2026-10-11), with follow-ups | Every attempt is checked for signs that it is not physics. The checks flag the old rim's failures and stay quiet on the fixed model |
 | 6 | Experiment B: same surface, different representation | Done (2026-10-11) | One contact surface or numerical setting changed at a time, with everything physical held fixed; a table of which results survive |
-| 7 | Experiment C: sensitivity to the physical unknowns | 5 of 18 conditions run | Each guessed number moved across a stated plausible range; a ranking with uncertainty, set beside experiment B's |
+| 7 | Experiment C: sensitivity to the physical unknowns | Done (2026-10-12) | Each guessed number moved across a stated plausible range; a ranking with uncertainty, set beside experiment B's |
+| 7b | Explain the flagged attempts: collisions before firing, and overlap at low pin friction | Next | Each is traced to a cause, and fixed or stated as a limit |
 | 8 | Write-up | Planned | README with results, figures, and video, stating what the results are conditional on |
 
 ## Proposed experiments
@@ -164,6 +165,8 @@ A result *survives* if no setting moves it by more than the noise floor. A secon
 | Snare drive force | 1,500 N | 750 to 3,000 | Invented. Expected to do nothing: a check that the method can report "no effect" |
 
 **Size.** 28 conditions of 240 attempts for B and C, and four of 60 for A's test. `experiments/run_experiments.py` runs them and writes the summary tables.
+
+**Result (2026-10-12).** Of 240 attempts, a meaningless change flips 3 outcomes; any sound change of representation flips at most 7; the old box-top rim flips 79; the physical unknowns flip up to 180 (the joint rate cap), then 96 (friction at the rim) and 68 (observation delay). Pull-in force, vehicle mass, and snare drive force do not matter over their ranges. The checks flag all 50 known artefacts, and still flag 17 baseline attempts that are not yet explained. Details in the build log.
 
 **What would count as an answer.** A table of checks that catch a known artefact and how often they cry wolf; a list of results that do and do not survive a change of representation; a ranking of the physical unknowns with uncertainty; and one sentence comparing the two.
 

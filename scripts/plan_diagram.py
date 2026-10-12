@@ -19,11 +19,11 @@ STAGES = [
 EXPERIMENTS = [
     ("5 · EXPERIMENT A", "Artefact checks", "Force, energy, overlap on every attempt", "Caught 50 of 50, and found more", "done"),
     ("6 · EXPERIMENT B", "Same surface, new shape", "Rim · wall · time step · stiffness", "Result survives; old rim does not", "done"),
-    ("7 · EXPERIMENT C", "Physical unknowns", "Each guessed number across its range", "Ranking, set beside experiment B", "next"),
+    ("7 · EXPERIMENT C", "Physical unknowns", "Each guessed number across its range", "Rate cap, rim friction, delay lead", "done"),
 ]
 
 # One line on what is happening right now, shown under the title.
-NOW = "Experiments A and B done.  C part run.  The checks found two more contact problems to explain."
+NOW = "Experiments done.  Next: explain the attempts the checks still flag, then the write-up."
 
 W, H = 1600, 860
 BG, CARD, EDGE = "#0f1b2d", "#1b2a40", "#2b3d57"

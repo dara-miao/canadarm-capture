@@ -963,3 +963,50 @@ Even at the gentlest drift only 44 of 60 are captured. With tumble up to 2 deg/s
 **Checks.** 52 pass.
 
 **Next.** Finish experiment C. Then look at the flagged collisions before firing and at the overlap at low pin friction, before reading too much into C.
+
+## 2026-10-12 · Experiment C, and the comparison with B
+
+**Experiment C finished.** All 18 conditions, 240 attempts each on the same scenarios as experiment B. The baseline captures 110 of 240. The noise floor from experiment B is 3 changed outcomes. `docs/data/experiments_b_c.csv`.
+
+| Number changed | Low setting: captured | High setting: captured | Most outcomes changed | How it fails |
+|---|---|---|---|---|
+| Joint rate cap (0.015, 0.06 rad/s) | 21 | 199 | 180 | A slow arm times out before it can fire |
+| Friction at the rim (0.1, 0.8) | 111 | 14 | 96 | At 0.8 the fixture is caught but not pulled rigid |
+| Friction everywhere (0.1, 0.8) | 110 | 16 | 101 | The same, and it is the rim that does it |
+| Observation delay (0.5, 1.0 s) | 101 | 55 | 68 | The snare fires and misses |
+| Joint back-drive friction (100, 400 N m) | 111 | 101 | 17 | At 400, more end caught but not rigid |
+| Friction at the pin (0.1, 0.8) | 111 | 108 | 8 | |
+| Vehicle mass (5,000, 8,050 kg) | 112 | 110 | 8 | |
+| Snare drive force (750, 3,000 N) | 108 | 110 | 2 | The control: no effect, as expected |
+| Pull-in force (3,560, 6,100 N) | 110 | 110 | 1 | |
+
+What it shows:
+
+- *One number dominates, and it is invented.* The joint rate cap moves the capture count from 21 to 199. It is the number the research notes list first among the unknowns.
+- *Friction matters at one contact only.* High friction at the rim stops the tilted plate sliding flat. Friction at the snare makes no difference to the count.
+- *Stale observations matter past half a second.* At 1.0 s, 55 attempts fire and miss.
+- *Three numbers do not matter over their ranges:* pull-in force, vehicle mass, and snare drive force. The pull-in force is the best-sourced number in the model and the result does not depend on it.
+- *The control behaved.* Snare drive force was expected to do nothing and changed 2 outcomes, inside the noise floor.
+
+**B against C.** This is the comparison the experiments were built for.
+
+| | Most outcomes changed, of 240 |
+|---|---|
+| Noise floor | 3 |
+| Any sound change of representation (sphere count, wall boxes, time step, contact stiffness) | 7 |
+| The old box-top rim | 79 |
+| The physical unknowns | 180 |
+
+- On the fixed model, how contact is represented moves the result by about as much as noise, and the physical unknowns move it more than twenty times as far. A sensitivity ranking from this model reflects the physics it was given, not the shapes chosen.
+- One unsound representation moves it as much as the second-largest physical effect. From the outcome counts alone, the old rim's 33 of 240 looks like any other result. Only the checks tell the two apart: they flag 96 of that condition's attempts against 17 for the baseline.
+
+So the answer to the question, for this model: the checks in experiment A are how to tell, and once they pass, the result is far more sensitive to the physical unknowns than to the representation.
+
+**What limits this.**
+
+- The checks do not fully pass. The baseline still has 17 flagged attempts, in collisions before the snare fires, and low pin friction has 105. Neither is explained. Both sit in conditions whose capture counts did not move, so the ranking above probably stands, but that is not shown.
+- Two seeds, one scenario family. Even at the gentlest drift only 44 of 60 are captured, because tumble up to 2 deg/s puts many attempts out of reach.
+- The biggest effect is a property of this project's own controller. A different controller would have a different ranking.
+- Each number was moved alone. Nothing here says how they combine.
+
+**Next.** Explain the two sets of flagged attempts. Then the write-up.
