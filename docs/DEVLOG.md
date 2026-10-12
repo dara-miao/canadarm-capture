@@ -977,3 +977,11 @@ Even at the gentlest drift only 44 of 60 are captured. With tumble up to 2 deg/s
 **Tried and removed.** An invented Earth beyond the vehicle. Taken out again.
 
 **Checks.** 52 pass. The model has the same joints and degrees of freedom with the sphere as without.
+
+## 2026-10-11 · A preview video
+
+**Built.** `scripts/render_preview.py` renders `docs/media/preview.mp4`: 18 seconds, one continuous shot of a simulated capture at four times real speed. It opens on the whole station with the vehicle drifting beside it, moves in on the end effector as it lines up, fades the end effector's shell so the pin and the snare can be seen as it closes, and pulls back to the whole station once the vehicle is held. No captions. The README shows a smaller animated copy that links to it.
+
+**The sky.** Each star had been spread over two or three screen pixels, which made the background look like a low-resolution picture. The sky is now painted at twice the resolution, 2,048 pixels to a cube face, with the stars a little brighter.
+
+**Note.** The attempt in the video is a real run of the model, and it ends captured. The see-through shell is a drawing effect only.

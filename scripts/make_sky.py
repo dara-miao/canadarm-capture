@@ -1,6 +1,6 @@
 """Paint a starry sky for the scene's background and save it as assets/processed/sky.png.
 
-    python scripts/make_sky.py [--size 1024] [--seed 7]
+    python scripts/make_sky.py [--size 2048] [--seed 7]
 
 The sky is invented: random stars, a band of glow with dust lanes standing in for the
 Milky Way, and a few faint smudges standing in for galaxies. It is not a map of the
@@ -112,7 +112,7 @@ def _add_stars(faces: np.ndarray, rng: np.random.Generator, n: int) -> None:
     # crowd more of them toward the band
     keep = rng.random(3 * n) < 0.25 + 0.75 * np.exp(-((np.arcsin(np.clip(d @ POLE, -1, 1)) / np.radians(14.0)) ** 2))
     d = d[keep][:n]
-    brightness = np.clip(0.03 * rng.pareto(1.5, size=len(d)) + 0.02, 0, 5.0)
+    brightness = np.clip(0.05 * rng.pareto(1.5, size=len(d)) + 0.03, 0, 6.0)
     temperature = rng.random(len(d))
     colour = np.stack([0.75 + 0.25 * temperature, 0.82 + 0.1 * np.sin(np.pi * temperature), 1.0 - 0.3 * temperature], axis=1)
 
@@ -139,9 +139,9 @@ def _add_stars(faces: np.ndarray, rng: np.random.Generator, n: int) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    parser.add_argument("--size", type=int, default=1024, help="pixels along each cube face")
+    parser.add_argument("--size", type=int, default=2048, help="pixels along each cube face")
     parser.add_argument("--seed", type=int, default=7)
-    parser.add_argument("--stars", type=int, default=30000)
+    parser.add_argument("--stars", type=int, default=40000)
     args = parser.parse_args()
 
     rng = np.random.default_rng(args.seed)

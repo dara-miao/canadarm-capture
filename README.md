@@ -6,6 +6,10 @@ Inspired by Canadarm2 capturing Cygnus, which the real arm does routinely. This 
 
 **Status:** in progress. The arm approaches a drifting, tumbling vehicle from the 10 m capture point, snares its grapple pin, pulls it in, and latches, with delayed and noisy sensing. A batch runner records how each attempt ends and at which stage it failed. Pilot runs found, and fixed, a contact failure in the model that had looked like a physical failure mode. The systematic experiments have not been run yet. See the [research notes](docs/RESEARCH.md), the [plan](docs/PLAN.md), and the [build log](docs/DEVLOG.md).
 
+[![Preview of the simulation: the station, the approach, the snare closing, and the vehicle held](docs/media/preview.gif)](docs/media/preview.mp4)
+
+A capture at four times real speed. Click for the full-size video.
+
 ![Project plan](docs/media/plan.svg)
 
 ![Station, arm, and Cygnus](docs/media/scene_station.png)
