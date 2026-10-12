@@ -824,11 +824,9 @@ One attempt in each variant fires and misses, as before.
 
 **Uncertainty.** This is the same idea as uncertainty in a physics lab, and it is now in the plan: a guessed number is a measurement with a wide uncertainty, and a sensitivity run is how its effect on the result is found.
 
-**Also built: a sky.** The background was flat black. `scripts/make_sky.py` paints a cube map of about 30,000 stars, a band of glow with dust lanes, and four faint galaxies, and the scene uses it when the file exists. It is invented, not a map of the real sky, and changes nothing in the physics. Checked by rendering wide views across the cube's edges and corners: the band is continuous. A real camera exposed for sunlit hardware would show few stars or none, and the Earth, which fills much of the real view, is not drawn.
-
 **Checks.** 52 pass.
 
-## 2026-10-11 · Collision shapes, and whose notes these are
+## 2026-10-11 · Collision shapes
 
 **What I learned.** I had not known that a simulator collides simple hidden shapes, not the models it draws. Following that up, in conversation and with Perplexity:
 
@@ -848,8 +846,6 @@ The details and sources are in the research notes, section 2 and section 3. The 
 
 - Weight and mass: in orbit nothing has weight, so every contact force comes from a motor or from motion. Mass still decides how much a push changes an object's motion.
 - Three habits from my first-year uncertainty guide that apply here, and one finding from its section on significant figures: several of the model's sourced values are round numbers in pounds and feet converted to metric (4,893 N is 1,100 lbf; 64,054 N is 14,400 lbf), so they are good to two or three figures.
-
-**Voice.** These documents had been written from the assistant's point of view, referring to me by name. They are now my notes: plain where they are just notes, first person where they are mine. Work I did not do by hand is described without an "I". The README says how the project was built.
 
 **Not changed.** The model and the code.
 
@@ -884,8 +880,6 @@ So the sensitivity ranking itself was an artefact of one collision surface. That
 Still a pilot: 12 attempts a point, one seed, tumble only up to 0.5 deg/s. The estimator-gain rows still test nothing, because sensing is perfect in this sweep.
 
 **A viewer bug.** Opening the viewer with the new `--shapes` option produced MuJoCo's "simulation is unstable" warning. The viewer's own loop never cleared the applied forces between steps, so once the latches came on, their 64 kN was added again every step. It dates from the latch stage (R4). Batches and tests step through `run_trial`, which does clear them, so no result was affected. Fixed with one line, and the same scenario now finishes with no warning. A result that looked like the model's behaviour was an artefact of how it was being run.
-
-**Also built.** `scripts/view.py --shapes` shows the collision shapes in place of the 3D models.
 
 **Three experiments proposed.** Written up in the plan, not yet agreed:
 
@@ -969,19 +963,3 @@ Even at the gentlest drift only 44 of 60 are captured. With tumble up to 2 deg/s
 **Checks.** 52 pass.
 
 **Next.** Finish experiment C. Then look at the flagged collisions before firing and at the overlap at low pin friction, before reading too much into C.
-
-## 2026-10-11 · A sky that moves
-
-**Built.** In the viewer the stars now wheel past. MuJoCo's own background cannot move, so the painted sky also goes on the inside of a 400 m sphere that hangs on a body physics ignores, and the viewer turns it a little each frame about the station's orbit axis. `--sky-speed` sets the rate as a multiple of the real one (one turn per orbit of about 93 minutes); the default is 10 so that it can be seen, and 0 holds it still. Renders and batches still use the fixed background.
-
-**Tried and removed.** An invented Earth beyond the vehicle. Taken out again.
-
-**Checks.** 52 pass. The model has the same joints and degrees of freedom with the sphere as without.
-
-## 2026-10-11 · A preview video
-
-**Built.** `scripts/render_preview.py` renders `docs/media/preview.mp4`: 18 seconds, one continuous shot of a simulated capture at four times real speed. It opens on the whole station with the vehicle drifting beside it, moves in on the end effector as it lines up, fades the end effector's shell so the pin and the snare can be seen as it closes, and pulls back to the whole station once the vehicle is held. No captions. The README shows a smaller animated copy that links to it.
-
-**The sky.** Each star had been spread over two or three screen pixels, which made the background look like a low-resolution picture. The sky is now painted at twice the resolution, 2,048 pixels to a cube face, with the stars a little brighter.
-
-**Note.** The attempt in the video is a real run of the model, and it ends captured. The see-through shell is a drawing effect only.
