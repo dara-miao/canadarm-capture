@@ -107,14 +107,14 @@ A capture also has three stages of "done":
 | P2 | Load pilot: what happens after the snare closes | Done (2026-10-11) | Forces, vehicle motion, and tilt logged for the harsh batch; table in `docs/data/pilot_load.csv` |
 | R5 | Fix the plate-on-rim contact | Done (2026-10-11) | Plate seats on a ring of spheres; load and lost-capture pilots rerun; a replay of the failing attempt is a test |
 | P3 | Rerun the sensitivity pilot on the fixed model | Done (2026-10-11) | Table and failure types by speed in `docs/data/` |
-| 5 | Experiment A: artefact checks | Proposed | Every attempt is checked for signs that it is not physics. The checks flag the old rim's failures and stay quiet on the fixed model |
-| 6 | Experiment B: same surface, different representation | Proposed | One contact surface or numerical setting changed at a time, with everything physical held fixed; a table of which results survive |
-| 7 | Experiment C: sensitivity to the physical unknowns | Proposed | Each guessed number moved across a stated plausible range; a ranking with uncertainty, set beside experiment B's |
+| 5 | Experiment A: artefact checks | Done (2026-10-11), with follow-ups | Every attempt is checked for signs that it is not physics. The checks flag the old rim's failures and stay quiet on the fixed model |
+| 6 | Experiment B: same surface, different representation | Done (2026-10-11) | One contact surface or numerical setting changed at a time, with everything physical held fixed; a table of which results survive |
+| 7 | Experiment C: sensitivity to the physical unknowns | 5 of 18 conditions run | Each guessed number moved across a stated plausible range; a ranking with uncertainty, set beside experiment B's |
 | 8 | Write-up | Planned | README with results, figures, and video, stating what the results are conditional on |
 
 ## Proposed experiments
 
-Proposed on 2026-10-11, not yet agreed. Together they answer the question at the top: A is *how to tell*, and B against C is *what the result is sensitive to*.
+Proposed and agreed on 2026-10-11, with the ranges below. Together they answer the question at the top: A is *how to tell*, and B against C is *what the result is sensitive to*.
 
 **The headline comparison.** Is the result moved more by how contact is represented (B) or by the physical numbers nobody knows exactly (C)? If B's largest effect is as big as C's, a sensitivity ranking from one representation cannot be trusted. The pilots already hint at this: fixing one surface changed which parameter mattered most.
 
@@ -153,15 +153,17 @@ A result *survives* if no setting moves it by more than the noise floor. A secon
 
 | Number | In the model | Proposed range | Kind |
 |---|---|---|---|
-| Contact friction | 0.3 | 0.1 to 0.6 | A modelling paper's input |
+| Contact friction, everywhere | 0.3 | 0.1 to 0.8 | A modelling paper's input. The top end covers bare metal in vacuum, which is from memory and unchecked |
+| Friction where the snare holds the pin | 0.3 | 0.1 to 0.8 | Split out to see which contact matters |
+| Friction where the fixture seats on the rim | 0.3 | 0.1 to 0.8 | Split out to see which contact matters |
 | Joint rate cap | 0.03 rad/s | 0.015 to 0.06 | Invented |
 | Pull-in force | 4,893 N | 3,560 (the Shuttle value) to 6,100 | Sourced; range is a guess |
 | Joint back-drive friction | 200 N m | 100 to 400 | Derived from one test load |
-| Vehicle mass | 7,000 kg | 5,000 to 8,050 (published loaded mass) | Approximate |
+| Vehicle mass | 7,000 kg | 5,000 to 8,050 | Approximate. Reported figures put the mass at capture between about 5,000 and 7,000 kg; 8,050 is kept as a deliberate overshoot |
 | Observation delay | 0 | 0 to 1.0 s | Exploratory |
 | Snare drive force | 1,500 N | 750 to 3,000 | Invented. Expected to do nothing: a check that the method can report "no effect" |
 
-**Size.** About 20 conditions of 240 attempts. At the pilots' speed that is roughly one and a half to two hours of computing on mains power, in two or three sittings.
+**Size.** 28 conditions of 240 attempts for B and C, and four of 60 for A's test. `experiments/run_experiments.py` runs them and writes the summary tables.
 
 **What would count as an answer.** A table of checks that catch a known artefact and how often they cry wolf; a list of results that do and do not survive a change of representation; a ranking of the physical unknowns with uncertainty; and one sentence comparing the two.
 
@@ -233,7 +235,8 @@ The notes below were written for the earlier experiments A, B, and C, and are ke
 | 2026-10-11 | I build, with Claude Code explaining and reviewing: work through the five layers one at a time, starting with contact | The point of the project is to learn the system design well enough to explain it | Current |
 | 2026-10-11 | The plan, research notes, and build log are written as my notes, not narrated by the assistant | They are my documents and I need to be able to speak to all of it | Current |
 | 2026-10-11 | Painted starry background, generated by `scripts/make_sky.py` | The scene was black. Appearance only; an invented sky, not a star map | Current |
-| 2026-10-11 | Proposed: three experiments (artefact checks, representation, physical sensitivity), with the second engine folded into the second as an extension | They answer the two halves of the question, and B against C is the comparison that carries beyond this model | Proposed, not yet agreed |
+| 2026-10-11 | Proposed: three experiments (artefact checks, representation, physical sensitivity), with the second engine folded into the second as an extension | They answer the two halves of the question, and B against C is the comparison that carries beyond this model | Agreed the same day |
+| 2026-10-11 | Friction range runs to 0.8, and is also varied separately at the pin and at the rim | The effect is at the high end, and the two contacts may not matter equally | Current |
 | 2026-10-10 | Treat the station as fixed and the arm as rigid | The station is about 60 times heavier than the vehicle; arm flexibility is left out to keep the first version simple | Current |
 
 ## Values the model uses, by where they come from
@@ -307,6 +310,7 @@ Full provenance is in the research notes. This table records only what the model
 - **The latch is a force, not a mechanism.** Retention now holds because 64 kN is applied at the rim once the fixture is seated. Whether real latches would engage on a slightly misaligned fixture is not something this model can say.
 - **Zero gravity is a timescale assumption.** Reasonable for a one-minute attempt according to the mjorbit comparison, but that does not by itself prove relative orbital motion is negligible against centimetre tolerances.
 - **The biggest sensitivity found so far is to the controller.** In the pilots, letting the arm go limp when the snare closes doubled the drift speed at which capture fails; friction, drive force, arm speed, and observation delay each moved it by 1 cm/s or less. A parameter ranking on this model may mostly reflect that one piece of invented logic.
+- **The checks found two more places where the model is not behaving like physics (2026-10-11).** About 12 of 240 baseline attempts have contact forces up to 24 MN and overlaps up to 24 cm in a collision before the snare fires; all were already failures. And at pin friction 0.1, most captures show 12 mm of overlap and forces over 1 MN while the capture count is unchanged. Neither is understood yet. Results from flagged attempts should be reported separately until they are.
 - **A contact failure went unnoticed through four milestones.** Until 2026-10-11 every lost pin was a solver failure where the tilted fixture plate met the rim. It was found only when contact forces and kinetic energy were logged. Other contacts of the same kind remain (the knob against the overlapping wall boxes). Batches should log peak contact force and flag any attempt where the vehicle gains speed.
 - **Tilt is removed by a substitute for the cams.** The snare holds a point and does not stop rotation, so the vehicle's tumble tilts the plate up to 14° before it meets the rim, and pull-in levers it flat. On the real fixture, cam arms do this. The plate, rim, and pin dimensions that set the lever are not sourced, and the result is sensitive to friction at that contact.
 - **Contact tuning.** Stiff contact in zero gravity may need a smaller timestep or solver tuning.

@@ -896,3 +896,76 @@ Still a pilot: 12 attempts a point, one seed, tumble only up to 0.5 deg/s. The e
 The comparison that matters is B against C: does the choice of representation move the result as much as the physical unknowns do?
 
 **Checks.** 52 pass.
+
+## 2026-10-11 · Experiments A and B, and the start of C
+
+**Agreed before running.** The ranges for experiment C: friction up to 0.8, and varied separately at the pin and at the rim; vehicle mass from 5,000 to 8,050 kg after checking what is published (the research notes have the figures, which point to 5,000 to 7,000 kg at capture).
+
+**Built.**
+
+- `capture/audit.py`: five checks that run on every attempt in every batch. An attempt is flagged for an unstable step, a contact force on the vehicle over 150 kN, the vehicle moving faster after contact than 1.5 times its fastest speed before, shapes overlapping by more than 1 cm, or a sliding joint more than 5 mm past its stop.
+- Model options for everything B and C change: number of rim spheres, number of wall boxes, time step, contact stiffness, friction at the pin and at the rim, pull-in force, joint back-drive friction, vehicle mass.
+- `experiments/run_experiments.py`: 32 conditions, each run on the same scenarios. It can be stopped and restarted. Summary tables are `docs/data/experiment_a_checks.csv` and `docs/data/experiments_b_c.csv`.
+
+**Scenarios for B and C.** A matched drift sweep at 4, 8, 12, and 16 cm/s, 30 scenarios each, two seeds: 240 attempts per condition, with tumble up to 2 deg/s.
+
+### Experiment A: do the checks catch a known artefact?
+
+The harsh batch of 60, on the old rim and on the fixed one.
+
+| | Lost | Lost and flagged | Flagged without being lost |
+|---|---|---|---|
+| Box-top rim | 27 | 27 | 6 |
+| Box-top rim, limp arm | 23 | 23 | 7 |
+| Sphere rim | 0 | 0 | 6 |
+| Sphere rim, limp arm | 0 | 0 | 6 |
+
+- All 50 known artefacts are flagged.
+- The fixed model is not clean. Six of its 60 attempts are flagged, and in the 240-attempt baseline 17 are. None fired the snare, bar one lost attempt: they timed out or went out of reach. About 12 of the 17 have forces from hundreds of kilonewtons to 24 MN, overlaps up to 24 cm, and a vehicle that leaves faster than it came. Something goes wrong when the arm and the vehicle collide during a failed approach. Not yet looked at. Candidates: the plate or the pin against the outside of the wall boxes, or the arm's motors, which have no torque limit, driving the end effector into the hull.
+- About four look like false alarms: only the energy check fired, with small forces. Its threshold was a first guess and is probably too tight.
+
+### Experiment B: does the result survive a change of representation?
+
+Captured out of 240, and how many individual attempts changed outcome against the baseline.
+
+| Condition | Captured | Rate (95% range) | Attempts whose outcome changed |
+|---|---|---|---|
+| Baseline | 110 | 46% (40 to 52) | |
+| Noise floor: start nudged 0.001 mm | 111 | 46% (40 to 53) | 3 |
+| Rim: box tops | 33 | 14% (10 to 19) | 79 |
+| Rim: 16 spheres | 110 | 46% | 2 |
+| Rim: 64 spheres | 110 | 46% | 0 |
+| Wall: 8 boxes | 112 | 47% | 5 |
+| Wall: 32 boxes | 112 | 47% | 7 |
+| Time step 1 ms | 110 | 46% | 2 |
+| Time step 0.5 ms | 110 | 46% | 3 |
+| Contact twice as stiff | 110 | 46% | 7 |
+
+- A change with no physical meaning flips 3 of 240 outcomes. That is the noise floor.
+- The capture rate survives every change of representation except one. Sphere count and time step are at the noise floor. Wall box count and contact stiffness are a little above it, 5 to 7 changed outcomes, and move the capture count by 2 at most.
+- The old rim is the exception: 79 outcomes change and 77 captures are lost.
+
+Even at the gentlest drift only 44 of 60 are captured. With tumble up to 2 deg/s many attempts end out of reach before anything touches.
+
+### Experiment C: 5 of 18 conditions
+
+| Condition | Captured | Caught, not rigid | Outcomes changed | Flagged |
+|---|---|---|---|---|
+| Baseline | 110 | 2 | | 17 |
+| Friction 0.1 everywhere | 110 | 3 | 7 | 119 |
+| Friction 0.8 everywhere | 16 | 95 | 101 | 14 |
+| Friction at the pin 0.1 | 111 | 2 | 2 | 105 |
+| Friction at the pin 0.8 | 108 | 3 | 8 | 18 |
+| Friction at the rim 0.1 | 111 | 2 | 2 | 18 |
+
+- High friction is the largest effect seen in either experiment: 94 captures become caught but not rigid. The split says it is not the pin. Friction at the rim 0.8 has not run yet.
+- Low friction at the pin leaves the capture count alone, and the checks say not to believe that. Of 110 captures at friction 0.1, 101 are flagged, with shapes overlapping by about 12 mm (under 1 mm in the baseline) and forces up to 1.2 MN. The outcome label says "no effect". Not yet understood.
+
+**What went wrong.**
+
+- The run was estimated at an hour and a half and needed about three. It was cut off at two hours, after 19 of 32 conditions. The 13 left are all in experiment C.
+- The model had been called fixed. The checks show two more places where it is not behaving like physics.
+
+**Checks.** 52 pass.
+
+**Next.** Finish experiment C. Then look at the flagged collisions before firing and at the overlap at low pin friction, before reading too much into C.

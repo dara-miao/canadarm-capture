@@ -20,6 +20,7 @@ import mujoco
 import numpy as np
 
 from . import scene
+from .audit import Audit
 from .controller import CaptureController, ControllerConfig
 from .sensing import PinSensor, SensorConfig
 from .trial import Outcome, run_trial
@@ -143,8 +144,9 @@ def run_scenario(
         SensorConfig(s.sensor_delay, s.sensor_rate, s.sensor_pos_noise, s.sensor_angle_noise),
         seed=s.seed,
     )
-    r = run_trial(model, data, CaptureController(model, config, sensor=sensor), max_time=max_time)
-    return asdict(s) | {
+    audit = Audit(model)
+    r = run_trial(model, data, CaptureController(model, config, sensor=sensor), max_time=max_time, after_step=audit)
+    return asdict(s) | audit.result(data) | {
         "outcome": r.outcome.value,
         "engaged": int(r.engaged),
         "seated": int(r.seated),

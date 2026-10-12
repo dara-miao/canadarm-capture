@@ -17,13 +17,13 @@ STAGES = [
     ("4 · REPEATABLE TRIALS", "Measure outcomes", "Success criteria · failure types", "Outcome labels · batches · sensing", "done"),
 ]
 EXPERIMENTS = [
-    ("5 · EXPERIMENT A", "Artefact checks", "Force, energy, overlap on every attempt", "Do they catch the known failure?", "next"),
-    ("6 · EXPERIMENT B", "Same surface, new shape", "Rim · wall · time step · stiffness", "Which results survive?", "planned"),
-    ("7 · EXPERIMENT C", "Physical unknowns", "Each guessed number across its range", "Ranking, set beside experiment B", "planned"),
+    ("5 · EXPERIMENT A", "Artefact checks", "Force, energy, overlap on every attempt", "Caught 50 of 50, and found more", "done"),
+    ("6 · EXPERIMENT B", "Same surface, new shape", "Rim · wall · time step · stiffness", "Result survives; old rim does not", "done"),
+    ("7 · EXPERIMENT C", "Physical unknowns", "Each guessed number across its range", "Ranking, set beside experiment B", "next"),
 ]
 
 # One line on what is happening right now, shown under the title.
-NOW = "Question: is a simulated contact result physics or artefact?  Three experiments proposed; not yet agreed."
+NOW = "Experiments A and B done.  C part run.  The checks found two more contact problems to explain."
 
 W, H = 1600, 860
 BG, CARD, EDGE = "#0f1b2d", "#1b2a40", "#2b3d57"

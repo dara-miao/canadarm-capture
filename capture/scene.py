@@ -57,7 +57,7 @@ LATCH_RADIUS = 0.2
 MAX_FIXTURE_STIFFNESS = 5.0e4
 
 
-def _add_cavity_wall(spec: mujoco.MjSpec) -> None:
+def _add_cavity_wall(spec: mujoco.MjSpec, segments: int = WALL_SEGMENTS) -> None:
     """Approximate a hollow cylinder with a ring of boxes.
 
     MuJoCo collides convex shapes, so one mesh cannot represent a cavity.
@@ -65,10 +65,10 @@ def _add_cavity_wall(spec: mujoco.MjSpec) -> None:
     lee = spec.body("lee_tool")
     r_mid = CAVITY_RADIUS + WALL_THICKNESS / 2
     # Half-width chosen so neighbouring boxes overlap at the inner radius.
-    half_w = (CAVITY_RADIUS + WALL_THICKNESS) * np.tan(np.pi / WALL_SEGMENTS)
+    half_w = (CAVITY_RADIUS + WALL_THICKNESS) * np.tan(np.pi / segments)
     half_len = (CAVITY_Z1 - CAVITY_Z0) / 2
-    for i in range(WALL_SEGMENTS):
-        phi = 2 * np.pi * i / WALL_SEGMENTS
+    for i in range(segments):
+        phi = 2 * np.pi * i / segments
         theta = phi + np.pi / 2  # box x axis is tangential
         lee.add_geom(
             name=f"lee_wall_{i}",
@@ -76,12 +76,12 @@ def _add_cavity_wall(spec: mujoco.MjSpec) -> None:
             size=[half_w, WALL_THICKNESS / 2, half_len],
             pos=[r_mid * np.cos(phi), r_mid * np.sin(phi), (CAVITY_Z0 + CAVITY_Z1) / 2],
             quat=[np.cos(theta / 2), 0, 0, np.sin(theta / 2)],
-            mass=WALL_MASS / WALL_SEGMENTS,
+            mass=WALL_MASS / segments,
             rgba=[0.85, 0.72, 0.3, 0.35],  # see-through, so the snare is visible
         )
 
 
-def _add_rim(spec: mujoco.MjSpec) -> None:
+def _add_rim(spec: mujoco.MjSpec, spheres: int = RIM_SPHERES) -> None:
     """Give the fixture plate its own surface to seat on: a ring of spheres on the rim.
 
     The wall boxes overlap at their edges, so a tilted plate touched two of them at the
@@ -92,8 +92,8 @@ def _add_rim(spec: mujoco.MjSpec) -> None:
     lee = spec.body("lee_tool")
     r = WALL_THICKNESS / 2
     r_mid = CAVITY_RADIUS + r
-    for i in range(RIM_SPHERES):
-        phi = 2 * np.pi * i / RIM_SPHERES
+    for i in range(spheres):
+        phi = 2 * np.pi * i / spheres
         lee.add_geom(
             name=f"lee_rim_{i}",
             type=mujoco.mjtGeom.mjGEOM_SPHERE,
@@ -154,6 +154,17 @@ def _set_friction(spec: mujoco.MjSpec, friction: float) -> None:
             geom.friction[0] = friction
 
 
+def _pin_geoms(spec: mujoco.MjSpec) -> list:
+    """The shapes that meet where the snare holds the pin: the pin, its tip, and the three bars."""
+    bars = [g for i in range(3) for g in spec.body(f"snare_{i}").geoms]
+    return [spec.geom("gf_pin"), spec.geom("gf_tip"), *bars]
+
+
+def _rim_geoms(spec: mujoco.MjSpec) -> list:
+    """The shapes that meet where the fixture seats: the plate and the rim spheres."""
+    return [spec.geom("gf_plate"), *(g for g in spec.geoms if g.name.startswith("lee_rim_"))]
+
+
 def _mount_fixture_on_spring(spec: mujoco.MjSpec, stiffness: float) -> None:
     """Let the grapple fixture rock on its base against a rotational spring."""
     if not 0 < stiffness <= MAX_FIXTURE_STIFFNESS:
@@ -174,6 +185,15 @@ def build_model(
     fixture_stiffness: float | None = None,
     snare_force: float | None = None,
     rim: str = "spheres",
+    rim_spheres: int = RIM_SPHERES,
+    wall_segments: int = WALL_SEGMENTS,
+    timestep: float | None = None,
+    contact_time: float | None = None,
+    friction_pin: float | None = None,
+    friction_rim: float | None = None,
+    pull_in_force: float | None = None,
+    backdrive: float | None = None,
+    vehicle_mass: float | None = None,
 ) -> mujoco.MjModel:
     """Build the scene.
 
@@ -188,19 +208,56 @@ def build_model(
     rim:      what the fixture plate seats on. "spheres" is a ring of spheres on the rim.
               "boxes" is the tops of the wall boxes, as before 2026-10-11; kept only to
               reproduce the contact failure that led to the change.
+
+    Options that change how the same objects are represented:
+    rim_spheres:   how many spheres make the rim.
+    wall_segments: how many boxes make the cavity wall.
+    timestep:      simulation step [s]. Defaults to the model file's 2 ms.
+    contact_time:  time constant of every contact's stiffness [s]; smaller is stiffer.
+                   Defaults to MuJoCo's 0.02.
+
+    Options that change a physical number:
+    friction_pin:  friction where the snare holds the pin (pin, tip, and bars), set after `friction`.
+    friction_rim:  friction where the fixture seats (plate and rim), set after `friction`.
+    pull_in_force: force limit of the carriage drive [N]. Defaults to 4,893.
+    backdrive:     torque needed to back-drive each arm joint [N m]. Defaults to 200.
+    vehicle_mass:  mass of the vehicle's hull [kg], split between its two modules as in the
+                   model file. Defaults to 7,000.
     """
     if rim not in ("spheres", "boxes"):
         raise ValueError(f"unknown rim: {rim}")
     spec = mujoco.MjSpec.from_file(str(BASE_XML))
-    _add_cavity_wall(spec)
+    _add_cavity_wall(spec, wall_segments)
     if rim == "spheres":
-        _add_rim(spec)
+        _add_rim(spec, rim_spheres)
     if friction is not None:
         _set_friction(spec, friction)
     if fixture_stiffness is not None:
         _mount_fixture_on_spring(spec, fixture_stiffness)
     if snare_force is not None:
         spec.actuator("a_snare").forcerange = [-snare_force, snare_force]
+    if friction_pin is not None:
+        for geom in _pin_geoms(spec):
+            geom.friction[0] = friction_pin
+    if friction_rim is not None:
+        for geom in _rim_geoms(spec):
+            geom.friction[0] = friction_rim
+    if pull_in_force is not None:
+        spec.actuator("a_carriage").forcerange = [-pull_in_force, pull_in_force]
+    if backdrive is not None:
+        for name in ARM_JOINTS:
+            spec.joint(name).frictionloss = backdrive
+    if vehicle_mass is not None:
+        hull = [spec.geom("hull_cargo"), spec.geom("hull_service")]
+        scale = vehicle_mass / sum(g.mass for g in hull)
+        for g in hull:
+            g.mass *= scale
+    if timestep is not None:
+        spec.option.timestep = timestep
+    if contact_time is not None:
+        for geom in spec.geoms:
+            if geom.contype or geom.conaffinity:
+                geom.solref = [contact_time, 1.0]
     if meshes is None:
         meshes = meshes_available()
     if meshes:

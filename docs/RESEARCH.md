@@ -246,6 +246,10 @@ Honda et al. report that the fixture base stiffness "has much larger effect on t
 | Quantity | Value | Source | What it is | Label |
 |---|---|---|---|---|
 | Cygnus (Enhanced) | 3.07 m diameter, 6.39 m long, up to 8,050 kg loaded | Public data | Published figure | Read |
+| Cygnus (Enhanced), empty | 1,800 kg dry | Wikipedia's infobox, which cites no source for it | Published figure, unsourced | Reported |
+| Cygnus (Enhanced), cargo | 3,500 kg capacity; 3,785 kg and 3,857 kg carried on NG-20 and NG-21 (8,345 and 8,503 lb) | Wikipedia | Capacity, and two missions' loads | Reported |
+| Cygnus (Enhanced), propellant | 1,218 kg | Wikipedia, body text, no source cited | Capacity at launch. How much is left at capture is not found | Reported |
+| Cygnus mass at capture | roughly 5,000 to 7,000 kg | Sum of the three rows above: empty, plus 2,500 to 3,900 kg of cargo, plus whatever propellant is left | An estimate, not a published figure | Assumed |
 | HTV | 16 t, 9.8 m long, 4.4 m diameter | Honda et al., Table 1 | Published figure | Read |
 | Capture point | about 10 m from the station; 12 m for Cygnus XL | NASA and JAXA reports | Vehicle-to-station distance. Not the arm's standoff from the fixture | Read |
 | Time to capture | 2 to 3 minutes once the crew has "Go" and the arm is in the capture window | Chang and Marquez | Typical duration. Not an abort limit | Read |
@@ -431,4 +435,6 @@ Applied on 2026-10-10 unless marked otherwise. The build log has the details and
 **2026-10-11, collision geometry.** Started from a question of mine: if physics uses simple shapes underneath, how can it reflect a sharp or oddly shaped edge, and why must the shapes be convex? A Perplexity conversation gave the outline: the detector hands the solver a point, a direction, and a distance; a bounding box for filtering is not the same as the collision shape; convex does not mean round; an object can be one shape, several convex pieces, or a mesh; and the convex restriction belongs to particular engines. The MuJoCo points were then checked against its documentation and the CoACD points against the authors' project page, and both held. The rest is recorded as reported. Added an idea to section 2 and the sources to section 3.
 
 *Why this matters here.* It is the project's question in small. The model has already changed a collision shape three times (the cavity, the pin's tip, the rim), and the result changed each time.
+
+**2026-10-11, vehicle mass.** Looked for a sourced empty mass before setting the range for the mass sensitivity run. Wikipedia gives 1,800 kg dry, 3,500 kg of cargo, and 1,218 kg of propellant for the Enhanced Cygnus, with recent missions carrying a little over 3,800 kg. None of the three figures has a citation there, so they are reported. They add up to about 6,900 kg at launch, which puts the model's 7,000 kg at the heavy end for the moment of capture, after some propellant has been used. A lightly loaded ship would be nearer 5,000 kg. The 8,050 kg already in these notes is higher than those figures can reach and its source should be rechecked.
 
