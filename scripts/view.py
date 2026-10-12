@@ -30,12 +30,18 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--speed", type=float, default=4.0, help="playback speed relative to real time")
     parser.add_argument("--shapes", action="store_true", help="show the collision shapes instead of the 3D models")
+    parser.add_argument(
+        "--sky-speed", type=float, default=10.0,
+        help="how fast the stars wheel past, as a multiple of the real rate (one turn per orbit); 0 holds them still",
+    )  # fmt: skip
     args = parser.parse_args()
 
-    model = scene.build_model(meshes=not args.shapes)
+    model = scene.build_model(meshes=not args.shapes, moving_sky=True)
     data = mujoco.MjData(model)
     controller = CaptureController(model)
     steps_per_frame = max(1, int(round(args.speed * FRAME_TIME / model.opt.timestep)))
+    sky_step = args.sky_speed * scene.ORBIT_RATE * steps_per_frame * model.opt.timestep  # [rad] per frame
+    sky_angle = 0.0
 
     with mujoco.viewer.launch_passive(model, data) as viewer:
         scene.reset(model, data)
@@ -54,6 +60,8 @@ def main() -> None:
                     data.qfrc_applied[:] = 0  # the controller re-adds its latch force every step
                     controller.step(data)
                     mujoco.mj_step2(model, data)
+                sky_angle += sky_step
+                scene.turn_sky(model, data, sky_angle)
                 if controller.phase is Phase.DONE and hold_until is None:
                     hold_until = data.time + 8.0
                 viewer.sync()

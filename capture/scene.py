@@ -121,6 +121,61 @@ def _use_sky(spec: mujoco.MjSpec) -> None:
     sky.width = sky.height = 0
 
 
+SKY_RADIUS = 400.0  # [m]; far beyond everything else, inside the camera's far limit
+ORBIT_RATE = 2 * np.pi / (92.7 * 60)  # [rad/s]; one turn per orbit of about 92.7 minutes
+
+
+def _use_moving_sky(spec: mujoco.MjSpec, like: mujoco.MjModel) -> None:
+    """Paint the sky on the inside of a huge sphere that can be turned. Appearance only.
+
+    MuJoCo's own background cannot move. The sphere hangs on a body that physics ignores
+    (a "mocap" body), so turning it costs nothing and touches nothing. `like` is the same
+    model built without the sphere: its sense of the scene's size is kept, so that the
+    camera's near and far limits do not change.
+    """
+    spec.stat.extent = like.stat.extent
+    spec.stat.center = like.stat.center
+    spec.visual.map.zfar = 2.5 * SKY_RADIUS / like.stat.extent
+
+    # A sphere of triangles wound so that their faces point inward.
+    rings, sectors = 24, 48
+    lat = np.linspace(0, np.pi, rings + 1)
+    lon = np.linspace(0, 2 * np.pi, sectors, endpoint=False)
+    vertices = np.array([[np.sin(a) * np.cos(b), np.sin(a) * np.sin(b), np.cos(a)] for a in lat for b in lon])
+    faces = []
+    for i in range(rings):
+        for j in range(sectors):
+            a, b = i * sectors + j, i * sectors + (j + 1) % sectors
+            c, d = a + sectors, b + sectors
+            faces += [[a, b, c], [b, d, c]]
+    spec.add_mesh(
+        name="sky_sphere",
+        uservert=(SKY_RADIUS * vertices).flatten(),
+        userface=np.array(faces).flatten(),
+        inertia=mujoco.mjtMeshInertia.mjMESH_INERTIA_SHELL,
+    )
+    texture = spec.add_texture(
+        name="sky_cube", type=mujoco.mjtTexture.mjTEXTURE_CUBE, file=str(SKY), gridsize=[6, 1], gridlayout="RLUDFB......"
+    )
+    material = spec.add_material(name="sky", specular=0, shininess=0)
+    material.textures[mujoco.mjtTextureRole.mjTEXROLE_RGB] = texture.name
+    body = spec.worldbody.add_body(name="sky", mocap=True)
+    body.add_geom(
+        name="sky", type=mujoco.mjtGeom.mjGEOM_MESH, meshname="sky_sphere", material="sky",
+        contype=0, conaffinity=0, density=0,
+    )  # fmt: skip
+
+
+def turn_sky(model: mujoco.MjModel, data: mujoco.MjData, angle: float) -> None:
+    """Turn the moving sky to `angle` [rad] about the station's orbit axis (world y here).
+
+    A station that keeps one side toward the Earth turns once per orbit, so from on board
+    the stars wheel past at that rate.
+    """
+    if model.nmocap:
+        data.mocap_quat[model.body("sky").mocapid[0]] = [np.cos(angle / 2), 0.0, np.sin(angle / 2), 0.0]
+
+
 def meshes_available() -> bool:
     names = [*geometry.ARM_MESHES.values(), *geometry.VEHICLE_MESHES, *geometry.STATION_MESHES]
     return all((MESH_DIR / f"{n}.stl").exists() for n in names)
@@ -194,6 +249,7 @@ def build_model(
     pull_in_force: float | None = None,
     backdrive: float | None = None,
     vehicle_mass: float | None = None,
+    moving_sky: bool = False,
 ) -> mujoco.MjModel:
     """Build the scene.
 
@@ -205,6 +261,8 @@ def build_model(
               fixture base's stiffness strongly affects early capture.
     snare_force: force limit of the drive that closes the snare bars [N]. Defaults
               to the model file's 1,500 N, which is not sourced.
+    moving_sky: paint the sky on a sphere that scene.turn_sky can turn, for the viewer.
+              Needs the painted sky (scripts/make_sky.py); ignored without it.
     rim:      what the fixture plate seats on. "spheres" is a ring of spheres on the rim.
               "boxes" is the tops of the wall boxes, as before 2026-10-11; kept only to
               reproduce the contact failure that led to the change.
@@ -263,7 +321,10 @@ def build_model(
     if meshes:
         _use_meshes(spec)
     if meshes and SKY.exists():
-        _use_sky(spec)
+        if moving_sky:
+            _use_moving_sky(spec, like=spec.compile())
+        else:
+            _use_sky(spec)
     return spec.compile()
 
 

@@ -969,3 +969,11 @@ Even at the gentlest drift only 44 of 60 are captured. With tumble up to 2 deg/s
 **Checks.** 52 pass.
 
 **Next.** Finish experiment C. Then look at the flagged collisions before firing and at the overlap at low pin friction, before reading too much into C.
+
+## 2026-10-11 · A sky that moves
+
+**Built.** In the viewer the stars now wheel past. MuJoCo's own background cannot move, so the painted sky also goes on the inside of a 400 m sphere that hangs on a body physics ignores, and the viewer turns it a little each frame about the station's orbit axis. `--sky-speed` sets the rate as a multiple of the real one (one turn per orbit of about 93 minutes); the default is 10 so that it can be seen, and 0 holds it still. Renders and batches still use the fixed background.
+
+**Tried and removed.** An invented Earth beyond the vehicle. Taken out again.
+
+**Checks.** 52 pass. The model has the same joints and degrees of freedom with the sphere as without.
