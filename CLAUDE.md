@@ -45,19 +45,16 @@ Do this as part of every piece of work, not at the end:
 - No `Co-Authored-By` line on commits. The README's "How this was built" section credits Claude Code instead.
 - Update `docs/PLAN.md`, `docs/DEVLOG.md`, and the plan diagram in the same commit as the milestone they describe.
 
-## Where things stand (updated 2026-10-11)
+## Where things stand (updated 2026-10-12)
 
-Read `docs/PLAN.md` (questions, milestones, decisions), `docs/RESEARCH.md` (sources and numbers), and the last few entries of `docs/DEVLOG.md` before doing anything.
+Read `README.md` (the write-up), `docs/PLAN.md` (question, experiments, decisions, assumptions), and `docs/DEVLOG.md` before doing anything. All three were trimmed on 2026-10-12; longer versions are in the git history.
 
-- Milestones 1 to 4 and R1 to R4 are done. The model has the Canadarm2 pull-in force, a latch stage, a retention check, and six outcome labels.
-- Two questions lead the project, both written at the top of the plan:
-  1. Which of the model's assumptions decide where the simulated capture fails? (`experiments/pilot_sensitivity.py`)
-  2. Why do snared pins get lost? (`experiments/pilot_lost.py`)
-- Pilots so far are written up in the build log (entries of 2026-10-10 and 2026-10-11). Tables are in `docs/data/`; files ending `_box_rim` are from before the rim fix. Before rerunning a pilot because a table is missing, check it is not still running (`pgrep -fl experiments/pilot_`).
-- Found 2026-10-11: every "lost" capture was a numerical contact failure where the tilted fixture plate met the tops of the overlapping wall boxes. Fixed the same day: the plate now seats on a ring of spheres (`scene._add_rim`; `rim="boxes"` rebuilds the old rim). In the harsh batch all 30 snared attempts are now captured, in every variant except friction 0.6 (10 captured, 20 caught but not rigid).
-- All batch results from before the fix describe the old rim. The sensitivity pilot was rerun on 2026-10-11 and its ranking turned over: "limp at close" now does nothing; joint rate cap, observation delay, and friction 0.6 each matter and each fails in its own way; the baseline holds to about 15 cm/s of drift.
-- Three experiments were run (`experiments/run_experiments.py`; results in the build log entries of 2026-10-11 and 2026-10-12). Of 240 attempts: noise floor 3 changed outcomes; sound representation changes at most 7; the old rim 79; physical unknowns up to 180 (joint rate cap), 96 (friction at the rim), 68 (observation delay). A long run should go in the user's terminal, since a background job is cut off at two hours.
-- Next: explain the attempts `capture/audit.py` still flags on the fixed model (collisions before the snare fires, with forces up to 24 MN; 12 mm overlaps at pin friction 0.1). Then the write-up.
+- The model is built and the three experiments are run (`experiments/run_experiments.py`; tables in `docs/data/`). Of 240 attempts: noise floor 3 changed outcomes; sound representation changes at most 7; the old box-top rim 79; physical unknowns up to 180 (joint rate cap), 96 (friction at the rim), 68 (observation delay).
+- Every "lost" capture before 2026-10-11 was a numerical contact failure at the rim. The plate now seats on a ring of spheres (`scene._add_rim`; `rim="boxes"` rebuilds the old rim). Data files ending `_box_rim` are from before the fix.
+- `capture/audit.py` flags attempts that do not look like physics, in every batch. On the fixed model it still flags two things, both traced with `experiments/replay_flagged.py`: the end effector running into the hull during a failed approach (the arm's motors have no torque limit), and the pin's knob wedging between the rigid snare bars at low friction. Neither changes a capture count.
+- The README is the write-up, drafted 2026-10-12. `scripts/results_figure.py` draws its figure from the results table.
+- Open, for Dara to decide: a "collided" outcome for the hull contact, and a torque limit on the arm's joints (no sourced value). Do not change the model or run experiments unasked.
+- A long run should go in Dara's terminal, since a background job is cut off at two hours.
 - `scripts/view.py` must clear `data.qfrc_applied` each step, as `run_trial` does. Any new stepping loop needs the same line or the latch force accumulates.
-- When investigating a failure, log contact forces and kinetic energy before explaining it. Three explanations of lost pins were written before anyone did.
-- Two Claude Code sessions once edited this repository at the same time and their work was mixed in one commit. Check `git status` and `git log` before editing.
+- When investigating a failure, log contact forces and kinetic energy before explaining it.
+- More than one Claude Code session has edited this repository at once before. Check `git status` and `git log` before editing.

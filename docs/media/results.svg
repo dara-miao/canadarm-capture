@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 642" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif">
+<rect width="1000" height="642" rx="14" fill="#fcfcfb"/>
+<text x="32" y="46" fill="#0b0b0b" font-size="22" font-weight="700">What moved the result</text>
+<text x="32" y="74" fill="#52514e" font-size="15">Attempts, out of 240, that ended differently when one thing was changed.</text>
+<line x1="372.0" y1="112" x2="372.0" y2="580" stroke="#e4e3df" stroke-width="1"/>
+<text x="372.0" y="600" fill="#52514e" font-size="13" text-anchor="middle">0</text>
+<line x1="511.5" y1="112" x2="511.5" y2="580" stroke="#e4e3df" stroke-width="1"/>
+<text x="511.5" y="600" fill="#52514e" font-size="13" text-anchor="middle">50</text>
+<line x1="651.0" y1="112" x2="651.0" y2="580" stroke="#e4e3df" stroke-width="1"/>
+<text x="651.0" y="600" fill="#52514e" font-size="13" text-anchor="middle">100</text>
+<line x1="790.5" y1="112" x2="790.5" y2="580" stroke="#e4e3df" stroke-width="1"/>
+<text x="790.5" y="600" fill="#52514e" font-size="13" text-anchor="middle">150</text>
+<line x1="930.0" y1="112" x2="930.0" y2="580" stroke="#e4e3df" stroke-width="1"/>
+<text x="930.0" y="600" fill="#52514e" font-size="13" text-anchor="middle">200</text>
+<rect x="372" y="112" width="8.4" height="468" fill="#8a8983" opacity="0.28"/>
+<text x="388.37" y="104" fill="#52514e" font-size="13">noise floor: 3 attempts change when nothing meaningful does</text>
+<text x="32" y="146" fill="#0b0b0b" font-size="15" font-weight="700">How contact is represented</text>
+<text x="358" y="184.0" fill="#0b0b0b" font-size="14" text-anchor="end">Rim: 16 or 64 spheres instead of 32</text>
+<path d="M372,171.0 h1.6 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-1.6 z" fill="#2a78d6"><title>Rim: 16 or 64 spheres instead of 32: 2 of 240</title></path>
+<text x="385.58" y="184.0" fill="#0b0b0b" font-size="14" font-weight="600">2</text>
+<text x="358" y="218.0" fill="#0b0b0b" font-size="14" text-anchor="end">Time step four times finer</text>
+<path d="M372,205.0 h4.4 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-4.4 z" fill="#2a78d6"><title>Time step four times finer: 3 of 240</title></path>
+<text x="388.37" y="218.0" fill="#0b0b0b" font-size="14" font-weight="600">3</text>
+<text x="358" y="252.0" fill="#0b0b0b" font-size="14" text-anchor="end">Cavity wall: 8 or 32 boxes instead of 16</text>
+<path d="M372,239.0 h15.5 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-15.5 z" fill="#2a78d6"><title>Cavity wall: 8 or 32 boxes instead of 16: 7 of 240</title></path>
+<text x="399.53" y="252.0" fill="#0b0b0b" font-size="14" font-weight="600">7</text>
+<text x="358" y="286.0" fill="#0b0b0b" font-size="14" text-anchor="end">Contact twice as stiff</text>
+<path d="M372,273.0 h15.5 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-15.5 z" fill="#2a78d6"><title>Contact twice as stiff: 7 of 240</title></path>
+<text x="399.53" y="286.0" fill="#0b0b0b" font-size="14" font-weight="600">7</text>
+<text x="358" y="320.0" fill="#0b0b0b" font-size="14" text-anchor="end">Rim: the tops of the wall boxes</text>
+<path d="M372,307.0 h216.4 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-216.4 z" fill="#2a78d6"><title>Rim: the tops of the wall boxes: 79 of 240</title></path>
+<text x="600.41" y="320.0" fill="#0b0b0b" font-size="14" font-weight="600">79</text>
+<text x="632.41" y="320.0" fill="#52514e" font-size="13">broke the solver; caught only by the checks</text>
+<text x="32" y="360" fill="#0b0b0b" font-size="15" font-weight="700">Physical numbers not known exactly</text>
+<text x="358" y="398.0" fill="#0b0b0b" font-size="14" text-anchor="end">Snare drive force (control)</text>
+<path d="M372,385.0 h1.6 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-1.6 z" fill="#eb6834"><title>Snare drive force (control): 2 of 240</title></path>
+<text x="385.58" y="398.0" fill="#0b0b0b" font-size="14" font-weight="600">2</text>
+<text x="358" y="432.0" fill="#0b0b0b" font-size="14" text-anchor="end">Friction where the snare holds the pin</text>
+<path d="M372,419.0 h18.3 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-18.3 z" fill="#eb6834"><title>Friction where the snare holds the pin: 8 of 240</title></path>
+<text x="402.32" y="432.0" fill="#0b0b0b" font-size="14" font-weight="600">8</text>
+<text x="358" y="466.0" fill="#0b0b0b" font-size="14" text-anchor="end">Joint back-drive friction</text>
+<path d="M372,453.0 h43.4 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-43.4 z" fill="#eb6834"><title>Joint back-drive friction: 17 of 240</title></path>
+<text x="427.43" y="466.0" fill="#0b0b0b" font-size="14" font-weight="600">17</text>
+<text x="358" y="500.0" fill="#0b0b0b" font-size="14" text-anchor="end">Observation delay</text>
+<path d="M372,487.0 h185.7 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-185.7 z" fill="#eb6834"><title>Observation delay: 68 of 240</title></path>
+<text x="569.72" y="500.0" fill="#0b0b0b" font-size="14" font-weight="600">68</text>
+<text x="358" y="534.0" fill="#0b0b0b" font-size="14" text-anchor="end">Friction where the fixture seats on the rim</text>
+<path d="M372,521.0 h263.8 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-263.8 z" fill="#eb6834"><title>Friction where the fixture seats on the rim: 96 of 240</title></path>
+<text x="647.84" y="534.0" fill="#0b0b0b" font-size="14" font-weight="600">96</text>
+<text x="358" y="568.0" fill="#0b0b0b" font-size="14" text-anchor="end">How fast the arm's joints may turn</text>
+<path d="M372,555.0 h498.2 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-498.2 z" fill="#eb6834"><title>How fast the arm's joints may turn: 180 of 240</title></path>
+<text x="882.2" y="568.0" fill="#0b0b0b" font-size="14" font-weight="600">180</text>
+<text x="651.0" y="624" fill="#52514e" font-size="13" text-anchor="middle">attempts whose outcome changed</text>
+</svg>

@@ -92,7 +92,7 @@ What is measured is where *this controller with this mechanism* reaches, snares,
 | Experiment B: the same object, represented differently | Done (2026-10-11) |
 | Experiment C: physical unknowns | Done (2026-10-12) |
 | Trace the attempts the checks still flag | Done (2026-10-12); fixes to decide |
-| Write-up | In progress |
+| Write-up | Drafted (2026-10-12): the README |
 
 ## The experiments
 
