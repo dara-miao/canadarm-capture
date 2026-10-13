@@ -4,17 +4,9 @@ Dated entries, newest last. Each one records what was built, why, what the check
 
 ## 2026-10-09 to 10 · Choosing the project
 
-**Goal.** A physics simulation project for a portfolio aimed at physical AI.
+**Why this project.** I wanted a scenario harder than a robot arm on a desk picking up a mug: something real, with real consequences. Capturing a spacecraft is that. The target weighs seven tonnes and floats free, so in zero gravity a light touch in the wrong place pushes it away, right next to a crewed station.
 
-**How the idea changed.**
-
-1. Started as a from-scratch differentiable simulator in PyTorch. Dropped before any code was kept.
-2. Refocused on contact-rich manipulation after reading that insertion, grasping, and tactile tasks "depend on accurate contact geometry, friction, compliance, actuator behavior, and tight tolerances".
-3. Switched from building an engine to composing existing tools, after reading how NVIDIA's developers assemble simulations from Omniverse libraries, Newton, and MuJoCo.
-4. Checked what runs on a MacBook with no NVIDIA GPU:
-   - Runs: MuJoCo, Newton (CPU only), OpenUSD, the MuJoCo and URDF to USD converters, the USD and SimReady validators.
-   - Does not run: ovrtx, ovphysx, ovstage, ovstream, ovui, Isaac Sim.
-5. Rejected a generic arm pick-and-place as too ordinary. Chose to reconstruct a real operation: Canadarm2 capturing a free-floating cargo vehicle.
+I also wanted to push myself: to see whether I could replicate a real operation in simulation, and to learn along the way everything a contact-rich simulation has to get right. My interest is physical AI, where robots are trained and tested in simulation, and contact is the part simulators find hardest.
 
 **Borrowed from the Market Street driving demo.** Two ideas, not the content: plan the work as a visual pipeline, and reuse one world for several experiments that each change one thing.
 
@@ -1010,3 +1002,42 @@ So the answer to the question, for this model: the checks in experiment A are ho
 - Each number was moved alone. Nothing here says how they combine.
 
 **Next.** Explain the two sets of flagged attempts. Then the write-up.
+
+## 2026-10-12 · What the flagged attempts are
+
+**Goal.** Explain the attempts the checks still flag on the fixed model. `experiments/replay_flagged.py` replays an attempt and prints which shapes are touching, how deeply, and with what force, at the first moment a threshold is crossed and at the worst moment.
+
+### Flagged in the baseline: the end effector runs into the hull
+
+Of the 17 flagged baseline attempts, 16 are the same event.
+
+- It happens while the arm is still lining up, before the snare fires. The pin is 0.3 to 6 m off the end effector's axis at first contact, so these attempts were already failing.
+- The end effector's wall or base touches the vehicle's hull. In 15 of the 16 that is the first contact of any kind; in one the pin's tip brushes the wall first.
+- The arm then keeps pushing. Its joint torque goes from about 200 N m to as much as 200,000 N m, the contact force reaches up to 5 MN, and in the worst case the end effector sinks 23 cm into the hull.
+- All 16 tumble at about 1 deg/s or more. All end timed out or out of reach.
+
+The cause is in the machine layer, not the contact layer. The arm's motors have no torque limit, which the plan has listed as an assumption since the first milestone, and the controller has no idea the hull is there. A position-controlled motor with no limit pushes as hard as it takes. The contact itself is behaving: the forces are what it takes to stop a motor that will not stop.
+
+The seventeenth is different: a pin lost after firing, with forces of a few kilonewtons. It looks like a real loss, flagged by the energy check, whose threshold is probably too tight.
+
+### Flagged at low pin friction: the knob wedges between the bars
+
+At pin friction 0.1, in the two captured attempts replayed:
+
+- About 10 s after firing, during pull-in with the fixture still tilted about 5 degrees, the pin's knob is squeezed between two of the snare bars with 48 to 90 kN on each, ten to twenty times the pull-in drive's limit.
+- By the time the fixture is seated the bars are sitting 10 to 12 mm inside the knob, with almost no force.
+- With friction at 0.3 the same attempt has no contact between bars and knob in its largest forces, and overlaps under 1 mm.
+
+Low friction lets the knob slide into the narrowing gap between the bars. Rigid bars held by rigid joints then supply whatever force a wedge demands. Real cables would give. This is a property of the rigid-bar snare, and the capture count does not show it.
+
+Not established: why the bars end up inside the knob with so little force. Two attempts is a look, not a count.
+
+### What this means
+
+- The capture counts and the ranking from experiments B and C stand. The hull collisions are in attempts that had already failed, and the wedging is in attempts that still end captured.
+- The model is missing an outcome. An end effector that hits the hull is a collision, and should be counted as one, not folded into "timed out" or "out of reach".
+- The checks did what they were for, twice more. Neither problem was visible in the outcome labels.
+- Both causes are things the plan already listed as assumptions: no torque limits, and rigid bars for cables. Listing an assumption is not the same as knowing what it does.
+
+**Not changed.** The model and the controller. Options to decide: a torque limit on the arm's joints (no sourced value; the research notes list it as not found), a "collided" outcome that ends an attempt when the end effector touches the hull before firing, or both.
+
