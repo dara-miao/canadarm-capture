@@ -26,7 +26,7 @@ Every number is listed in the [plan](docs/PLAN.md) as sourced, borrowed, or gues
 
 ## A failure that was not physics
 
-In harsh conditions the model lost most of the pins it snared: 27 of 30. It looked like a real failure mode, and I wrote down three physical explanations for it. All three were wrong.
+In harsh conditions the model lost most of the pins it snared: 27 of 30. It looked like a real failure mode, and the project went through three physical explanations for it, each from Claude Code working on the pilot results. All three were wrong.
 
 Logging the contact forces showed what was happening. The ship keeps tumbling after the snare closes, its fixture plate tilts onto the end effector's rim, and at that moment the contact force jumped into the millions of newtons and threw the ship off faster than it had arrived. A contact cannot add energy. The solver was failing on one pair of shapes: the rim was the tops of 16 overlapping boxes, and the plate's edge touched two of them in the same place.
 
@@ -37,7 +37,7 @@ Logging the contact forces showed what was happening. The ship keeps tumbling af
 
 *Figure 1. The same attempt with the rim's collision shape built two ways. Nothing else differs.*
 
-Rebuilding that one surface as a ring of spheres took captures from 3 of 30 to 30 of 30. It also overturned the conclusion I had drawn about which parameter mattered most.
+Rebuilding that one surface as a ring of spheres took captures from 3 of 30 to 30 of 30. It also overturned the pilot's conclusion about which parameter mattered most.
 
 Nothing in the results had flagged it. The outcome labels looked like any other result.
 
@@ -56,19 +56,19 @@ Three experiments on the fixed model. Each condition changes one thing and runs 
 
 *Figure 2. Experiments B and C. Each bar is one thing changed from the baseline, on the same 240 attempts.*
 
-Two conditions are there to keep the method honest. Nudging the start by a thousandth of a millimetre changes 3 outcomes of 240: that is what "no effect" looks like. And the snare's drive force, which I expected to do nothing, changed 2.
+Two conditions are there to keep the method honest. Nudging the start by a thousandth of a millimetre changes 3 outcomes of 240: that is what "no effect" looks like. And the snare's drive force, which was expected to do nothing, changed 2.
 
-## What I found
+## What the experiments found
 
 1. **Once the contact is sound, how it is represented barely matters.** Sphere count, box count, time step, and stiffness each changed at most 7 outcomes of 240, close to the noise floor of 3.
 2. **The physical unknowns matter far more.** How fast the arm's joints may turn changed 180 outcomes; friction where the fixture seats, 96; a stale view of the pin, 68.
 3. **One unsound representation mattered as much as real physics.** The old rim changed 79 outcomes, more than all but two of the physical unknowns, and from the outcome counts it looked like any other result. Only the checks told them apart.
-4. **The number that matters most is one I invented.** The joint rate cap is not in any source I could find. The best-sourced number in the model, the pull-in force, made no difference at all.
+4. **The number that matters most is an invented one.** The joint rate cap is not in any source that could be found. The best-sourced number in the model, the pull-in force, made no difference at all.
 5. **Friction matters at one contact only:** where the tilted fixture has to slide flat on the rim, not where the snare holds the pin.
 
 ## What I would carry to another simulation
 
-- Log contact forces and energy before explaining a failure. I wrote three explanations before I did, and one replay settled it.
+- Log contact forces and energy before explaining a failure. Three explanations were written here before anyone did, and one replay settled it.
 - Check every run for things that cannot happen. Outcome labels do not show them.
 - Measure the noise floor with a change that means nothing, so "no effect" has a size.
 - Change the representation, and see whether the result survives.
@@ -82,9 +82,9 @@ The checks still flag attempts on the fixed model, and both causes are traced:
 - When an approach fails, the end effector can run into the ship's hull, and the arm keeps pushing with up to 200,000 N m, because its motors have no torque limit. The contact is behaving; the motor is impossible.
 - At low friction the pin's knob wedges between the snare's rigid bars with up to 90 kN on each. Real cables would give.
 
-Neither changes a capture count. Both come from assumptions I had listed from the start without knowing what they did.
+Neither changes a capture count. Both come from assumptions that had been listed from the start without anyone knowing what they did.
 
-The limits are plain. This is simulation only, never compared with flight data. The controller is invented, and the largest effect I found is a property of it. The snare is rigid bars, not cables; the latches are a force; the cams that straighten the real fixture are a flat plate on a ring of spheres. The experiments use two random seeds and change one number at a time. And the cause of the original contact failure is the likely one, not a proved one.
+The limits are plain. This is simulation only, never compared with flight data. The controller is invented, and the largest effect found is a property of it. The snare is rigid bars, not cables; the latches are a force; the cams that straighten the real fixture are a flat plate on a ring of spheres. The experiments use two random seeds and change one number at a time. And the cause of the original contact failure is the likely one, not a proved one.
 
 ## More
 
