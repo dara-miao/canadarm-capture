@@ -113,62 +113,39 @@ A capture also has three stages of "done":
 | 7b | Explain the flagged attempts: collisions before firing, and overlap at low pin friction | Traced (2026-10-12); fixes to decide | Each is traced to a cause, and fixed or stated as a limit |
 | 8 | Write-up | Planned | README with results, figures, and video, stating what the results are conditional on |
 
-## Proposed experiments
+## The experiments
 
-Proposed and agreed on 2026-10-11, with the ranges below. Together they answer the question at the top: A is *how to tell*, and B against C is *what the result is sensitive to*.
+Run on 2026-10-11 and 12, and trimmed afterwards to the conditions that carry the answer. A is *how to tell* whether a result is physics. B against C is *what the result is sensitive to*.
 
-**The headline comparison.** Is the result moved more by how contact is represented (B) or by the physical numbers nobody knows exactly (C)? If B's largest effect is as big as C's, a sensitivity ranking from one representation cannot be trusted. The pilots already hint at this: fixing one surface changed which parameter mattered most.
+**Set-up.** Every condition changes one thing and runs the same 240 attempts: a drift sweep at 4, 8, 12, and 16 cm/s, 30 scenarios each, two seeds, tumble up to 2 deg/s. Each is compared with the baseline attempt by attempt. The baseline captures 110 of 240.
 
-**Shared set-up.**
+**Experiment A: artefact checks.** Every attempt in every batch is flagged if a step goes unstable, a contact force on the vehicle passes 150 kN, the vehicle leaves a contact faster than 1.5 times its fastest speed before, two shapes overlap by more than 1 cm, or a sliding joint goes 5 mm past its stop. Tested on the old rim, where 50 attempts are known artefacts: all 50 flagged.
 
-- *Scenarios.* A matched drift sweep at 4, 8, 12, and 16 cm/s, 30 scenarios at each, two seeds: 240 attempts per condition. Tumble up to 2 deg/s, so the plate does tilt onto the rim. Offsets, tilt, and roll at the tested worst case. The pilot shows outcomes are mixed in this range, which they have to be for anything to be able to move them.
-- *One change at a time,* on the same scenarios, so attempts can be compared in pairs.
-- *What is reported.* Counts with the number of attempts behind them, an interval on each rate, and for each change how many individual attempts flipped outcome in each direction.
-- *The noise floor.* One condition changes nothing meaningful: every start position is nudged by a thousandth of a millimetre. However many outcomes flip there is what "no effect" looks like, and anything smaller is not a finding.
+**Experiment B: the same object, represented differently.**
 
-**Experiment A: artefact checks.** Built into every attempt, so it costs no extra runs. An attempt is flagged if:
-
-| Check | Flag when |
-|---|---|
-| Solver warning | MuJoCo reports an unstable step |
-| Impossible force | A contact force exceeds 150 kN, about twice everything the machine can apply (latches 64 kN, pull-in 4.9 kN) |
-| Energy from nowhere | The vehicle moves faster than 1.5 times its fastest speed before first contact |
-| Deep overlap | Two shapes overlap by more than 1 cm |
-| Broken stop | A joint is more than 5 mm past its limit |
-
-The test of the checks: run the harsh batch on the old rim (`rim="boxes"`), where 50 attempts are known to be artefacts, and on the fixed model. Report how many of the 50 are flagged and how many clean attempts are flagged by mistake. The thresholds above are first guesses and may need moving; if they do, that is recorded.
-
-**Experiment B: same surface, different representation.** Each row changes how something is represented and nothing about the object it stands for.
-
-| What changes | Settings | Why |
+| What changes | Settings | Outcomes changed, of 240 |
 |---|---|---|
-| The rim | box tops; 16, 32, or 64 spheres | The surface that failed. 32 is today's model |
-| The cavity wall | 8, 16, or 32 boxes | More pieces is a rounder tube and more seams. 16 is today's |
-| The time step | 2, 1, or 0.5 ms | A smaller step should change nothing if the result is physics |
-| Contact stiffness | the default time constant, and half of it | How hard overlap is pushed back |
-| Noise floor | start nudged by a thousandth of a millimetre | See above |
+| Nothing meaningful (start nudged 0.001 mm) | | 3: the noise floor |
+| The rim's collision shape | box tops | 79 |
+| | 16 or 64 spheres, against 32 | 2, 0 |
+| The cavity wall's collision shape | 8 or 32 boxes, against 16 | 5, 7 |
+| Time step | 0.5 ms, against 2 ms | 3 |
+| Contact stiffness | twice as stiff | 7 |
 
-A result *survives* if no setting moves it by more than the noise floor. A second engine is the largest representation change there is, and belongs here as a later extension, not as its own experiment.
+**Experiment C: physical numbers that are not known exactly.**
 
-**Experiment C: sensitivity to the physical unknowns.** Each row is a number the model guesses or borrows, with a range it could plausibly lie in. The ranges are first proposals and are mine to set.
+| Number | In the model | Range tried | Captured at each end | Outcomes changed, of 240 |
+|---|---|---|---|---|
+| Joint rate cap | 0.03 rad/s | 0.015 to 0.06 | 21, 199 | 180 |
+| Friction where the fixture seats on the rim | 0.3 | 0.1 to 0.8 | 111, 14 | 96 |
+| Observation delay | 0 | 0.5, 1.0 s | 101, 55 | 68 |
+| Joint back-drive friction | 200 N m | 100 to 400 | 111, 101 | 17 |
+| Friction where the snare holds the pin | 0.3 | 0.1 to 0.8 | 111, 108 | 8 |
+| Snare drive force (control: expected to do nothing) | 1,500 N | 750 to 3,000 | 108, 110 | 2 |
 
-| Number | In the model | Proposed range | Kind |
-|---|---|---|---|
-| Contact friction, everywhere | 0.3 | 0.1 to 0.8 | A modelling paper's input. The top end covers bare metal in vacuum, which is from memory and unchecked |
-| Friction where the snare holds the pin | 0.3 | 0.1 to 0.8 | Split out to see which contact matters |
-| Friction where the fixture seats on the rim | 0.3 | 0.1 to 0.8 | Split out to see which contact matters |
-| Joint rate cap | 0.03 rad/s | 0.015 to 0.06 | Invented |
-| Pull-in force | 4,893 N | 3,560 (the Shuttle value) to 6,100 | Sourced; range is a guess |
-| Joint back-drive friction | 200 N m | 100 to 400 | Derived from one test load |
-| Vehicle mass | 7,000 kg | 5,000 to 8,050 | Approximate. Reported figures put the mass at capture between about 5,000 and 7,000 kg; 8,050 is kept as a deliberate overshoot |
-| Observation delay | 0 | 0 to 1.0 s | Exploratory |
-| Snare drive force | 1,500 N | 750 to 3,000 | Invented. Expected to do nothing: a check that the method can report "no effect" |
+**Taken out after running once.** These made no difference worth keeping a condition for, and are recorded here so the result is not lost: pull-in force from 3,560 to 6,100 N (1 outcome changed), vehicle mass from 5,000 to 8,050 kg (8), a 1 ms time step (2), and friction changed everywhere at once (the same as changing it at the rim).
 
-**Size.** 28 conditions of 240 attempts for B and C, and four of 60 for A's test. `experiments/run_experiments.py` runs them and writes the summary tables.
-
-**Result (2026-10-12).** Of 240 attempts, a meaningless change flips 3 outcomes; any sound change of representation flips at most 7; the old box-top rim flips 79; the physical unknowns flip up to 180 (the joint rate cap), then 96 (friction at the rim) and 68 (observation delay). Pull-in force, vehicle mass, and snare drive force do not matter over their ranges. The checks flag all 50 known artefacts, and still flag 17 baseline attempts that are not yet explained. Details in the build log.
-
-**What would count as an answer.** A table of checks that catch a known artefact and how often they cry wolf; a list of results that do and do not survive a change of representation; a ranking of the physical unknowns with uncertainty; and one sentence comparing the two.
+**The answer, for this model.** Once the checks pass, a sound change of representation moves the result about as much as noise (at most 7 of 240), and the physical unknowns move it up to 180. One unsound representation, the box-top rim, moved it 79, and nothing but the checks showed that it was unsound.
 
 Notes on the experiments:
 
@@ -238,6 +215,7 @@ The notes below were written for the earlier experiments A, B, and C, and are ke
 | 2026-10-11 | I build, with Claude Code explaining and reviewing: work through the five layers one at a time, starting with contact | The point of the project is to learn the system design well enough to explain it | Current |
 | 2026-10-11 | Proposed: three experiments (artefact checks, representation, physical sensitivity), with the second engine folded into the second as an extension | They answer the two halves of the question, and B against C is the comparison that carries beyond this model | Agreed the same day |
 | 2026-10-11 | Friction range runs to 0.8, and is also varied separately at the pin and at the rim | The effect is at the high end, and the two contacts may not matter equally | Current |
+| 2026-10-12 | Trim the experiments to the conditions that carry the answer | Seven conditions made little or no difference and cluttered the design. What they showed is kept in one paragraph | Current |
 | 2026-10-10 | Treat the station as fixed and the arm as rigid | The station is about 60 times heavier than the vehicle; arm flexibility is left out to keep the first version simple | Current |
 
 ## Values the model uses, by where they come from

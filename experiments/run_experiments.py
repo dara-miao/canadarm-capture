@@ -9,7 +9,10 @@ attempts can be compared in pairs. Per-attempt results go to results/experiments
 kept in git); summary tables go to docs/data/. A condition whose results file exists is
 not rerun, so the script can be stopped and restarted.
 
-See docs/PLAN.md, "Proposed experiments", for what each condition is for.
+See docs/PLAN.md, "The experiments", for what each condition is for. Conditions that
+were run once and made no difference (pull-in force, vehicle mass, a 1 ms time step,
+friction changed everywhere at once) have been taken out;
+the plan records what they showed.
 """
 
 import csv
@@ -51,23 +54,16 @@ CONDITIONS = [
     ("B", "rim: 64 spheres", {"rim_spheres": 64}, {}, {}),
     ("B", "wall: 8 boxes", {"wall_segments": 8}, {}, {}),
     ("B", "wall: 32 boxes", {"wall_segments": 32}, {}, {}),
-    ("B", "time step 1 ms", {"timestep": 0.001}, {}, {}),
     ("B", "time step 0.5 ms", {"timestep": 0.0005}, {}, {}),
     ("B", "contact twice as stiff", {"contact_time": 0.01}, {}, {}),
-    ("C", "friction 0.1", {"friction": 0.1}, {}, {}),
-    ("C", "friction 0.8", {"friction": 0.8}, {}, {}),
     ("C", "friction at the pin 0.1", {"friction_pin": 0.1}, {}, {}),
     ("C", "friction at the pin 0.8", {"friction_pin": 0.8}, {}, {}),
     ("C", "friction at the rim 0.1", {"friction_rim": 0.1}, {}, {}),
     ("C", "friction at the rim 0.8", {"friction_rim": 0.8}, {}, {}),
     ("C", "joint rate cap 0.015 rad/s", {}, {"max_joint_rate": 0.015}, {}),
     ("C", "joint rate cap 0.06 rad/s", {}, {"max_joint_rate": 0.06}, {}),
-    ("C", "pull-in force 3,560 N", {"pull_in_force": 3560.0}, {}, {}),
-    ("C", "pull-in force 6,100 N", {"pull_in_force": 6100.0}, {}, {}),
     ("C", "joint back-drive 100 N m", {"backdrive": 100.0}, {}, {}),
     ("C", "joint back-drive 400 N m", {"backdrive": 400.0}, {}, {}),
-    ("C", "vehicle mass 5,000 kg", {"vehicle_mass": 5000.0}, {}, {}),
-    ("C", "vehicle mass 8,050 kg", {"vehicle_mass": 8050.0}, {}, {}),
     ("C", "observation delay 0.5 s", {}, {}, {"sensor_delay": 0.5}),
     ("C", "observation delay 1.0 s", {}, {}, {"sensor_delay": 1.0}),
     ("C", "snare drive 750 N", {"snare_force": 750.0}, {}, {}),
