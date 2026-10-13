@@ -2,7 +2,7 @@
 
     python scripts/results_figure.py
 
-docs/media/results.svg     what moved the result (from docs/data/experiments_b_c.csv)
+docs/media/results.svg     what moved the result (from docs/data/experiments.csv)
 docs/media/rim.svg         one attempt on the old rim and the fixed one (from
                            docs/data/rim_force_trace.csv; experiments/trace_rim_force.py)
 
@@ -57,7 +57,7 @@ def frame(width: int, height: int, c: dict, title: str, subtitle: str, descripti
 
 
 def results(c: dict) -> str:
-    with (DATA / "experiments_b_c.csv").open() as f:
+    with (DATA / "experiments.csv").open() as f:
         changed = {r["condition"]: int(r["outcome_changed"]) for r in csv.DictReader(f)}
     noise = changed["noise floor: start nudged 0.001 mm"]
 

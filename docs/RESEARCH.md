@@ -126,7 +126,7 @@ A MuJoCo toolkit for small free-flying satellites: control, learning on GPU, con
 - It has a contact-rich docking example, reported as one trial (first contact at 16.9 s, peak force 2.06 N), not a sweep.
 - The authors call their scenarios "illustrative examples, rather than exhaustive benchmarks".
 - It involves thruster-driven free-flyers. There is no robot arm and no grapple fixture.
-- It notes that MuJoCo Warp is a GPU implementation of MuJoCo built on NVIDIA Warp. This matters for experiment C: rerunning in Newton with that solver would largely be comparing MuJoCo with itself.
+- It notes that MuJoCo Warp is a GPU implementation of MuJoCo built on NVIDIA Warp. This matters for any comparison with a second engine: rerunning in Newton with that solver would largely be comparing MuJoCo with itself.
 
 **MuJoCo documentation, "Overview" and "Computation" chapters.** [mujoco.readthedocs.io](https://mujoco.readthedocs.io/en/stable/overview.html). Checked for how the engine treats collision shapes: convex shapes only, a non-convex mesh replaced by its convex hull, hollow objects as a union of convex pieces, contacts as points with a frame and a distance, and contact that allows some penetration.
 

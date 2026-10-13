@@ -88,21 +88,21 @@ What is measured is where *this controller with this mechanism* reaches, snares,
 | Build the model: scene, snare, controller, real geometry, sourced numbers, trial harness | Done (2026-10-10) |
 | Pilots, which found the contact failure at the rim | Done (2026-10-11) |
 | Fix the rim contact and rerun | Done (2026-10-11) |
-| Experiment A: artefact checks | Done (2026-10-11) |
-| Experiment B: the same object, represented differently | Done (2026-10-11) |
-| Experiment C: physical unknowns | Done (2026-10-12) |
+| Guardrail: checks on every attempt for things that cannot happen | Done (2026-10-11) |
+| Experiment 1: collision geometry | Done (2026-10-11) |
+| Experiment 2: physical unknowns | Done (2026-10-12) |
 | Trace the attempts the checks still flag | Done (2026-10-12); fixes to decide |
 | Write-up | Drafted (2026-10-12): the README |
 
 ## The experiments
 
-Run on 2026-10-11 and 12, and trimmed afterwards to the conditions that carry the answer. A is *how to tell* whether a result is physics. B against C is *what the result is sensitive to*.
+Run on 2026-10-11 and 12, and trimmed afterwards to the conditions that carry the answer. There are two experiments. Experiment 1 against experiment 2 is *what the result is sensitive to*. The guardrail is *how to tell* whether a result is physics; it is not an experiment, and ideally never fires. More than 10,000 simulated attempts have been run in all, about 7,000 of them here.
 
 **Set-up.** Every condition changes one thing and runs the same 240 attempts: a drift sweep at 4, 8, 12, and 16 cm/s, 30 scenarios each, two seeds, tumble up to 2 deg/s. Each is compared with the baseline attempt by attempt. The baseline captures 110 of 240.
 
-**Experiment A: artefact checks.** Every attempt in every batch is flagged if a step goes unstable, a contact force on the vehicle passes 150 kN, the vehicle leaves a contact faster than 1.5 times its fastest speed before, two shapes overlap by more than 1 cm, or a sliding joint goes 5 mm past its stop. Tested on the old rim, where 50 attempts are known artefacts: all 50 flagged.
+**The guardrail.** Every attempt in every batch is flagged if a step goes unstable, a contact force on the vehicle passes 150 kN, the vehicle leaves a contact faster than 1.5 times its fastest speed before, two shapes overlap by more than 1 cm, or a sliding joint goes 5 mm past its stop. Tested on the old rim, where 50 attempts are known artefacts: all 50 flagged.
 
-**Experiment B: the same object, represented differently.**
+**Experiment 1: collision geometry.** The same object built from different shapes, with two simulator settings alongside.
 
 | What changes | Settings | Outcomes changed, of 240 |
 |---|---|---|
@@ -113,7 +113,7 @@ Run on 2026-10-11 and 12, and trimmed afterwards to the conditions that carry th
 | Time step | 0.5 ms, against 2 ms | 3 |
 | Contact stiffness | twice as stiff | 7 |
 
-**Experiment C: physical numbers that are not known exactly.**
+**Experiment 2: physical numbers that are not known exactly.**
 
 | Number | In the model | Range tried | Captured at each end | Outcomes changed, of 240 |
 |---|---|---|---|---|

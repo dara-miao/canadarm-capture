@@ -1,7 +1,11 @@
-"""The three experiments: artefact checks (A), representation (B), physical unknowns (C).
+"""The two experiments, and the test of the guardrail that runs on every attempt.
+
+Experiment 1: collision geometry and other ways of representing the same object.
+Experiment 2: physical numbers that are not known exactly.
+Guardrail test: do the checks in capture/audit.py flag a known artefact?
 
     python experiments/run_experiments.py            # run whatever has not been run, then summarise
-    python experiments/run_experiments.py B          # only experiment B's conditions
+    python experiments/run_experiments.py 1          # only experiment 1's conditions
     python experiments/run_experiments.py summary    # only rebuild the summary tables
 
 Every condition changes one thing from the baseline and runs the same scenarios, so
@@ -38,7 +42,7 @@ from pilot_lost import HARSH  # noqa: E402
 RAW = ROOT / "results" / "experiments"
 DATA = ROOT / "docs" / "data"
 
-# Shared scenarios for B and C: a matched drift sweep, with enough tumble that the
+# Shared scenarios for both experiments: a matched drift sweep, with enough tumble that the
 # fixture plate tilts onto the rim. Offsets, tilt, and roll at the tested worst case.
 DRIFTS = [0.04, 0.08, 0.12, 0.16]  # [m/s]
 PER_DRIFT, SEEDS = 30, (0, 1)
@@ -47,37 +51,37 @@ NUDGE = 1e-6  # [m]; a change with no physical meaning, to see how many outcomes
 
 # experiment, name, build options, controller options, scenario fields to override
 CONDITIONS = [
-    ("B", "baseline", {}, {}, {}),
-    ("B", "noise floor: start nudged 0.001 mm", {}, {}, {"nudge": NUDGE}),
-    ("B", "rim: box tops", {"rim": "boxes"}, {}, {}),
-    ("B", "rim: 16 spheres", {"rim_spheres": 16}, {}, {}),
-    ("B", "rim: 64 spheres", {"rim_spheres": 64}, {}, {}),
-    ("B", "wall: 8 boxes", {"wall_segments": 8}, {}, {}),
-    ("B", "wall: 32 boxes", {"wall_segments": 32}, {}, {}),
-    ("B", "time step 0.5 ms", {"timestep": 0.0005}, {}, {}),
-    ("B", "contact twice as stiff", {"contact_time": 0.01}, {}, {}),
-    ("C", "friction at the pin 0.1", {"friction_pin": 0.1}, {}, {}),
-    ("C", "friction at the pin 0.8", {"friction_pin": 0.8}, {}, {}),
-    ("C", "friction at the rim 0.1", {"friction_rim": 0.1}, {}, {}),
-    ("C", "friction at the rim 0.8", {"friction_rim": 0.8}, {}, {}),
-    ("C", "joint rate cap 0.015 rad/s", {}, {"max_joint_rate": 0.015}, {}),
-    ("C", "joint rate cap 0.06 rad/s", {}, {"max_joint_rate": 0.06}, {}),
-    ("C", "joint back-drive 100 N m", {"backdrive": 100.0}, {}, {}),
-    ("C", "joint back-drive 400 N m", {"backdrive": 400.0}, {}, {}),
-    ("C", "observation delay 0.5 s", {}, {}, {"sensor_delay": 0.5}),
-    ("C", "observation delay 1.0 s", {}, {}, {"sensor_delay": 1.0}),
-    ("C", "snare drive 750 N", {"snare_force": 750.0}, {}, {}),
-    ("C", "snare drive 3,000 N", {"snare_force": 3000.0}, {}, {}),
-    # Experiment A's test: the harsh pilot batch, where the box-top rim is known to fail.
-    ("A", "harsh, box-top rim", {"rim": "boxes"}, {}, {}),
-    ("A", "harsh, box-top rim, limp arm", {"rim": "boxes"}, {"limp_from_snare_close": True}, {}),
-    ("A", "harsh, sphere rim", {}, {}, {}),
-    ("A", "harsh, sphere rim, limp arm", {}, {"limp_from_snare_close": True}, {}),
+    ("1", "baseline", {}, {}, {}),
+    ("1", "noise floor: start nudged 0.001 mm", {}, {}, {"nudge": NUDGE}),
+    ("1", "rim: box tops", {"rim": "boxes"}, {}, {}),
+    ("1", "rim: 16 spheres", {"rim_spheres": 16}, {}, {}),
+    ("1", "rim: 64 spheres", {"rim_spheres": 64}, {}, {}),
+    ("1", "wall: 8 boxes", {"wall_segments": 8}, {}, {}),
+    ("1", "wall: 32 boxes", {"wall_segments": 32}, {}, {}),
+    ("1", "time step 0.5 ms", {"timestep": 0.0005}, {}, {}),
+    ("1", "contact twice as stiff", {"contact_time": 0.01}, {}, {}),
+    ("2", "friction at the pin 0.1", {"friction_pin": 0.1}, {}, {}),
+    ("2", "friction at the pin 0.8", {"friction_pin": 0.8}, {}, {}),
+    ("2", "friction at the rim 0.1", {"friction_rim": 0.1}, {}, {}),
+    ("2", "friction at the rim 0.8", {"friction_rim": 0.8}, {}, {}),
+    ("2", "joint rate cap 0.015 rad/s", {}, {"max_joint_rate": 0.015}, {}),
+    ("2", "joint rate cap 0.06 rad/s", {}, {"max_joint_rate": 0.06}, {}),
+    ("2", "joint back-drive 100 N m", {"backdrive": 100.0}, {}, {}),
+    ("2", "joint back-drive 400 N m", {"backdrive": 400.0}, {}, {}),
+    ("2", "observation delay 0.5 s", {}, {}, {"sensor_delay": 0.5}),
+    ("2", "observation delay 1.0 s", {}, {}, {"sensor_delay": 1.0}),
+    ("2", "snare drive 750 N", {"snare_force": 750.0}, {}, {}),
+    ("2", "snare drive 3,000 N", {"snare_force": 3000.0}, {}, {}),
+    # The guardrail's test: the harsh pilot batch, where the box-top rim is known to fail.
+    ("guard", "harsh, box-top rim", {"rim": "boxes"}, {}, {}),
+    ("guard", "harsh, box-top rim, limp arm", {"rim": "boxes"}, {"limp_from_snare_close": True}, {}),
+    ("guard", "harsh, sphere rim", {}, {}, {}),
+    ("guard", "harsh, sphere rim, limp arm", {}, {"limp_from_snare_close": True}, {}),
 ]
 
 
 def scenarios(experiment: str, override: dict) -> list[batch.Scenario]:
-    if experiment == "A":
+    if experiment == "guard":
         out = batch.sample(60, HARSH, seed=0)
     else:
         out = [s for seed in SEEDS for s in batch.matched_sweep(batch.sample(PER_DRIFT, SWEEP, seed), "drift", DRIFTS)]
@@ -123,11 +127,11 @@ def interval(k: int, n: int) -> tuple[float, float]:
 
 
 def summarise() -> None:
-    base = load("B", "baseline")
+    base = load("1", "baseline")
     out = []
     for experiment, name, *_ in CONDITIONS:
         rows = load(experiment, name)
-        if rows is None or experiment == "A" or base is None:
+        if rows is None or experiment == "guard" or base is None:
             continue
         n = len(rows)
         captured = [r["outcome"] == "captured" for r in rows]
@@ -151,16 +155,16 @@ def summarise() -> None:
             "flagged": sum(bool(r["audit_flags"]) for r in rows),
         })  # fmt: skip
     if out:
-        with (DATA / "experiments_b_c.csv").open("w", newline="") as f:
+        with (DATA / "experiments.csv").open("w", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=list(out[0]))
             writer.writeheader()
             writer.writerows(out)
-        print("wrote docs/data/experiments_b_c.csv")
+        print("wrote docs/data/experiments.csv")
 
     checks = []
     for experiment, name, *_ in CONDITIONS:
         rows = load(experiment, name)
-        if rows is None or experiment != "A":
+        if rows is None or experiment != "guard":
             continue
         flagged = [bool(r["audit_flags"]) for r in rows]
         lost = [r["outcome"] == "lost" for r in rows]
@@ -173,11 +177,11 @@ def summarise() -> None:
             **{f"flag_{name_}": sum(name_ in r["audit_flags"].split() for r in rows) for name_ in FLAGS},
         })  # fmt: skip
     if checks:
-        with (DATA / "experiment_a_checks.csv").open("w", newline="") as f:
+        with (DATA / "guardrail_test.csv").open("w", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=list(checks[0]))
             writer.writeheader()
             writer.writerows(checks)
-        print("wrote docs/data/experiment_a_checks.csv")
+        print("wrote docs/data/guardrail_test.csv")
 
 
 if __name__ == "__main__":

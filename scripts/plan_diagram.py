@@ -17,9 +17,9 @@ STAGES = [
     ("4 · REPEATABLE TRIALS", "Measure outcomes", "Success criteria · failure types", "Outcome labels · batches · sensing", "done"),
 ]
 EXPERIMENTS = [
-    ("5 · EXPERIMENT A", "Artefact checks", "Force, energy, overlap on every attempt", "Caught 50 of 50, and found more", "done"),
-    ("6 · EXPERIMENT B", "Same surface, new shape", "Rim · wall · time step · stiffness", "Result survives; old rim does not", "done"),
-    ("7 · EXPERIMENT C", "Physical unknowns", "Each guessed number across its range", "Rate cap, rim friction, delay lead", "done"),
+    ("5 · GUARDRAIL", "Checks on every attempt", "Force, energy, overlap on every attempt", "Caught 50 of 50, and found more", "done"),
+    ("6 · EXPERIMENT 1", "Collision geometry", "Rim · wall · time step · stiffness", "Result survives; old rim does not", "done"),
+    ("7 · EXPERIMENT 2", "Physical unknowns", "Each guessed number across its range", "Rate cap, rim friction, delay lead", "done"),
 ]
 
 # One line on what is happening right now, shown under the title.

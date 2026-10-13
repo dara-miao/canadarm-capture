@@ -1,6 +1,6 @@
 """Diagnostic: what is touching what when the checks flag an attempt?
 
-Replays attempts from experiment B's and C's scenario set and prints, for the first
+Replays attempts from the experiments' scenario set and prints, for the first
 moment a check's threshold is crossed and for the worst moment, which pairs of shapes
 are in contact, how deeply, and with what force.
 
@@ -68,7 +68,7 @@ def main() -> None:
         key, value = arg.split("=")
         build[key] = value if key == "rim" else float(value)
     model = scene.build_model(meshes=False, **build)
-    base = scenarios("B", {})
+    base = scenarios("1", {})
     for index in chosen:
         s = base[index]
         data = mujoco.MjData(model)

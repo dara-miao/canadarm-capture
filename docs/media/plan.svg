@@ -48,23 +48,23 @@
   <line x1="1370" y1="455" x2="1370" y2="514" stroke="#8fd3e8" stroke-width="3" marker-end="url(#b)"/>
 
   <rect x="440" y="520" width="340" height="190" rx="14" fill="#1b2a40" stroke="#7fd36b" stroke-width="2"/>
-  <text x="462" y="560" fill="#b9e36b" font-size="15" font-weight="700" letter-spacing="0.5">5 · EXPERIMENT A</text>
-  <text x="462" y="602" fill="#ffffff" font-size="27" font-weight="700">Artefact checks</text>
+  <text x="462" y="560" fill="#b9e36b" font-size="15" font-weight="700" letter-spacing="0.5">5 · GUARDRAIL</text>
+  <text x="462" y="602" fill="#ffffff" font-size="27" font-weight="700">Checks on every attempt</text>
   <text x="462" y="638" fill="#a9b7c9" font-size="17">Force, energy, overlap on every attempt</text>
   <text x="462" y="664" fill="#a9b7c9" font-size="17">Caught 50 of 50, and found more</text>
   <rect x="708" y="672" width="56" height="24" rx="12" fill="#7fd36b"/>
   <text x="736.0" y="689" fill="#0f1b2d" font-size="12" font-weight="700" text-anchor="middle" letter-spacing="0.5">DONE</text>
 
   <rect x="820" y="520" width="340" height="190" rx="14" fill="#1b2a40" stroke="#7fd36b" stroke-width="2"/>
-  <text x="842" y="560" fill="#b9e36b" font-size="15" font-weight="700" letter-spacing="0.5">6 · EXPERIMENT B</text>
-  <text x="842" y="602" fill="#ffffff" font-size="27" font-weight="700">Same surface, new shape</text>
+  <text x="842" y="560" fill="#b9e36b" font-size="15" font-weight="700" letter-spacing="0.5">6 · EXPERIMENT 1</text>
+  <text x="842" y="602" fill="#ffffff" font-size="27" font-weight="700">Collision geometry</text>
   <text x="842" y="638" fill="#a9b7c9" font-size="17">Rim · wall · time step · stiffness</text>
   <text x="842" y="664" fill="#a9b7c9" font-size="17">Result survives; old rim does not</text>
   <rect x="1088" y="672" width="56" height="24" rx="12" fill="#7fd36b"/>
   <text x="1116.0" y="689" fill="#0f1b2d" font-size="12" font-weight="700" text-anchor="middle" letter-spacing="0.5">DONE</text>
 
   <rect x="1200" y="520" width="340" height="190" rx="14" fill="#1b2a40" stroke="#7fd36b" stroke-width="2"/>
-  <text x="1222" y="560" fill="#b9e36b" font-size="15" font-weight="700" letter-spacing="0.5">7 · EXPERIMENT C</text>
+  <text x="1222" y="560" fill="#b9e36b" font-size="15" font-weight="700" letter-spacing="0.5">7 · EXPERIMENT 2</text>
   <text x="1222" y="602" fill="#ffffff" font-size="27" font-weight="700">Physical unknowns</text>
   <text x="1222" y="638" fill="#a9b7c9" font-size="17">Each guessed number across its range</text>
   <text x="1222" y="664" fill="#a9b7c9" font-size="17">Rate cap, rim friction, delay lead</text>

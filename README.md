@@ -43,33 +43,35 @@ Nothing in the results had flagged it. The outcome labels looked like any other 
 
 ## The experiments
 
-Three experiments on the fixed model. Each condition changes one thing and runs the same 240 attempts, so attempts can be compared in pairs.
+Two experiments on the fixed model. Each condition changes one thing and runs the same 240 simulated attempts, so attempts can be compared in pairs. Counting the pilots that came before, the project has run more than 10,000 simulated capture attempts.
 
-- **A. Can a non-physical result be caught?** Five checks run on every attempt: an unstable step, a contact force no part of the machine could produce, a ship leaving a contact faster than it arrived, shapes overlapping by more than a centimetre, and a joint pushed past its stop. On the old rim, where 50 attempts were known artefacts, they flagged all 50.
-- **B. Does the result survive a change of representation?** Change how an object is described without changing the object: the shape of a contact surface, the time step, the contact stiffness.
-- **C. Which physical unknowns matter?** Move each number that is not known exactly across a plausible range.
+**Experiment 1: collision geometry.** Build the same object from different shapes and see whether the result changes. The rim as box tops, or as 16, 32, or 64 spheres; the hollow tube's wall as 8, 16, or 32 boxes. Two settings of the simulator ride along: a finer time step and stiffer contact.
+
+**Experiment 2: physical numbers that are not known exactly.** Move each one across a plausible range, one at a time: friction at two different contacts (slippery, normal, and bare-metal grip), how fast the arm's joints may turn, how hard a limp joint resists, how stale the controller's view of the pin is.
+
+**The guardrail.** This is not an experiment. It is an alarm that runs on every attempt and goes off when something happens that cannot happen: an unstable step, a contact force no part of the machine could produce, a ship leaving a contact faster than it arrived, shapes sunk more than a centimetre into each other, a joint pushed past its stop. Ideally it never fires. Tested on the old rim, where 50 attempts were known to be fake failures, it fired on all 50.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/media/results-dark.svg">
   <img alt="Bar chart of how many of 240 attempts changed outcome when one thing was changed. Sound changes to how contact is represented changed at most 7, near a noise floor of 3. The old box-top rim changed 79. Physical unknowns changed up to 180." src="docs/media/results.svg">
 </picture>
 
-*Figure 2. Experiments B and C. Each bar is one thing changed from the baseline, on the same 240 attempts.*
+*Figure 2. Experiment 1 (blue) and experiment 2 (orange). Each bar is one thing changed from the baseline, on the same 240 attempts.*
 
 Two conditions are there to keep the method honest. Nudging the start by a thousandth of a millimetre changes 3 outcomes of 240: that is what "no effect" looks like. And the snare's drive force, which was expected to do nothing, changed 2.
 
 ## What the experiments found
 
-1. **Once the contact is sound, how it is represented barely matters.** Sphere count, box count, time step, and stiffness each changed at most 7 outcomes of 240, close to the noise floor of 3.
+1. **Once the collision geometry is sound, the exact choice barely matters.** Sphere count, box count, time step, and stiffness each changed at most 7 outcomes of 240, close to the noise floor of 3.
 2. **The physical unknowns matter far more.** How fast the arm's joints may turn changed 180 outcomes; friction where the fixture seats, 96; a stale view of the pin, 68.
-3. **One unsound representation mattered as much as real physics.** The old rim changed 79 outcomes, more than all but two of the physical unknowns, and from the outcome counts it looked like any other result. Only the checks told them apart.
+3. **One unsound collision shape mattered as much as real physics.** The old rim changed 79 outcomes, more than all but two of the physical unknowns, and from the outcome counts it looked like any other result. Only the guardrail told them apart.
 4. **The number that matters most is an invented one.** The joint rate cap is not in any source that could be found. The best-sourced number in the model, the pull-in force, made no difference at all.
 5. **Friction matters at one contact only:** where the tilted fixture has to slide flat on the rim, not where the snare holds the pin.
 
 ## What I would carry to another simulation
 
 - Log contact forces and energy before explaining a failure. Three explanations were written here before anyone did, and one replay settled it.
-- Check every run for things that cannot happen. Outcome labels do not show them.
+- Put a guardrail on every run that fires on things that cannot happen. Outcome labels do not show them.
 - Measure the noise floor with a change that means nothing, so "no effect" has a size.
 - Change the representation, and see whether the result survives.
 - Keep a control you expect to do nothing.
@@ -77,7 +79,7 @@ Two conditions are there to keep the method honest. Nudging the start by a thous
 
 ## What is still wrong, and what limits this
 
-The checks still flag attempts on the fixed model, and both causes are traced:
+The guardrail still fires on some attempts on the fixed model, and both causes are traced:
 
 - When an approach fails, the end effector can run into the ship's hull, and the arm keeps pushing with up to 200,000 N m, because its motors have no torque limit. The contact is behaving; the motor is impossible.
 - At low friction the pin's knob wedges between the snare's rigid bars with up to 90 kN on each. Real cables would give.

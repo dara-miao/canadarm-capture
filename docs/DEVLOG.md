@@ -72,6 +72,28 @@ Step 4 is not physics. A contact cannot give a vehicle more energy than it had. 
 
 The plate still tilts up to 14 degrees onto the rim. Pull-in now levers it flat.
 
+**The mistake, plainly.** It was in how the model was built, by Claude Code, at the very first milestone.
+
+- The end effector has to be hollow so the pin can go in. The simulator only collides shapes with no hollows, so the tube was built from 16 flat boxes standing in a ring.
+- To leave no gaps between them, each box was made slightly too wide, so neighbours overlap at their edges.
+- Those boxes were meant to be the tube's wall. But their top faces also became the rim that the fixture plate lands on. Nobody chose that; it came for free.
+- When the plate landed flat, it rested on all 16 tops evenly and nothing went wrong. Every test checked a flat landing.
+- When the plate landed tilted, its edge came down on a place where two boxes overlap. The simulator saw two contacts at the same spot, and when a third arrived at a different angle it could not work out a sensible answer and returned an enormous force.
+
+**Why this is easy to do.**
+
+- Building a hollow thing from overlapping pieces is the standard approach, and overlapping them to close the gaps is the obvious next step.
+- A surface built for one job quietly ends up doing a second one.
+- Tests check the case the builder had in mind, here a flat landing, and not the awkward one.
+- The result had a believable name. "Lost" sounds like something a real capture could do, so it got explained instead of questioned.
+
+**The rule from now on.**
+
+- Any surface that takes a load gets its own simple shape, with no seams or overlaps where the contact lands.
+- Test contacts at an angle and off centre, not only in the tidy case.
+- Check every run for forces the machine could not make and for motion that needs energy from nowhere.
+- When something fails, log the forces before explaining it.
+
 **What the fix undid.** The pilot headline went with it. On the fixed model, going limp at closure does nothing at all, and the numbers that matter are different ones. The sensitivity ranking itself had been an artefact of one collision surface.
 
 **What went wrong.** Three explanations were written before anyone logged a contact force. The check that settled it, whether the vehicle gained energy, took one replay.
@@ -92,15 +114,15 @@ This model has now changed a collision shape three times (the cavity from boxes,
 
 ## 2026-10-11 to 12 · The experiments
 
-Three experiments on the fixed model. Every condition changes one thing and runs the same 240 attempts: drift at 4, 8, 12, and 16 cm/s, 30 scenarios each, two seeds, tumble up to 2 deg/s. The baseline captures 110 of 240.
+Two experiments on the fixed model, with a guardrail running on every attempt. Every condition changes one thing and runs the same 240 attempts: drift at 4, 8, 12, and 16 cm/s, 30 scenarios each, two seeds, tumble up to 2 deg/s. The baseline captures 110 of 240. About 7,000 attempts were simulated for these, and more than 10,000 in the project counting the pilots.
 
-### A: can a non-physical result be caught?
+### The guardrail
 
-Every attempt is checked for five signs: an unstable step, a contact force on the vehicle over 150 kN (about twice what the machine can apply), the vehicle leaving a contact faster than 1.5 times its fastest speed before, shapes overlapping by more than 1 cm, and a sliding joint 5 mm past its stop.
+Not an experiment: an alarm on every attempt, which ideally never fires. Every attempt is checked for five signs: an unstable step, a contact force on the vehicle over 150 kN (about twice what the machine can apply), the vehicle leaving a contact faster than 1.5 times its fastest speed before, shapes overlapping by more than 1 cm, and a sliding joint 5 mm past its stop.
 
 Tested on the old rim, where 50 attempts are known artefacts: all 50 flagged.
 
-### B: does the result survive a change of representation?
+### Experiment 1: collision geometry
 
 | What changes | Captured, of 240 | Outcomes changed |
 |---|---|---|
@@ -114,7 +136,7 @@ Tested on the old rim, where 50 attempts are known artefacts: all 50 flagged.
 
 A meaningless change flips 3 outcomes. That is the noise floor. Every sound change of representation is within a few attempts of it. The old rim is not.
 
-### C: which physical unknowns matter?
+### Experiment 2: which physical unknowns matter?
 
 | Number | Range | Captured at each end | Outcomes changed | How it fails |
 |---|---|---|---|---|
@@ -142,7 +164,7 @@ Pull-in force, vehicle mass, a 1 ms time step, and friction changed everywhere a
 
 Once the checks pass, how contact is represented moves the result about as much as noise, and the physical unknowns move it more than twenty times as far. But one unsound representation moved it as much as the second-largest physical effect, and from the outcome counts alone it looked like any other result. Only the checks told them apart.
 
-### What the checks still flag
+### What the guardrail still flags
 
 The fixed model is not clean. The checks flag 17 of the 240 baseline attempts, and 105 at pin friction 0.1. Both were traced by replaying attempts and printing what was touching what.
 

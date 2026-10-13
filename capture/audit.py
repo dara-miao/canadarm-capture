@@ -5,7 +5,7 @@ or motion that needs energy from nowhere. These checks watch every step of an at
 and flag it when something like that happens. They do not say what went wrong, only
 that the outcome should not be trusted.
 
-The thresholds are first guesses. See the plan, experiment A.
+The thresholds are first guesses. See the plan, "The guardrail".
 """
 
 import mujoco
