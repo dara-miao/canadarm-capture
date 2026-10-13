@@ -4,7 +4,7 @@ What was built, what it showed, and what went wrong, in order. Trimmed on 2026-1
 
 ## Why this project
 
-I wanted a scenario harder than a robot arm on a desk picking up a mug: something real, with real consequences. Capturing a spacecraft is that. The target weighs seven tonnes and floats free, so in zero gravity a light touch in the wrong place pushes it away, right next to a crewed station.
+I wanted a real operation with real consequences, where making contact is the whole difficulty. Capturing a spacecraft is that. The target weighs seven tonnes and floats free, so in zero gravity a light touch in the wrong place pushes it away, right next to a crewed station.
 
 I also wanted to push myself: to see whether I could replicate a real operation in simulation, and to learn along the way everything a contact-rich simulation has to get right. My interest is physical AI, where robots are trained and tested in simulation, and contact is the part simulators find hardest.
 

@@ -10,7 +10,7 @@ A simulated capture at four times real speed. Click for the full-size video.
 
 ## Why this scenario
 
-I wanted something harder than a robot arm on a desk picking up a mug, and real. Canadarm2 catching a Cygnus cargo ship is that: the target weighs seven tonnes and floats free, so in zero gravity a touch in the wrong place pushes it away, next to a crewed station.
+I wanted a real operation with real consequences, where making contact is the whole difficulty. Canadarm2 catching a Cygnus cargo ship is that: the target weighs seven tonnes and floats free, so in zero gravity a touch in the wrong place pushes it away, next to a crewed station.
 
 This project solves no problem for the space industry. Canadarm2 does this routinely. I chose it because zero gravity leaves contact as nearly the only thing going on, which makes it a clean place to see what a simulator's contact model is doing. That matters for physical AI: robots are trained and tested in simulation, and contact is the part simulators find hardest.
 
@@ -20,13 +20,22 @@ A 7-joint arm built from the Canadian Space Agency's Canadarm2 geometry, a 7-ton
 
 Every number is listed in the [plan](docs/PLAN.md) as sourced, borrowed, or guessed, and the [research notes](docs/RESEARCH.md) say where each comes from.
 
-![Station, arm, and Cygnus](docs/media/scene_station.png)
+![The station, the arm reaching out from the forward node, and Cygnus holding at the capture point](docs/media/scene_station.png)
+
+*The scene: the station, the arm, and Cygnus at the capture point, 10 m out.*
 
 ## A failure that was not physics
 
 In harsh conditions the model lost most of the pins it snared: 27 of 30. It looked like a real failure mode, and I wrote down three physical explanations for it. All three were wrong.
 
-Logging the contact forces showed what was happening. The ship keeps tumbling after the snare closes, its fixture plate tilts onto the end effector's rim, and at that moment the contact force jumped to as much as 2.3 million newtons and threw the ship off faster than it had arrived. A contact cannot add energy. The solver was failing on one pair of shapes: the rim was the tops of 16 overlapping boxes, and the plate's edge touched two of them in the same place.
+Logging the contact forces showed what was happening. The ship keeps tumbling after the snare closes, its fixture plate tilts onto the end effector's rim, and at that moment the contact force jumped into the millions of newtons and threw the ship off faster than it had arrived. A contact cannot add energy. The solver was failing on one pair of shapes: the rim was the tops of 16 overlapping boxes, and the plate's edge touched two of them in the same place.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/media/rim-dark.svg">
+  <img alt="Line chart of the vehicle's speed in one simulated attempt. With the rim modelled as box tops, the speed jumps from 2 to over 20 cm/s when the fixture plate meets the rim, and the pin is lost. With the rim as a ring of spheres it stays near 2 cm/s and the vehicle is captured." src="docs/media/rim.svg">
+</picture>
+
+*Figure 1. The same attempt with the rim's collision shape built two ways. Nothing else differs.*
 
 Rebuilding that one surface as a ring of spheres took captures from 3 of 30 to 30 of 30. It also overturned the conclusion I had drawn about which parameter mattered most.
 
@@ -40,7 +49,12 @@ Three experiments on the fixed model. Each condition changes one thing and runs 
 - **B. Does the result survive a change of representation?** Change how an object is described without changing the object: the shape of a contact surface, the time step, the contact stiffness.
 - **C. Which physical unknowns matter?** Move each number that is not known exactly across a plausible range.
 
-![What moved the result](docs/media/results.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/media/results-dark.svg">
+  <img alt="Bar chart of how many of 240 attempts changed outcome when one thing was changed. Sound changes to how contact is represented changed at most 7, near a noise floor of 3. The old box-top rim changed 79. Physical unknowns changed up to 180." src="docs/media/results.svg">
+</picture>
+
+*Figure 2. Experiments B and C. Each bar is one thing changed from the baseline, on the same 240 attempts.*
 
 Two conditions are there to keep the method honest. Nudging the start by a thousandth of a millimetre changes 3 outcomes of 240: that is what "no effect" looks like. And the snare's drive force, which I expected to do nothing, changed 2.
 

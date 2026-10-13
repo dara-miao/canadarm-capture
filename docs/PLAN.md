@@ -27,7 +27,7 @@ The two earlier questions are kept for the record:
 
 Canadarm2 already captures cargo vehicles such as Cygnus, routinely. This project solves no problem for that operation, and its real limits may be fully characterised in documents that are not public. A failure in this model is a failure of this model.
 
-The scenario is chosen because it is harder than an arm on a desk picking up a mug, and it is real. The target weighs seven tonnes and is free to move. In zero gravity nothing holds it still, so a touch in the wrong place pushes it away, next to a crewed station. Reaching the target is only the start: the arm has to make and keep contact with it. And zero gravity strips away almost everything except contact, which makes it a clean place to see what a simulator's contact model is doing.
+The scenario is chosen because it is a real operation in which making contact is the whole difficulty. The target weighs seven tonnes and is free to move. In zero gravity nothing holds it still, so a touch in the wrong place pushes it away, next to a crewed station. Reaching the target is only the start: the arm has to make and keep contact with it. And zero gravity strips away almost everything except contact, which makes it a clean place to see what a simulator's contact model is doing.
 
 There is also a personal aim. I am not from the space industry. I am building this to learn, by trying to replicate a real operation, everything a contact-rich simulation has to get right. My interest behind it is physical AI: robots are trained and tested in simulation, which only works if the simulated contact can be trusted.
 
@@ -135,7 +135,7 @@ The ones that shape the project. Superseded and minor decisions are in the git h
 | Decision | Reason |
 |---|---|
 | Use existing simulators, not a from-scratch engine | More to learn from the tools the field uses |
-| Reconstruct a real operation, not a generic pick-and-place | A generic arm demo does not stand out |
+| Reconstruct a real operation | Real numbers to check against, and real consequences to reason about |
 | MuJoCo, on a MacBook, CPU only | No NVIDIA GPU; the task is rigid bodies, which MuJoCo handles well |
 | Detailed 3D models are appearance only; collisions use simple shapes | Fast and predictable contact, and the simulation runs without the downloaded files |
 | Hollow end effector built from a ring of 16 boxes | MuJoCo collides convex shapes, so a cavity cannot be one shape |
