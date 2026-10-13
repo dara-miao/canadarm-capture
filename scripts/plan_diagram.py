@@ -23,7 +23,7 @@ EXPERIMENTS = [
 ]
 
 # One line on what is happening right now, shown under the title.
-NOW = "Experiments done.  Next: explain the attempts the checks still flag, then the write-up."
+NOW = "Model built, experiments done.  Now: the write-up."
 
 W, H = 1600, 860
 BG, CARD, EDGE = "#0f1b2d", "#1b2a40", "#2b3d57"

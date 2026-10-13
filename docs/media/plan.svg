@@ -6,7 +6,7 @@
   <rect width="1600" height="860" fill="#0f1b2d"/>
   <text x="60" y="70" fill="#b9e36b" font-size="18" font-weight="700" letter-spacing="1">THE PLAN</text>
   <text x="60" y="130" fill="#ffffff" font-size="46" font-weight="700">One capture model. Three robustness experiments.</text>
-  <text x="60" y="168" fill="#f2b84b" font-size="17" font-weight="600">Experiments done.  Next: explain the attempts the checks still flag, then the write-up.</text>
+  <text x="60" y="168" fill="#f2b84b" font-size="17" font-weight="600">Model built, experiments done.  Now: the write-up.</text>
 
   <rect x="60" y="200" width="340" height="190" rx="14" fill="#1b2a40" stroke="#7fd36b" stroke-width="2"/>
   <text x="82" y="240" fill="#b9e36b" font-size="15" font-weight="700" letter-spacing="0.5">1 · ZERO-G WORLD</text>

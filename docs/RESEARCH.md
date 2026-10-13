@@ -175,10 +175,6 @@ From a Perplexity summary. None was opened successfully (the first sits behind a
 | ESA-hosted presentation on a planar air-bearing microgravity simulator | Limits of such testbeds: motion in one plane, finite area, scaled-down hardware, careful calibration | A 3D simulation can reach combinations a planar rig cannot, at the price of assumed contact models |
 | "The analysis of capture strategy for redundant space manipulator...", *Advances in Mechanical Engineering* | Reported to discuss attitude regulation of a snare-type end effector with a contact model | A lead on snare capture strategy. Full text not retrieved |
 
-### Reported for background only
-
-From a Perplexity summary, not opened: AmericaSpace's account of the Cygnus OA-6 capture (free drift with thrusters disabled); the Canadian Space Agency's "cosmic catches" page; NASA blog posts on the 13 April 2026 Cygnus XL capture (capture point about 12 m; capture and installation as separate events); Uyama et al. (2012, i-SAIRAS) on a compliant wrist and rebound; Abiko et al. (2006, IROS) and others on impedance control for free-floating robots; and a 2026 *Aerospace* paper on a different, two-finger capture mechanism. These shaped sections 1 and 2. None supplies a number used in the model.
-
 ## 4. Numbers
 
 ### The arm
@@ -297,144 +293,16 @@ The four unread documents at the top of the table in section 3 are the most like
 
 ## 7. What this project can and cannot claim
 
-This section came out of a critique of the plan (see the log). The points below were checked against the sources where they rest on one.
+- **It is a case study, not a solution to a problem.** Canadarm2 captures cargo vehicles routinely; the 50th free-flyer capture is reported for 6 August 2024. A failure in this model is a failure of this model.
+- **"No public answer could be found" is not "the field has no answer."** The real limits may be fully set out in requirements, tests, and procedures that are not public.
+- **A capture demonstration in MuJoCo is not new.** Open tools for contact-rich space robotics exist (SmallSatSim and mjorbit, both 2026), and professional work models the snare as flexible cables. No gap in the literature is claimed.
+- **The mechanism is a substitute, not a cheaper copy.** Rigid bars, a flat-backed knob, and a plate on a ring of spheres have different contact surfaces from cables, a cammed shaft, and cam arms. Results belong to the substitute.
+- **The controller is part of every result.** Its rate cap, tolerances, and estimator are invented. "Capture fails above this rate" always means "this controller and mechanism fail above this rate".
+- **Two kinds of uncertainty.** Doubt about the encounter (drift, tumble, alignment, measurement error) is what a real controller would face. Doubt about the model (shapes, friction, invented limits) is doubt about whether the simulation represents the real system. Robustness to the first says nothing about the second.
+- **A mechanism's design tolerance is not a limit on a visiting vehicle's motion.** The 0.031 m/s used here is a requirement on the Shuttle end effector.
 
-### This is a case study, not a solution to a problem
+## 8. How this was researched
 
-Canadarm2 already captures cargo vehicles. The Canadian Space Agency reports successful captures as routine, and the 50th free-flyer capture is reported for 6 August 2024. The operation does not need this simulation, and the agencies have their own simulators for training and preparation (NASA's on-board trainer and its track-and-capture scoring tool are reported, not read).
+Perplexity searches found most of the sources and several of the ideas; the sources were then opened and checked, and anything not checked is labelled Reported. Several of Perplexity's citation links pointed at the wrong work even where the claim was right, which is the reason for that label.
 
-So the honest reason for the project is this: an established capture operation is a concrete case for learning contact-rich robotics and simulation. The project looks at how a simplified model produces successful and failed captures, and how sensitive those predictions are to its own physical and control assumptions.
-
-Three things follow.
-
-- **A failure in the model is not a weakness in Canadarm2.** When the model fails at four times the tested drift and tumble, that is a failure regime of this mechanism, this controller, and these assumptions.
-- **"No public answer could be found" is not "the field has no answer."** The real limits may be fully characterised in requirements, tests, and procedures that are not public.
-- **No gap needs declaring in advance.** If the experiments turn up something reproducible and useful, such as an outcome boundary that moves a lot under a seemingly minor approximation, that finding is the contribution. Until then the project stands as an engineering study with a transparent model, careful experiments, clear failure analysis, and stated limits.
-
-### The gap is narrower than "nobody has done this"
-
-Open MuJoCo tools for contact-rich space robotics now exist: SmallSatSim and mjorbit, both from 2026. A capture demonstration in MuJoCo is therefore not new. What the existing work leaves open is more specific:
-
-| Work | What it does | What it leaves for this project |
-|---|---|---|
-| Honda et al. (2014) | Reconstructs one real capture and fits parameters to its telemetry | Sweeps across conditions to find where capture fails |
-| Arbatani et al. (2023) | Simulates the flexible cables faithfully | Accessible experiments on a declared simplification, including how much the simplification matters |
-| Freer et al. (2020) | Measures operator workload | Physical engagement, pull-in, and retention |
-| SmallSatSim (2026) | General toolkit; one illustrative docking trial | A dedicated arm-and-fixture task with structured failure analysis |
-| mjorbit (2026) | Orbit-coupled simulation; docking by a conditional weld | The mechanics of the capture interface itself |
-
-These are differences of emphasis. They are not evidence that no one has run a similar experiment.
-
-A statement of the gap that the sources support: existing work models capture dynamics, flexible snares, and contact control, and recent open tools simulate contact in microgravity. None of that by itself says how far a particular capture prediction can be trusted when the mechanism, actuators, sensing, and numerics are uncertain. This project looks at that question for one simplified arm-and-fixture scenario.
-
-### Three envelopes
-
-"Capture envelope" can mean the *geometric* envelope of the mechanism, the *closed-loop* envelope of a controller using that mechanism, or the *operational* envelope a flight procedure allows. A mechanism's design tolerance is not a limit on a visiting vehicle's drift. This project measures the second kind, for its own controller and mechanism. The plan's definitions section carries this.
-
-One consequence: the 0.031 m/s used in tests comes from the Shuttle end effector's requirements. Earlier entries in the build log call the tested range "sourced capture limits". The accurate phrase is "a range derived from the Shuttle end-effector paper".
-
-### Engaged, seated, retained
-
-Catching the pin, finishing pull-in, and surviving a later disturbance are three different achievements. The model's "captured" label currently means seated. Since the seated joint lets go above about 850 N m, a retention check belongs in the definition of success.
-
-### The mechanism is a substitute, not a cheaper copy
-
-Three rigid bars and a flat-backed knob have different contact surfaces and kinematics from three cables and a cammed shaft. The knob's shape was chosen partly because a ball tip failed. Any envelope measured here belongs to that substitute. The useful question is which findings survive plausible changes to it.
-
-### The controller is part of the result
-
-The rate cap, tolerances, and estimator gain are invented, and the tracking logic was changed because the first version let the pin escape. So a statement like "capture fails above this tumble rate" must read "this controller and mechanism fail above this rate under these conditions".
-
-### Two kinds of uncertainty
-
-The project deals with two different uncertainties, and showing robustness to one says nothing about the other.
-
-| Kind | Examples | Who would face it | Which experiment |
-|---|---|---|---|
-| About the encounter | Leftover drift and tumble, starting alignment, measurement error, the vehicle's mass | A real controller, during a real capture | A |
-| About the model | Rigid bars for cables, invented rate limits and gains, approximate fixture geometry, friction and contact softness, missing cams and flexibility | Nobody in flight. It is doubt about whether the simulation represents the real system | B and C |
-
-A controller that copes with noisy measurements *inside the model* has not shown that the model is relevant. The strongest version of this project keeps the two apart and reports both.
-
-### There is no single tolerance
-
-The outcome depends on where contact begins, how fast relative motion spoils the alignment, whether the arm keeps tracking, whether the snare shuts before the pin escapes, whether pull-in completes, and whether the joint survives load. So "the error the arm can tolerate" is not one number. The question to ask is which combinations of conditions lead to each outcome, for a stated mechanism, controller, and numerical model, and how stable that classification is when those are changed.
-
-### Why simulate at all
-
-Ground experiments supply real material and mechanism behaviour, but planar testbeds restrict the motion and their supports alter inertia and damping (reported; see section 3). Simulation reaches conditions hardware cannot, but rests on assumed contact models. Neither is simply more accurate. The value is in stating the trade plainly.
-
-### Claims and their standing
-
-| Statement | Standing |
-|---|---|
-| Unknown inertial properties can change whether contact lasts long enough to attach | Shown in simulation for a different mechanism (read) |
-| Ground-test supports can alter measured vibration and damping | Shown experimentally for a lab manipulator (reported) |
-| Planar tests cannot reproduce every 3D misalignment | Stated in a presentation (reported) |
-| Capture, impedance control, delay, and misalignment have long been studied experimentally | Supported by a 1993 NASA report (reported) |
-| No public failure-boundary benchmark exists for a Canadarm2-like capture | Not established. Do not claim it |
-| This project's combination of outcome labels, sweeps, and engine comparison is new | Not established. Describe it as the intended contribution |
-
-### What the first batches do and do not show
-
-They show the harness reaches both successful and unsuccessful regimes, and that a harsh condition exposes several failure paths. They do not show that sensing has no effect, which parameter causes the drop, or whether the boundary is smooth. Drift and tumble were scaled together, so their effects are confounded. Separate sweeps and matched trials are needed.
-
-A perfect-knowledge baseline that always succeeds is still a result: it establishes the baseline inside the sampled range. Degraded sensing should be added to answer a question, not to produce failures.
-
-## 8. What this means for the model
-
-Applied on 2026-10-10 unless marked otherwise. The build log has the details and the test results.
-
-| Finding | Before | Now |
-|---|---|---|
-| LEE rigidize preload is 4,893 N | 3,560 N, the Shuttle value | 4,893 N |
-| Four latches add 64,054 N after rigidizing | No latches. The seated joint let go above about 850 N m | Latch stage added: 64,054 N as four forces at the rim, engaging only on a seated fixture |
-| Whole sequence must fit in 30 s; snare within 3 s; latch about 6 s | Snare 2 s, pause 2 s, pull-in 10 s | Latch 6 s added. 20 s in total |
-| Tested worst case: 4 in offset, 15° pitch/yaw, 10° roll | No roll | Roll about the pin axis added to scenarios, up to 10° |
-| Arm back-drive resistance: 156 N side load, 448 N axial average | Limp arm had no resistance | 200 N m of joint friction, from 156 N at 1.3 m |
-| Published friction input is 0.3 static, 0.1 dynamic | 0.6 | 0.3, with a build option for sensitivity runs. MuJoCo has one coefficient, so the dynamic value is not represented |
-| Honda et al. model the wires as rigid rotating rods | Rigid sliding bars | No change. Noted as precedent |
-| Fixture base stiffness strongly affects early capture | Fixture rigid on the hull | Optional sprung mount. Limited to 5e4 N m/rad by the timestep, so their 1e8 starting value cannot be reproduced |
-| A person flies the arm, in Manual mode | Automatic controller | No change. Stated in the plan and README |
-| Capture takes 2 to 3 minutes | 41 s to the snare firing | No change. Noted |
-| Honda et al. fix shoulder roll when solving the arm's pose | All seven joints move | Optional, off by default |
-| Success should include retention | "Captured" meant seated and at rest | "Captured" needs seated, latched, and retained under 1,627 N m for 5 s with under 3° of tilt. The load is borrowed from the Shuttle end effector |
-| Engagement is a distinct stage | Not recorded | Recorded per attempt |
-| Capture is a race between closing and escaping | Timing not recorded | Recorded: how long after firing the pin stayed catchable, up to the snare's 2 s closing time |
-| Drift and tumble were varied together | One "wide" batch scaled both | `matched_sweep` varies one quantity with everything else, including the random seed, held fixed. To be used in experiment A |
-| "Compliance" has several meanings | Unspecified | Named in the plan |
-| Teleoperation latency is not sensor delay | Delay range cited to Freer et al. | Relabelled exploratory in the plan and code |
-| Zero gravity holds for short horizons | Zero gravity throughout | No change. Timescale assumption stated in the plan |
-
-## 9. Research log
-
-**2026-10-10, session 1.** Started from my notes on NVIDIA's simulation stack and physics simulation basics. Found the 1982 Shuttle end-effector paper, the 2023 cable-simulation abstract, and the CSA comparison table. Could not open the 2010 "Cosmic Catch" paper or the JAXA 2009 abstract's full text.
-
-**2026-10-10, session 2, Perplexity searches.** Three searches: the physics of free-flyer capture and its link to contact-rich manipulation; a hunt for the missing numbers; and newer work from 2018 to 2026. Found Honda et al. (2014) and Chang and Marquez (2018), and the lead to Walker and Vandersluis (1995). Established that the three highest-priority numbers are not in the accessible literature.
-
-**2026-10-10, session 2, sources checked.** Opened and read Honda et al., Chang and Marquez, and Walker and Vandersluis. Every number Perplexity reported from the first two matched the source. Walker and Vandersluis had not been read by anyone yet and turned out to hold the Canadarm2-specific end-effector figures: 4,893 N rigidize preload, 64,054 N latch load, the 30 s capture requirement, and the worst-case test conditions with their back-drive loads.
-
-**2026-10-10, session 3, Perplexity critique.** A critique of the plan and README, drawing on mjorbit, SmallSatSim, and Freer et al. Main points: the gap is narrower than "no MuJoCo capture simulator exists"; the plan mixed three kinds of envelope; the rigid-bar mechanism and the controller are both part of any result; "captured" needs a retention criterion; teleoperation latency is not sensor delay; compliance and the second-engine comparison were underspecified.
-
-**2026-10-10, session 3, sources checked.** Checked the critique's claims about mjorbit and SmallSatSim against the papers through a summarising fetch; they held. Added section 7 and six rows to section 8, and revised the plan: reframed the question as a robustness study, added definitions and an explicit scope list, marked two decisions as superseded, split the values the model uses by where they come from, and tightened experiments A, B, and C.
-
-*A caution about the Perplexity text itself.* Several of its citation links pointed at the wrong work: statements about SmallSatSim linked to the Honda paper, statements about Honda linked to an unrelated journal page, and statements about Freer linked to the cable-simulation abstract. The claims were right where checked, but the links cannot be relied on to find the source. This is the reason for the Reported label.
-
-**2026-10-10, session 4, Perplexity searches.** Further reading on why capture fails and on what ground tests can and cannot show: Christidi-Loumpasefski et al. (2024) on contact time under mass uncertainty; Li et al. (2021) on air-bearing supports changing measured vibration; a 1993 NASA report and an ESA presentation on planar testbeds; a lead on snare capture strategy. Main ideas: capture is a race between engagement and separation; there are two kinds of uncertainty; there is no single tolerance number.
-
-**2026-10-10, session 4, sources checked.** Downloaded and read the Christidi-Loumpasefski manuscript; the reported numbers matched. Could not open Li et al. (a browser check blocked it), so it stays Reported, as do the NASA report, the ESA presentation, and the snare-strategy lead. Added the "capture is a race" idea to section 2, four subsections to section 7, and one row to section 8.
-
-**2026-10-10, session 5, Perplexity discussion.** I objected that Canadarm2 already captures spacecraft, so the project cannot be motivated as solving that. Perplexity agreed and revised its assessment: the earlier framing overstated a mission need. The project is a case study for learning and for testing a model's assumptions. Whether it becomes research with a new finding is open.
-
-**2026-10-10, session 5, follow-up.** Adopted. Added the first subsection of section 7 and revised the plan's "Why this project" and the README to match. The operational facts cited (routine captures, agency training simulators) are recorded as reported.
-
-**2026-10-11, geometry search.** Prompted by the load pilot, which found that everything after snare closure turns on the fixture plate meeting the end effector's rim. Searched again for fixture and end-effector geometry and for allowed rates at capture. Found no dimensions. Found and read the capture paragraphs of SSP 50235 (2000 baseline), which gives two vehicle-side requirements (5 minutes in the grapple box, up to 90 s of free drift) and names the documents that define the fixture. Two patents and a 2019 interoperability standard were checked through summaries or text search and gave nothing dimensional. One result was a wrong lead: NTRS 19930013102 is a one-page abstract about a magnetic end effector.
-
-*What the sources do say about tilt.* Walker and Vandersluis and the patents agree that the fixture's cam arms, mating with features in the end effector during pull-in, are what remove angular misalignment. The model has no cams. Its flat plate levering on the rim does the same job by a different route, with dimensions that are not sourced. Treat any result about tilt during pull-in as a property of that substitute.
-
-**2026-10-11, collision geometry.** Started from a question of mine: if physics uses simple shapes underneath, how can it reflect a sharp or oddly shaped edge, and why must the shapes be convex? A Perplexity conversation gave the outline: the detector hands the solver a point, a direction, and a distance; a bounding box for filtering is not the same as the collision shape; convex does not mean round; an object can be one shape, several convex pieces, or a mesh; and the convex restriction belongs to particular engines. The MuJoCo points were then checked against its documentation and the CoACD points against the authors' project page, and both held. The rest is recorded as reported. Added an idea to section 2 and the sources to section 3.
-
-*Why this matters here.* It is the project's question in small. The model has already changed a collision shape three times (the cavity, the pin's tip, the rim), and the result changed each time.
-
-**2026-10-11, vehicle mass.** Looked for a sourced empty mass before setting the range for the mass sensitivity run. Wikipedia gives 1,800 kg dry, 3,500 kg of cargo, and 1,218 kg of propellant for the Enhanced Cygnus, with recent missions carrying a little over 3,800 kg. None of the three figures has a citation there, so they are reported. They add up to about 6,900 kg at launch, which puts the model's 7,000 kg at the heavy end for the moment of capture, after some propellant has been used. A lightly loaded ship would be nearer 5,000 kg. The 8,050 kg already in these notes is higher than those figures can reach and its source should be rechecked.
-
+The searches, in order: the capture operation and its numbers; a critique of the plan against recent MuJoCo space-robotics work; why capture fails and what ground tests can show; fixture geometry and allowed rates (nothing dimensional found); collision geometry; and the vehicle's mass.

@@ -61,25 +61,15 @@ And one about significant figures. Several sourced values look more exact than t
 
 ## Definitions
 
-Three different things get called a "capture envelope". This project studies the second.
+A capture has three stages, and "captured" means all three plus latched:
 
-| Envelope | Question | Depends on |
-|---|---|---|
-| Geometric engagement | Where can the pin enter the opening and be caught? | The modelled cavity, bars, pin, and knob |
-| Closed-loop capture | From which starting conditions does *this controller with this mechanism* reach, snare, pull in, and hold? | All of the above, plus the arm's start pose, joint rate limits, tracking and insertion logic, estimator, sensing, abort rules, and time allowed |
-| Operationally allowed | Which conditions would a real flight procedure permit? | Flight rules. Not studied here, and not sourced |
+| Stage | Meaning |
+|---|---|
+| Engaged | The pin was inside the snare when it finished closing |
+| Seated | Pull-in finished with the fixture plate against the rim, on axis and at rest |
+| Retained | The latched joint survives 1,627 N m of bending for 5 s with at most 3° of tilt. The load is borrowed from the Shuttle end effector |
 
-The experiments address two different uncertainties. Experiment A varies the *encounter*: the vehicle's motion, the starting alignment, what the controller can sense. Experiments B and C vary the *model*: its physical parameters and the simulator underneath it. Robustness to the first says nothing about the second.
-
-A capture also has three stages of "done":
-
-| Stage | Meaning | In the model today |
-|---|---|---|
-| Engaged | The pin was inside the snare when it finished closing | Recorded for every attempt |
-| Seated | Pull-in finished with the fixture plate against the rim, on axis and at rest | Recorded. The latches engage only if this holds |
-| Retained | The latched joint survives a stated disturbance | Recorded. The disturbance is 1,627 N m of bending for 5 s, with at most 3° of tilt allowed |
-
-"Captured" now means all three, plus latched. The retention load is the Shuttle end effector's largest bending case. No equivalent figure was found for Canadarm2's, so it is a borrowed target.
+What is measured is where *this controller with this mechanism* reaches, snares, pulls in, and holds. That is not the mechanism's geometric tolerance, and it is not what a flight procedure would allow.
 
 ## Outside the scope
 
@@ -93,25 +83,16 @@ A capture also has three stages of "done":
 
 ## Milestones
 
-| # | Milestone | Status | Done when |
-|---|---|---|---|
-| 1 | Zero-g scene | Done (2026-10-10) | Arm and vehicle load, momentum is conserved, arm tracks commands |
-| 2 | Snare mechanism | Done (2026-10-10) | A closing mechanism holds the pin against a pull-out force |
-| 3 | Approach and capture | Done (2026-10-10) | A controller completes a capture from a nominal start |
-| R1 | Realism: real 3D models | Done (2026-10-10) | Arm, vehicle, and station use Canadian Space Agency and NASA models; arm joints placed from them |
-| R2 | Realism: sourced parameters | Done (2026-10-10) | Snare and capture numbers taken from the published papers where they give them |
-| R3 | Realism: 10 m capture point | Done (2026-10-10) | The attempt starts with the vehicle at the published capture distance |
-| 4 | Trial harness | Done (2026-10-10) | One command runs N trials and reports success rate and failure types |
-| R4 | Research review and model update | Done (2026-10-10) | Research notes reviewed; the changes in their section 8 applied and tested |
-| P | Pilots for the two questions | Done (2026-10-10) | Both pilots run and written up; summary tables in `docs/data/` |
-| P2 | Load pilot: what happens after the snare closes | Done (2026-10-11) | Forces, vehicle motion, and tilt logged for the harsh batch; table in `docs/data/pilot_load.csv` |
-| R5 | Fix the plate-on-rim contact | Done (2026-10-11) | Plate seats on a ring of spheres; load and lost-capture pilots rerun; a replay of the failing attempt is a test |
-| P3 | Rerun the sensitivity pilot on the fixed model | Done (2026-10-11) | Table and failure types by speed in `docs/data/` |
-| 5 | Experiment A: artefact checks | Done (2026-10-11), with follow-ups | Every attempt is checked for signs that it is not physics. The checks flag the old rim's failures and stay quiet on the fixed model |
-| 6 | Experiment B: same surface, different representation | Done (2026-10-11) | One contact surface or numerical setting changed at a time, with everything physical held fixed; a table of which results survive |
-| 7 | Experiment C: sensitivity to the physical unknowns | Done (2026-10-12) | Each guessed number moved across a stated plausible range; a ranking with uncertainty, set beside experiment B's |
-| 7b | Explain the flagged attempts: collisions before firing, and overlap at low pin friction | Traced (2026-10-12); fixes to decide | Each is traced to a cause, and fixed or stated as a limit |
-| 8 | Write-up | Planned | README with results, figures, and video, stating what the results are conditional on |
+| Milestone | Status |
+|---|---|
+| Build the model: scene, snare, controller, real geometry, sourced numbers, trial harness | Done (2026-10-10) |
+| Pilots, which found the contact failure at the rim | Done (2026-10-11) |
+| Fix the rim contact and rerun | Done (2026-10-11) |
+| Experiment A: artefact checks | Done (2026-10-11) |
+| Experiment B: the same object, represented differently | Done (2026-10-11) |
+| Experiment C: physical unknowns | Done (2026-10-12) |
+| Trace the attempts the checks still flag | Done (2026-10-12); fixes to decide |
+| Write-up | In progress |
 
 ## The experiments
 
@@ -147,76 +128,28 @@ Run on 2026-10-11 and 12, and trimmed afterwards to the conditions that carry th
 
 **The answer, for this model.** Once the checks pass, a sound change of representation moves the result about as much as noise (at most 7 of 240), and the physical unknowns move it up to 180. One unsound representation, the box-top rim, moved it 79, and nothing but the checks showed that it was unsound.
 
-Notes on the experiments:
-
-- **After the rim fix (2026-10-11).** With the plate seating on a ring of spheres, no pin is lost in any variant of the harsh batch: all 30 snared attempts are captured. The sensitivity pilot's main result came from the old rim and has to be rerun. New leads: at friction 0.6, 20 of 30 snared attempts end caught but not rigid; and half the harsh batch never reaches the pin at all. Experiments A, B, and C are to be redesigned around the question at the top of this plan, after I have worked through the model's layers.
-- **A candidate experiment from the research on collision shapes (2026-10-11).** Build the same contact surface several ways, for example the rim as box tops, as a ring of spheres, and as one mesh or a finer ring, and the cavity wall with 8, 16, and 32 boxes, and record which results change. It asks the project's question directly: does the result belong to the physics or to the shape chosen to stand in for it? Not yet designed or agreed.
-- **After the load pilot (2026-10-11).** Every lost capture in the harsh batch ended in a numerical contact failure: tumble tilted the fixture plate into the end effector's rim, and the solver returned meganewton forces that threw the vehicle off. "Lost" counts before the rim fix measure that artefact.
-- **After the pilots.** Experiments A and B are not yet redesigned. The pilots found that the largest effect by far is a controller choice (when the arm goes limp), and that lost pins escape through soft stops and bar coupling in the rigid-bar snare. Both need deciding on before the full experiments are fixed. See the last two build log entries of 2026-10-10.
-
-The notes below were written for the earlier experiments A, B, and C, and are kept because the cautions still apply.
-
-- **Experiment B (earlier design).** "Compliance" can mean contact softness at the pin and bars, snare-drive stiffness, pull-in-drive stiffness, joint-servo stiffness, or structural flexibility of the arm or fixture. They are not interchangeable. The experiment will vary a named one. Candidates that the model can express today are contact softness and joint-servo stiffness. Fixture base stiffness is the one Honda et al. found most influential, and would need adding to the model.
-- **Experiment C (earlier design: a second engine).** The comparison is between matched dynamic models, not matching appearances. Before comparing, check that masses and inertias, joint axes and limits, collision shapes, actuator laws and saturation, contact and friction definitions, initial conditions, controller and sensor timing, and success criteria are the same. Newton's default rigid-body solver is a port of MuJoCo, so the run must use a different solver or contact model to be an independent check. Agreement would show consistency under shared assumptions, not validity. Disagreement would flag something to investigate, not say which engine is right.
-
 ## Decisions
 
-| Date | Decision | Reason | Status |
-|---|---|---|---|
-| 2026-10-09 | Use existing simulators, not a from-scratch engine | More to learn from the tools the field uses, and a stronger result for the same effort | Current |
-| 2026-10-10 | Reconstruct a real operation, not a generic pick-and-place | A generic arm demo does not stand out | Current |
-| 2026-10-10 | Everything runs on a MacBook (CPU only) | No NVIDIA GPU available; rules out Isaac Sim and the Omniverse runtime libraries | Current |
-| 2026-10-10 | MuJoCo first, Newton as a second engine later | The task is rigid-body only; MuJoCo is mature on macOS and easy to debug | Current |
-| 2026-10-10 | Build the hollow end effector from a ring of 16 boxes | MuJoCo collides convex shapes, so a cavity cannot be one mesh | Current |
-| 2026-10-10 | Model the snare as three rigid bars forming a shrinking triangle | Reproduces the centring and catching action without cable simulation. Honda et al. (2014) also used rigid rods | Current |
-| 2026-10-10 | Open snare is the triangle inscribed in the cavity (inradius 0.1 m) | Matches the ±0.1 m lateral tolerance of this end-effector design | Current |
-| 2026-10-10 | Flat-backed knob on the pin tip, not a ball | A ball wedged the bars apart under load and the pin slipped out | Current |
-| 2026-10-10 | Stiff, high-force snare drive | The real drive is geared and is not pushed back open by load on the pin | Current |
-| 2026-10-10 | Resolved-rate control through the damped Jacobian pseudo-inverse | Standard for redundant arms; needs no trajectory planner for a short approach | Current |
-| 2026-10-10 | Leave roll about the pin axis uncontrolled | The modelled pin is symmetric; the real fixture has alignment cams that this model omits | Current |
-| 2026-10-10 | Arm freezes when the snare fires | Simple, and close to stopping the arm at capture | Superseded the same day: the arm now tracks until the snare has closed, then goes limp during pull-in |
-| 2026-10-10 | Controller reads the true pin pose and velocity | Kept sensing out of the first controller | Superseded the same day: the controller now sees the pin through a sensor model |
-| 2026-10-10 | Insert a realism pass before the trial harness | The experiments are only as credible as the model they run on | Current |
-| 2026-10-10 | Fetch the 3D models with a script; do not store them in the repository | The Canadian Space Agency permits non-commercial reproduction with credit; fetching from the source avoids redistributing the files | Current |
-| 2026-10-10 | Rebuild the arm's joints from the CSA model's separate parts | The model shows Canadarm2's offset joints, which the first straight-line arm did not have | Current |
-| 2026-10-10 | Meshes are appearance only; collisions keep simple shapes | Keeps contact fast and predictable, and the simulation runs without the downloaded files | Current |
-| 2026-10-10 | Mount the arm on the Earth-facing side of the forward node (Harmony) | Cygnus is captured below the station; the exact fixture used is not sourced | Current, approximate |
-| 2026-10-10 | Move the grapple pin to the service module | The Cygnus model has a small fixture there | Current, unconfirmed |
-| 2026-10-10 | Use the Shuttle arm's end-effector paper as the main parameter source | It was the only primary source found with numbers at the time | Superseded in part: Walker and Vandersluis (1995) covers Canadarm2's own end effector |
-| 2026-10-10 | Pull-in force limit 3,560 N | The Shuttle end effector's rigidize load | Superseded: now 4,893 N, the Canadarm2 value |
-| 2026-10-10 | Arm goes limp during pull-in, except wrist roll | Both end-effector papers and Honda et al. describe rigidizing against a limp arm | Current |
-| 2026-10-10 | Arm keeps tracking until the snare has closed | Stopping at the trigger failed at a 0.031 m/s relative velocity | Current |
-| 2026-10-10 | Cap tip speed at 0.37 m/s | Canadarm2's published unloaded speed | Current |
-| 2026-10-10 | Every attempt starts with the pin 10 m from the station and the arm hovering 2 m short | Matches the published capture distance; the hover distance is an assumption | Current |
-| 2026-10-10 | Five outcome labels: captured, caught but not rigid, missed, out of reach, timed out | A single success flag hides why attempts fail | Extended the same day with a sixth, "lost" |
-| 2026-10-10 | Controller aborts when the arm's Jacobian is nearly singular | Without it the arm thrashed at the edge of its workspace | Current |
-| 2026-10-10 | Controller sees the pin only through a sensor model with delay, update rate, and noise | To ask how capture degrades when observations are stale or noisy. The perfect-knowledge runs remain the baseline | Current |
-| 2026-10-10 | Controller smooths measurements with a fixed-gain estimator | Checking alignment against raw noisy readings meant it never committed to inserting | Current |
-| 2026-10-10 | Scenarios are plain data generated from a seed | Batches are reproducible and can be spread across processes | Current |
-| 2026-10-10 | Pause before the experiments to build up the research notes | Results are only worth reporting if the model's inputs and limits are understood first | Current |
-| 2026-10-10 | Label every research claim Read, Reported, Assumed, or Disputed | Secondary summaries are useful for finding sources but are not sources | Current |
-| 2026-10-10 | Frame the project as a robustness study of a simplified capture model | Open MuJoCo tools for contact-rich space robotics already exist. A plain capture demo is not a contribution; a transparent account of where predictions break down can be | Current |
-| 2026-10-10 | Pull-in force limit 4,893 N | Canadarm2's rigidize preload (Walker and Vandersluis) | Current |
-| 2026-10-10 | Add a latch stage: 64,054 N applied as four forces at the rim, over 6 s, only if pull-in seated the fixture | The latches are what carry large bending loads on the real end effector | Current. Cams and latch geometry are not modelled |
-| 2026-10-10 | "Captured" requires seated, latched, and retained under 1,627 N m | A capture that seats can still be mechanically weak | Current. The load is borrowed from the Shuttle end effector |
-| 2026-10-10 | Joints resist back-driving with 200 N m of friction | Derived from the 156 N side load used to test the end effector, at 1.3 m from the wrist axes | Current. Applied to all joints alike, which is a guess |
-| 2026-10-10 | Contact friction 0.3, and a build option to change it | The static value Honda et al. chose for shaft and snare wire | Current. A modelling paper's input, not a measurement |
-| 2026-10-10 | Scenarios include roll about the pin axis, up to 10° | Part of the worst case the end effector was tested at | Current. The pin is symmetric, so roll only moves the hull's mass |
-| 2026-10-10 | Optional sprung mount for the grapple fixture | Honda et al. found fixture base stiffness the most influential parameter | Off by default. Limited to 5e4 N m/rad by the timestep, far softer than their starting value |
-| 2026-10-10 | Optional locked shoulder roll | Honda et al. fix that joint when solving the arm's pose | Off by default |
-| 2026-10-10 | Record engagement, seating, latching, retention, and how long the pin stayed catchable | Failures can then be explained by stage and by timing margin | Current |
-| 2026-10-10 | Add a "lost" outcome: the snare closed on the pin and the pin later escaped | In the harsh batch 27 of 28 non-held attempts had been snared first. Calling them misses hid that | Current |
-| 2026-10-10 | Describe the project as a case study, with no literature gap claimed in advance | Canadarm2 already does this routinely. A contribution, if any, has to come from the results | Current |
-| 2026-10-10 | Lead with two questions, and run small pilots before fixing the full experiments | A project needs a question to answer. Pilots are cheap and show whether an experiment would measure anything | Current |
-| 2026-10-10 | Build option for the snare drive's force limit; controller option to go limp as soon as the snare closes | Needed to vary them one at a time in the pilots | Current. Both off by default; the default behaviour is unchanged |
-| 2026-10-11 | Hold the full experiments until the plate-on-rim contact is fixed | The load pilot showed all 50 lost captures in the harsh batch end in a solver blow-up at that contact | Done the same day |
-| 2026-10-11 | Fixture plate seats on a ring of 32 spheres, and collides with nothing else | The tops of the overlapping wall boxes gave the plate redundant contacts that the solver resolved with forces of up to 2.3 MN | Current. `rim="boxes"` rebuilds the old rim |
-| 2026-10-11 | One general question replaces the two specific ones: is a contact-rich result physics or artefact, and what is it sensitive to? | The capture solves no problem for the space industry. The answer should carry across physical AI and physics simulation | Current |
-| 2026-10-11 | I build, with Claude Code explaining and reviewing: work through the five layers one at a time, starting with contact | The point of the project is to learn the system design well enough to explain it | Current |
-| 2026-10-11 | Proposed: three experiments (artefact checks, representation, physical sensitivity), with the second engine folded into the second as an extension | They answer the two halves of the question, and B against C is the comparison that carries beyond this model | Agreed the same day |
-| 2026-10-11 | Friction range runs to 0.8, and is also varied separately at the pin and at the rim | The effect is at the high end, and the two contacts may not matter equally | Current |
-| 2026-10-12 | Trim the experiments to the conditions that carry the answer | Seven conditions made little or no difference and cluttered the design. What they showed is kept in one paragraph | Current |
-| 2026-10-10 | Treat the station as fixed and the arm as rigid | The station is about 60 times heavier than the vehicle; arm flexibility is left out to keep the first version simple | Current |
+The ones that shape the project. Superseded and minor decisions are in the git history.
+
+| Decision | Reason |
+|---|---|
+| Use existing simulators, not a from-scratch engine | More to learn from the tools the field uses |
+| Reconstruct a real operation, not a generic pick-and-place | A generic arm demo does not stand out |
+| MuJoCo, on a MacBook, CPU only | No NVIDIA GPU; the task is rigid bodies, which MuJoCo handles well |
+| Detailed 3D models are appearance only; collisions use simple shapes | Fast and predictable contact, and the simulation runs without the downloaded files |
+| Hollow end effector built from a ring of 16 boxes | MuJoCo collides convex shapes, so a cavity cannot be one shape |
+| Snare modelled as three rigid bars | Catches and centres the pin without simulating cables. Its limits are now known: see Risks |
+| Flat-backed knob on the pin, not a ball | The ball wedged the bars apart and slipped out |
+| Fixture plate seats on a ring of 32 spheres | The box tops gave it redundant contacts that broke the solver |
+| Arm tracks until the snare has closed, then goes limp for pull-in | Stopping at the trigger let a receding pin escape; the real arm is limp while the end effector pulls itself straight |
+| The controller sees the pin through a sensor model, smoothed by an estimator | To ask how capture degrades with stale or noisy observations |
+| Six outcome labels, and "captured" requires seated, latched, and retained | A single success flag hides why attempts fail |
+| Scenarios are plain data generated from a seed; experiments change one thing on the same scenarios | Reproducible, and attempts can be compared in pairs |
+| Every research claim is labelled Read, Reported, Assumed, or Disputed | A summary of a source is not the source |
+| One general question: is a contact-rich result physics or artefact, and what is it sensitive to? | The capture solves no problem for the space industry; the answer should carry to physical AI and physics simulation |
+| Every attempt is checked for signs it is not physics | Outcome labels alone hid a contact failure for four milestones |
+| I build, with Claude Code explaining and reviewing | The point is to understand the system well enough to explain it |
 
 ## Values the model uses, by where they come from
 
@@ -284,16 +217,12 @@ Full provenance is in the research notes. This table records only what the model
 
 ## Risks
 
-- **Results describe the surrogate, not the hardware.** The rigid-bar snare and flat-backed knob have different contact surfaces and kinematics from cables and cams. A sensitivity to friction could be a property of the bars. Experiments should check which findings survive plausible changes to the surrogate's geometry and contact behaviour.
-- **The controller is part of the result.** The joint rate cap, alignment tolerances, estimator gain, and tracking logic are invented, and one of them was changed because it caused failures. A boundary found in experiment A is where this controller with this mechanism fails, not a limit of Canadarm2.
-- **The latch is a force, not a mechanism.** Retention now holds because 64 kN is applied at the rim once the fixture is seated. Whether real latches would engage on a slightly misaligned fixture is not something this model can say.
-- **Zero gravity is a timescale assumption.** Reasonable for a one-minute attempt according to the mjorbit comparison, but that does not by itself prove relative orbital motion is negligible against centimetre tolerances.
-- **The biggest sensitivity found so far is to the controller.** In the pilots, letting the arm go limp when the snare closes doubled the drift speed at which capture fails; friction, drive force, arm speed, and observation delay each moved it by 1 cm/s or less. A parameter ranking on this model may mostly reflect that one piece of invented logic.
-- **Two more places where the model is not behaving like physics, both traced (2026-10-12).** In 16 of 240 baseline attempts the end effector runs into the vehicle's hull while lining up, and the arm's motors, which have no torque limit, push with up to 200,000 N m and 5 MN. At pin friction 0.1 the pin's knob wedges between the rigid snare bars with up to 90 kN a bar. Neither changes a capture count. Both come from assumptions already listed: no torque limits, and rigid bars for cables. There is no "collided" outcome yet.
-- **A contact failure went unnoticed through four milestones.** Until 2026-10-11 every lost pin was a solver failure where the tilted fixture plate met the rim. It was found only when contact forces and kinetic energy were logged. Other contacts of the same kind remain (the knob against the overlapping wall boxes). Batches should log peak contact force and flag any attempt where the vehicle gains speed.
-- **Tilt is removed by a substitute for the cams.** The snare holds a point and does not stop rotation, so the vehicle's tumble tilts the plate up to 14° before it meets the rim, and pull-in levers it flat. On the real fixture, cam arms do this. The plate, rim, and pin dimensions that set the lever are not sourced, and the result is sensitive to friction at that contact.
-- **Contact tuning.** Stiff contact in zero gravity may need a smaller timestep or solver tuning.
-- **Newton on macOS.** Supported in CPU-only mode but untested here.
+- **Results describe the substitute, not the hardware.** Rigid bars for cables, a force for the latches, a plate on spheres for the cams. The rigid bars are known to wedge the pin's knob with up to 90 kN at low friction.
+- **The controller is part of the result.** The largest sensitivity found, the joint rate cap, is a property of it.
+- **The arm's motors have no torque limit.** When the end effector runs into the hull, they push with up to 200,000 N m. There is no "collided" outcome yet.
+- **Tilt is removed by a lever with unsourced dimensions.** Plate radius, rim radius, and pin length set the tilt at which the plate meets the rim, and the result depends on friction there.
+- **The original contact failure has a likely cause, not a proved one.** Other contacts between cylinders and overlapping boxes remain, the knob inside the cavity among them.
+- **Zero gravity is a timescale assumption.** Reasonable for a one-minute attempt; not shown to be negligible against centimetre tolerances.
 
 ## References
 
