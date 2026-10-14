@@ -28,10 +28,6 @@ Every parameter is recorded as sourced, borrowed, or assumed. The [plan](docs/PL
 
 *The scene: the station, the manipulator, and Cygnus at the capture point, 10 m out.*
 
-[![The same capture at a slower pace, without the collision-shape view](docs/media/capture.gif)](docs/media/capture.mp4)
-
-*The same attempt at a slower pace, in the detailed models throughout. Click for the full video.*
-
 ## Collision geometry
 
 A physics engine does not collide the detailed meshes it renders. Each body has separate collision geometry, usually a few primitives, and that geometry is the body's surface as far as contact is concerned. If it fills in a hole or rounds off an edge, nothing later in the pipeline restores it.
