@@ -14,8 +14,9 @@ fixture plate meets the end effector's rim: first with the rim as the tops of th
 boxes, where the solver fails and the vehicle is thrown off, then with the rim as a ring
 of spheres, where it seats. The two runs are identical until that moment.
 
-Rendered at 1920x1080 and 60 fps, and saved at 1280x720 so that each file stays under
-about 10 MB, which is what GitHub will play in the browser. The camera moves on smooth
+Rendered at 1920x1080 and 60 fps. Two files are saved: the 1080p master at high quality
+(<name>-1080p.mp4, not kept in git) and a 1280x720 copy under about 10 MB, which is what
+GitHub will play in the browser. The camera moves on smooth
 curves through its keys, and each frame blends several moments for a light motion blur. Needs the 3D models, the sky
 (scripts/make_sky.py), and ffmpeg. --stills writes to $FILM_STILLS or results/, one frame
 every $FILM_STILL_STEP seconds (default 2) within $FILM_STILL_RANGE ("from,to" seconds).
@@ -146,11 +147,11 @@ FILMS = {
     ),
     "shapes": Film(
         name="capture_shapes",
-        duration=22.0,
+        duration=24.0,
         subframes=6,
         pace=[
             (0.0, "spheres", -46.0), (2.0, "spheres", -34.0), (5.0, "spheres", -8.0), (8.0, "spheres", 2.5),
-            (9.5, "spheres", 5.0), (16.0, "spheres", 21.0), (22.0, "spheres", 38.0),
+            (9.5, "spheres", 5.0), (16.0, "spheres", 21.0), (24.0, "spheres", 40.0),
         ],
         moves=[
             (0.0, 150.0, 10.0, -20.0, 0.0, 0.0, 0.0),
@@ -158,21 +159,21 @@ FILMS = {
             (5.0, 9.0, 40.0, -8.0, 0.8, 1.0, 0.0),
             (8.0, 3.6, 70.0, 0.0, 0.0, 1.0, 1.0),
             (11.0, 2.8, 90.0, 0.0, -0.1, 1.0, 1.0),
-            (16.0, 2.8, 125.0, 0.0, -0.15, 1.0, 1.0),
-            (18.0, 14.0, 140.0, 0.0, -0.1, 1.0, 1.0),  # straight back first, clear of the hull
-            (20.0, 40.0, 152.0, -10.0, -3.0, 0.8, 0.3),
-            (22.0, 150.0, 185.0, -22.0, 0.0, 0.5, 0.0),
+            (16.0, 2.6, 125.0, 0.0, -0.15, 1.0, 1.0),
+            (18.5, 14.0, 140.0, 0.0, -0.1, 1.0, 1.0),  # straight back first, clear of the hull
+            (21.0, 40.0, 152.0, -10.0, -3.0, 0.8, 0.3),
+            (24.0, 150.0, 185.0, -22.0, 0.0, 0.5, 0.0),
         ],
-        shell=[(5.0, 6.0, 1.0, 0.22), (17.0, 18.0, 0.22, 1.0)],
-        shapes=[(9.0, 10.0, 0.0, 1.0), (16.5, 17.5, 1.0, 0.0)],
-        contacts=[(10.0, 10.5, 0.0, 1.0), (16.0, 16.5, 1.0, 0.0)],
+        shell=[(4.8, 6.3, 1.0, 0.22), (17.3, 18.8, 0.22, 1.0)],
+        shapes=[(8.8, 10.3, 0.0, 1.0), (16.5, 18.0, 1.0, 0.0)],
+        contacts=[(10.0, 10.6, 0.0, 1.0), (16.0, 16.5, 1.0, 0.0)],
         captions=[
             (0.6, 3.5, "Canadarm2 capturing a drifting Cygnus, simulated in MuJoCo"),
             (5.5, 8.5, "The snare closes on the grapple pin"),
-            (10.2, 13.2, "The collision shapes the solver uses: the rim is a ring of spheres"),
-            (13.2, 16.2, "The tilted plate seats, pull-in levers it flat, the latches clamp"),
+            (10.4, 13.4, "The collision shapes the solver uses: the rim is a ring of spheres"),
+            (13.4, 16.4, "The tilted plate seats, pull-in levers it flat, the latches clamp"),
         ],
-        readout=[(10.5, 16.3)],
+        readout=[(10.6, 16.3)],
     ),
 }
 
@@ -214,6 +215,28 @@ def camera_at(film: Film, video_time: float) -> np.ndarray:
     out[0] = np.exp(_pchip(keys[:, 0], np.log(keys[:, 1]), video_time))  # zoom evenly in log distance
     out[1] += DRIFT * video_time
     return out
+
+
+CAMERA_SMOOTHING = 0.4  # [s]; the camera path is filtered over about this much time
+
+
+def camera_path(film: Film, rate: float, n: int) -> np.ndarray:
+    """The camera at every subframe, filtered so that it never changes direction sharply.
+
+    Each take between cuts is filtered on its own, so a cut still jumps.
+    """
+    path = np.array([camera_at(film, i / rate) for i in range(n)])
+    sigma = CAMERA_SMOOTHING * rate
+    half = int(3 * sigma)
+    kernel = np.exp(-0.5 * (np.arange(-half, half + 1) / sigma) ** 2)
+    kernel /= kernel.sum()
+    edges = [0, *(int(round((t0 + t1) / 2 * rate)) for t0, t1 in film.cuts), n]
+    for a, b in zip(edges[:-1], edges[1:]):
+        block = path[a:b]
+        padded = np.concatenate([np.repeat(block[:1], half, 0), block, np.repeat(block[-1:], half, 0)])
+        for c in range(path.shape[1]):
+            path[a:b, c] = np.convolve(padded[:, c], kernel, mode="valid")
+    return path
 
 
 def takes(film: Film) -> list[tuple[str, np.ndarray, np.ndarray]]:
@@ -329,14 +352,14 @@ class Run:
         self.renderer.scene.flags[mujoco.mjtRndFlag.mjRND_CULL_FACE] = 0  # thin solar arrays show from both sides
         return self.renderer.render().astype(np.float32)
 
-    def moment(self, film: Film, cam, option, index: int, video_time: float) -> np.ndarray:
+    def moment(self, film: Film, cam, option, index: int, video_time: float, camera: np.ndarray) -> np.ndarray:
         model, data = self.model, self.data
         time, qpos = self.frames[index]
         data.qpos[:] = qpos
         data.time = time
         scene.turn_sky(model, data, SKY_SPEED * scene.ORBIT_RATE * time)
         mujoco.mj_forward(model, data)
-        distance, azimuth, elevation, lift, focus, square = camera_at(film, video_time)
+        distance, azimuth, elevation, lift, focus, square = camera
         solid = fade(film.shell, video_time, 1.0)
         mix = fade(film.shapes, video_time, 0.0)
         contact = fade(film.contacts, video_time, 0.0)
@@ -428,6 +451,7 @@ def main() -> None:
     width, height, fps, subframes, supersample = (640, 360, 30, 1, 1.0) if fast else (WIDTH, HEIGHT, FPS, film.subframes, SUPERSAMPLE)
     big = (round(width * supersample), round(height * supersample))
     out = OUT / f"{film.name}{'_fast' if fast else ''}.mp4"
+    master = OUT / f"{film.name}-1080p.mp4"
 
     # Every subframe the film needs, by run.
     rate = fps * subframes
@@ -439,6 +463,7 @@ def main() -> None:
         wanted[run_name].append((i, since))
         moments.append((run_name, since))
 
+    path = camera_path(film, rate, n)
     runs: dict[str, Run] = {}
     for name, build in RUNS.items():
         if not wanted[name]:
@@ -453,10 +478,14 @@ def main() -> None:
     )
     ffmpeg = None
     if not stills:
+        outputs = ["-vf", f"scale={SAVE_WIDTH}:-2:flags=lanczos", "-c:v", "libx264", "-preset", "slow", "-crf", "23",
+                   "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(out)]
+        if not fast:
+            outputs = ["-c:v", "libx264", "-preset", "slow", "-crf", "16", "-pix_fmt", "yuv420p", "-movflags", "+faststart",
+                       str(master), *outputs]
         ffmpeg = subprocess.Popen(
             ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{width}x{height}",
-             "-r", str(fps), "-i", "-", "-vf", f"scale={SAVE_WIDTH}:-2:flags=lanczos", "-c:v", "libx264", "-preset", "slow",
-             "-crf", "23", "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(out)],
+             "-r", str(fps), "-i", "-", *outputs],
             stdin=subprocess.PIPE,
         )  # fmt: skip
     cam = mujoco.MjvCamera()
@@ -478,7 +507,7 @@ def main() -> None:
                 run = runs[run_name]
                 if i not in run.frames:  # past the end of the attempt: hold its last moment
                     run.frames[i] = run.frames[max(run.frames)]
-                part = run.moment(film, cam, option, i, i / rate)
+                part = run.moment(film, cam, option, i, i / rate, path[i])
                 image = part if image is None else image + part
             frame = np.clip(image / subframes, 0, 255).astype(np.uint8)
             frame = Image.fromarray(frame).resize((width, height), Image.LANCZOS)
@@ -503,6 +532,8 @@ def main() -> None:
         ffmpeg.stdin.close()
         ffmpeg.wait()
         print("wrote", out.relative_to(ROOT), f"({out.stat().st_size / 1e6:.1f} MB)")
+        if not fast:
+            print("wrote", master.relative_to(ROOT), f"({master.stat().st_size / 1e6:.1f} MB)")
 
 
 if __name__ == "__main__":
