@@ -17,7 +17,7 @@ Do this as part of every piece of work, not at the end:
 - `docs/DEVLOG.md` is the build log. Add a dated entry per milestone or significant change: what was built, design choices, check results with numbers, what went wrong, what is not done.
 - Log only what matters to the project's question: changes to the model or controller, experiments and their results, findings, decisions, and things that went wrong. Do not log cosmetic or housekeeping work (the sky, videos, viewer options, how the documents are written). Those go in the commit message and nowhere else.
 - `docs/media/plan.svg` is the visual plan. Edit statuses in `scripts/plan_diagram.py` and rerun it. The user likes plans shown as a visual pipeline.
-- Voice. The plan, research notes, and build log are Dara's documents. Write them as plain notes with no narrator, or in Dara's first person where it is a personal note (an aim, a decision, a question, something Dara did). Never write them from Claude's point of view, and never refer to Dara by name or as "the user". Do not put Dara's "I" on work Dara did not do: describe that neutrally ("eight attempts were replayed", "the sources were checked"). The README's "How this was built" section is where Claude Code is credited.
+- Voice. The plan, research notes, and build log are Dara's documents. Write them as plain notes with no narrator, or in Dara's first person where it is a personal note (an aim, a decision, a question, something Dara did). Never write them from Claude's point of view, and never refer to Dara by name or as "the user". Do not put Dara's "I" on work Dara did not do: describe that neutrally ("eight attempts were replayed", "the sources were checked"). The README is Dara's own write-up: it has no section crediting Claude Code, and none should be added.
 - Record failures and wrong turns honestly; they are part of the presentation.
 - Label every approximate dimension, mass, or gain as approximate. Do not present the simulation as validated.
 
@@ -42,7 +42,7 @@ Do this as part of every piece of work, not at the end:
 ## Git
 
 - One commit per milestone, authored by the user, pushed to `origin` (github.com/dara-miao/canadarm-capture).
-- No `Co-Authored-By` line on commits. The README's "How this was built" section credits Claude Code instead.
+- No `Co-Authored-By` line on commits, and no credit line for Claude Code in the README (Dara removed it on 2026-10-14).
 - Update `docs/PLAN.md`, `docs/DEVLOG.md`, and the plan diagram in the same commit as the milestone they describe.
 
 ## Where things stand (updated 2026-10-12)
