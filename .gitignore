@@ -5,4 +5,3 @@ __pycache__/
 .DS_Store
 assets/
 results/
-docs/media/*.mp4
