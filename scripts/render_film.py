@@ -76,6 +76,7 @@ class Film:
     readout: list = field(default_factory=list)  # (t0, t1): show the force and speed readout
     track: list = field(default_factory=list)  # (t0, t1, from, to): point of interest, the mouth (0) to the pin tip (1)
     subframes: int = SUBFRAMES  # moments blended into each frame
+    readout_title: str = ""  # first line of the readout; by default it names the rim
 
 
 FILMS = {
@@ -147,33 +148,28 @@ FILMS = {
     ),
     "shapes": Film(
         name="capture_shapes",
-        duration=24.0,
+        duration=14.0,
         subframes=6,
         pace=[
-            (0.0, "spheres", -46.0), (2.0, "spheres", -34.0), (5.0, "spheres", -8.0), (8.0, "spheres", 2.5),
-            (9.5, "spheres", 5.0), (16.0, "spheres", 21.0), (24.0, "spheres", 40.0),
+            (0.0, "spheres", -46.0), (1.2, "spheres", -30.0), (2.5, "spheres", -6.0), (4.5, "spheres", 2.5),
+            (5.5, "spheres", 4.5), (10.5, "spheres", 21.0), (14.0, "spheres", 40.0),
         ],
         moves=[
             (0.0, 150.0, 10.0, -20.0, 0.0, 0.0, 0.0),
-            (2.0, 110.0, 18.0, -16.0, 0.0, 0.15, 0.0),
-            (5.0, 9.0, 40.0, -8.0, 0.8, 1.0, 0.0),
-            (8.0, 3.6, 70.0, 0.0, 0.0, 1.0, 1.0),
-            (11.0, 2.8, 90.0, 0.0, -0.1, 1.0, 1.0),
-            (16.0, 2.6, 125.0, 0.0, -0.15, 1.0, 1.0),
-            (18.5, 14.0, 140.0, 0.0, -0.1, 1.0, 1.0),  # straight back first, clear of the hull
-            (21.0, 40.0, 152.0, -10.0, -3.0, 0.8, 0.3),
-            (24.0, 150.0, 185.0, -22.0, 0.0, 0.5, 0.0),
+            (1.2, 110.0, 18.0, -16.0, 0.0, 0.15, 0.0),
+            (2.5, 9.0, 40.0, -8.0, 0.8, 1.0, 0.0),
+            (4.5, 3.6, 70.0, 0.0, 0.0, 1.0, 1.0),
+            (6.5, 2.8, 90.0, 0.0, -0.1, 1.0, 1.0),
+            (10.5, 2.6, 125.0, 0.0, -0.15, 1.0, 1.0),
+            (11.8, 14.0, 140.0, 0.0, -0.1, 1.0, 1.0),  # straight back first, clear of the hull
+            (13.0, 40.0, 152.0, -10.0, -3.0, 0.8, 0.3),
+            (14.0, 150.0, 185.0, -22.0, 0.0, 0.5, 0.0),
         ],
-        shell=[(4.8, 6.3, 1.0, 0.22), (17.3, 18.8, 0.22, 1.0)],
-        shapes=[(8.8, 10.3, 0.0, 1.0), (16.5, 18.0, 1.0, 0.0)],
-        contacts=[(10.0, 10.6, 0.0, 1.0), (16.0, 16.5, 1.0, 0.0)],
-        captions=[
-            (0.6, 3.5, "Canadarm2 capturing a drifting Cygnus, simulated in MuJoCo"),
-            (5.5, 8.5, "The snare closes on the grapple pin"),
-            (10.4, 13.4, "The collision shapes the solver uses: the rim is a ring of spheres"),
-            (13.4, 16.4, "The tilted plate seats, pull-in levers it flat, the latches clamp"),
-        ],
-        readout=[(10.6, 16.3)],
+        shell=[(2.3, 3.5, 1.0, 0.22), (11.3, 12.3, 0.22, 1.0)],
+        shapes=[(5.0, 6.2, 0.0, 1.0), (10.8, 11.8, 1.0, 0.0)],
+        contacts=[(6.0, 6.5, 0.0, 1.0), (10.5, 10.8, 1.0, 0.0)],
+        readout=[(6.2, 10.7)],
+        readout_title="collision geometry",
     ),
 }
 
@@ -217,7 +213,7 @@ def camera_at(film: Film, video_time: float) -> np.ndarray:
     return out
 
 
-CAMERA_SMOOTHING = 0.4  # [s]; the camera path is filtered over about this much time
+CAMERA_SMOOTHING = 0.3  # [s]; the camera path is filtered over about this much time
 
 
 def camera_path(film: Film, rate: float, n: int) -> np.ndarray:
@@ -422,12 +418,15 @@ def overlay(frame: Image.Image, film: Film, run: Run, video_time: float, since: 
         if a <= 0:
             continue
         force, speed = run.measure(np.floor(since * 10) / 10)  # held for a tenth of a second, so it can be read
+        title = film.readout_title or f"rim as {'box tops' if run.label == 'boxes' else 'spheres'}"
         lines = [
-            f"rim as {'box tops' if run.label == 'boxes' else 'spheres'}",
             f"force on the fixture plate {force / 1e3:>9,.1f} kN",
             f"vehicle speed {speed * 100:>5.1f} cm/s",
         ]
         x, y = width * 0.03, height * 0.05
+        draw.text((x + 2, y + 2), title, font=caption_font, fill=(0, 0, 0, int(160 * a)))
+        draw.text((x, y), title, font=caption_font, fill=(255, 255, 255, int(255 * a)))
+        y += caption_font.size * 1.6
         for i, line in enumerate(lines):
             yy = y + i * readout_font.size * 1.5
             draw.text((x + 2, yy + 2), line, font=readout_font, fill=(0, 0, 0, int(160 * a)))
