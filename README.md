@@ -8,7 +8,7 @@ A MuJoCo simulation of a space station manipulator capturing a free-floating car
 
 A simulated capture at four times real speed. Click for the full-size video.
 
-## Why this scenario
+## Why this project
 
 I wanted a contact-rich task with real consequences. Canadarm2 capturing a Cygnus cargo vehicle is one: the target has a mass of seven tonnes and is in free drift, so in microgravity a light contact in the wrong place pushes it away, next to a crewed station.
 
@@ -28,21 +28,21 @@ Every parameter is recorded as sourced, borrowed, or assumed. The [plan](docs/PL
 
 *The scene: the station, the manipulator, and Cygnus at the capture point, 10 m out.*
 
-## Collision geometry is a modelling choice
+## Collision geometry
 
 A physics engine does not collide the detailed meshes it renders. Each body has separate collision geometry, usually a few primitives, and that geometry is the body's surface as far as contact is concerned. If it fills in a hole or rounds off an edge, nothing later in the pipeline restores it.
 
 MuJoCo, like many engines, collides convex shapes only. A convex shape has no dents or hollows, which is not the same as being round: a box is convex. A non-convex object is built as a compound of convex pieces. Each piece is convex; the assembled object does not have to be. The cost is seams between the pieces that the real object does not have.
 
-So the choice of collision geometry is a modelling decision, and a result can depend on it. This project found that out the hard way.
+So the choice of collision geometry is a modelling decision, and a result can depend on it. This project aimed to look at how far results varied.
 
-## An artefact that looked like a failure mode
+## My initial failure
 
-The end effector is hollow, so its collision geometry is a compound: a ring of 16 boxes, overlapping at their edges to leave no gaps. The top faces of those boxes also served as the rim the fixture plate seats on. That was never a deliberate choice.
+The end effector is hollow, so its collision geometry is a compound: a ring of 16 boxes, overlapping at their edges to leave no gaps. The top faces of those boxes also served as the rim the fixture plate seats on.
 
-In a harsh batch, with four times the tested drift and tumble, the model lost 27 of the 30 pins it snared. It read as a physical failure mode, and the obvious explanations were physical ones: residual relative velocity at snare closure, an overpowered snare drive, vehicle momentum absorbed through the snare. Each was tested and ruled out.
+In a harsh batch, with four times the tested drift and tumble, the model lost 27 of the 30 pins it snared. It seemed as though it was a physical failure mode, and the obvious explanations could be physical ones: residual relative velocity at snare closure, an overpowered snare drive, vehicle momentum absorbed through the snare. But then each was tested and ruled out.
 
-Logging contact forces showed the cause. The vehicle keeps tumbling after the snare closes, so the fixture plate meets the rim tilted. Its edge landed where two boxes overlap. The solver received redundant contacts at one location, and when a third arrived with a different normal it returned forces in the millions of newtons and ejected the vehicle faster than it had arrived. A contact cannot add kinetic energy. This was a solver failure, not a capture failure.
+Logging contact forces showed the cause. The vehicle keeps tumbling after the snare closes, so the fixture plate meets the rim tilted. Its edge landed where two boxes overlap. The solver received redundant contacts at one location, and when a third arrived with a different normal it returned forces in the millions of newtons and ejected the vehicle faster than it had arrived. 
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/media/rim-dark.svg">
@@ -53,7 +53,7 @@ Logging contact forces showed the cause. The vehicle keeps tumbling after the sn
 
 Replacing that one surface with a ring of spheres, each giving a single contact with a single normal, took captures from 3 of 30 to 30 of 30. It also reversed an earlier sensitivity result: a controller change that had appeared to double the failure threshold turned out to have no effect at all.
 
-The mistake is an easy one to make. Overlapping the pieces of a compound to close gaps is the natural thing to do. A surface built for one purpose ends up carrying a load it was not designed for. The tests covered a flat seating, not a tilted one. And the outcome label, "lost", was plausible enough to be explained instead of questioned.
+The mistake is an easy one to make. Overlapping the pieces of a compound to close gaps is the natural thing to do. But the issue is that a surface built for one purpose ends up carrying a load it wasn't made for.
 
 ## Experiments
 
@@ -63,7 +63,7 @@ Two experiments on the corrected model. Each condition changes one factor and re
 
 **Experiment 2: uncertain physical parameters.** Each parameter without a reliable source was treated as a measurement with an uncertainty and moved across a plausible range: the friction coefficient at two separate contacts (0.1 to 0.8), the joint rate limit, joint back-drive friction, and observation delay.
 
-**Guardrail.** Not an experiment: a set of checks that runs on every attempt and flags anything non-physical. An unstable step, a contact force above anything the actuators can apply, a vehicle leaving a contact faster than it arrived, interpenetration beyond 1 cm, a joint driven past its limit. Ideally it never fires. Validated against the original rim, where 50 attempts were known artefacts, it flagged all 50.
+**Guardrail:** a set of checks that runs on every attempt and flags anything non-physical. An unstable step, a contact force above anything the actuators can apply, a vehicle leaving a contact faster than it arrived, interpenetration beyond 1 cm, a joint driven past its limit. Ideally it never fires. Validated against the original rim, where 50 attempts were known artefacts, it flagged all 50.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/media/results-dark.svg">
@@ -141,7 +141,3 @@ Runs on CPU. Developed on an Apple Silicon Mac with MuJoCo 3.15.
 ## Credits
 
 3D models of Canadarm2 and Cygnus: Canadian Space Agency. 3D model of the International Space Station: NASA. They are downloaded from the agencies' own sites, not stored here, and used for non-commercial purposes. This project is not associated with or endorsed by the Canadian Space Agency or NASA.
-
-## How this was built
-
-I directed the project and made the design decisions; the code was written with Claude Code. The [build log](docs/DEVLOG.md) records each step, including the approaches that failed.
