@@ -12,7 +12,7 @@ A simulated capture at four times real speed. Click for the full-size video.
 
 I wanted a contact-rich task with real consequences. Canadarm2 capturing a Cygnus cargo vehicle is one: the target has a mass of seven tonnes and is in free drift, so in microgravity a light contact in the wrong place pushes it away, next to a crewed station.
 
-This project does not solve a problem for the space industry. Canadarm2 performs this capture routinely. I chose it to see whether I could reconstruct a real operation in simulation, and to learn what a contact-rich simulation has to get right. That matters for physical AI: robots are trained and evaluated in simulation, and contact is where simulators are weakest. With gravity removed, contact is nearly the only thing happening, which makes this a clean case for studying it.
+Canadarm2 performs this capture routinely so I chose it to see whether I could reconstruct a real operation in simulation, and to learn what a contact-rich simulation has to get right. That matters for physical AI: robots are trained and evaluated in simulation, and contact is where simulators are weakest. With gravity removed, contact is nearly the only thing happening, which makes this a clean case for studying it.
 
 ## The model
 
