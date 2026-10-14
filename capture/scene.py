@@ -244,12 +244,16 @@ def build_model(
     wall_segments: int = WALL_SEGMENTS,
     timestep: float | None = None,
     contact_time: float | None = None,
+    solver: str | None = None,
+    cone: str | None = None,
+    iterations: int | None = None,
     friction_pin: float | None = None,
     friction_rim: float | None = None,
     pull_in_force: float | None = None,
     backdrive: float | None = None,
     vehicle_mass: float | None = None,
     moving_sky: bool = False,
+    sun: bool = False,
 ) -> mujoco.MjModel:
     """Build the scene.
 
@@ -261,6 +265,7 @@ def build_model(
               fixture base's stiffness strongly affects early capture.
     snare_force: force limit of the drive that closes the snare bars [N]. Defaults
               to the model file's 1,500 N, which is not sourced.
+    sun:      light the scene with a directional sun that casts shadows, for renders.
     moving_sky: paint the sky on a sphere that scene.turn_sky can turn, for the viewer.
               Needs the painted sky (scripts/make_sky.py); ignored without it.
     rim:      what the fixture plate seats on. "spheres" is a ring of spheres on the rim.
@@ -273,6 +278,9 @@ def build_model(
     timestep:      simulation step [s]. Defaults to the model file's 2 ms.
     contact_time:  time constant of every contact's stiffness [s]; smaller is stiffer.
                    Defaults to MuJoCo's 0.02.
+    solver:        the constraint solver: "Newton" (MuJoCo's default), "CG", or "PGS".
+    cone:          the friction cone: "pyramidal" (the default) or "elliptic".
+    iterations:    the solver's iteration limit. Defaults to MuJoCo's 100.
 
     Options that change a physical number:
     friction_pin:  friction where the snare holds the pin (pin, tip, and bars), set after `friction`.
@@ -316,10 +324,24 @@ def build_model(
         for geom in spec.geoms:
             if geom.contype or geom.conaffinity:
                 geom.solref = [contact_time, 1.0]
+    if solver is not None:
+        spec.option.solver = getattr(mujoco.mjtSolver, f"mjSOL_{solver.upper()}")
+    if cone is not None:
+        spec.option.cone = getattr(mujoco.mjtCone, f"mjCONE_{cone.upper()}")
+    if iterations is not None:
+        spec.option.iterations = iterations
     if meshes is None:
         meshes = meshes_available()
     if meshes:
         _use_meshes(spec)
+    if sun:
+        light = spec.worldbody.add_light(name="sun", type=mujoco.mjtLightType.mjLIGHT_DIRECTIONAL, castshadow=True)
+        light.dir = [-0.45, 0.35, -0.82]
+        light.diffuse = [0.95, 0.93, 0.88]
+        light.specular = [0.25, 0.25, 0.25]
+        spec.visual.headlight.ambient = [0.12, 0.12, 0.14]
+        spec.visual.headlight.diffuse = [0.35, 0.35, 0.38]
+        spec.visual.quality.shadowsize = 8192
     if meshes and SKY.exists():
         if moving_sky:
             _use_moving_sky(spec, like=spec.compile())

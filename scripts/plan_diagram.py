@@ -18,12 +18,12 @@ STAGES = [
 ]
 EXPERIMENTS = [
     ("5 · GUARDRAIL", "Checks on every attempt", "Force, energy, overlap on every attempt", "Caught 50 of 50, and found more", "done"),
-    ("6 · EXPERIMENT 1", "Collision geometry", "Rim · wall · time step · stiffness", "Result survives; old rim does not", "done"),
-    ("7 · EXPERIMENT 2", "Physical unknowns", "Each guessed number across its range", "Rate cap, rim friction, delay lead", "done"),
+    ("6 · EXPERIMENT 1", "Collision geometry", "Rim · wall · step · stiffness · solver", "Result survives; old rim does not", "done"),
+    ("7 · EXPERIMENT 2", "Unknown numbers", "Each guessed number across its range", "Rate cap, rim friction, delay lead", "done"),
 ]
 
 # One line on what is happening right now, shown under the title.
-NOW = "Model built, experiments done.  Now: the write-up."
+NOW = "Model built, experiments done and extended to the solver and the controller's limits.  Now: the write-up and the films."
 
 W, H = 1600, 860
 BG, CARD, EDGE = "#0f1b2d", "#1b2a40", "#2b3d57"

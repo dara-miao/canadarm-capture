@@ -31,12 +31,16 @@ ROWS = [
     ("Time step four times finer", ["time step 0.5 ms"], "a", None),
     ("Cavity wall: 8 or 32 boxes instead of 16", ["wall: 8 boxes", "wall: 32 boxes"], "a", None),
     ("Contact twice as stiff", ["contact twice as stiff"], "a", None),
+    ("Constraint solver: CG or PGS instead of Newton", ["solver: CG", "solver: PGS"], "a", None),
+    ("Friction cone: elliptic instead of pyramidal", ["friction cone: elliptic"], "a", None),
     ("Rim: the tops of the wall boxes", ["rim: box tops"], "a", "broke the solver; caught only by the checks"),
-    ("Physical numbers not known exactly", None, None, None),
+    ("Numbers not known exactly: physical, and the controller's", None, None, None),
     ("Snare drive force (control)", ["snare drive 750 N", "snare drive 3,000 N"], "b", None),
     ("Friction where the snare holds the pin", ["friction at the pin 0.1", "friction at the pin 0.8"], "b", None),
     ("Joint back-drive friction", ["joint back-drive 100 N m", "joint back-drive 400 N m"], "b", None),
     ("Observation delay", ["observation delay 0.5 s", "observation delay 1.0 s"], "b", None),
+    ("When the controller gives up: reach threshold", ["abort threshold 0.075", "abort threshold 0.3"], "b", None),
+    ("When the controller gives up: time limit", ["time limit 90 s", "time limit 360 s"], "b", "at 90 s the limit cuts the grapple sequence itself"),
     ("Friction where the fixture seats on the rim", ["friction at the rim 0.1", "friction at the rim 0.8"], "b", None),
     ("How fast the arm's joints may turn", ["joint rate cap 0.015 rad/s", "joint rate cap 0.06 rad/s"], "b", None),
 ]  # fmt: skip
@@ -69,14 +73,14 @@ def results(c: dict) -> str:
     height = bottom + 118
     parts = frame(
         width, height, c,
-        "Physical unknowns moved the result far more than how contact was represented",
+        "Numbers not known exactly moved the result far more than how contact was represented",
         "Attempts, out of 240, that ended differently from the baseline when one thing was changed",
         "Bar chart. Sound changes to how contact is represented changed at most 7 of 240 outcomes, near a noise floor of 3. "
-        "The old box-top rim changed 79. Physical unknowns changed up to 180.",
+        "The old box-top rim changed 79. Numbers not known exactly changed up to 180.",
     )  # fmt: skip
     # legend
     lx, ly = 32, 104
-    for key, label in (("a", "How contact is represented"), ("b", "Physical numbers not known exactly")):
+    for key, label in (("a", "How contact is represented"), ("b", "Numbers not known exactly")):
         parts.append(f'<rect x="{lx}" y="{ly - 11}" width="12" height="12" rx="2" fill="{c[key]}"/>')
         parts.append(text(lx + 19, ly, label, c["muted"], 13))
         lx += 19 + 7.1 * len(label) + 26

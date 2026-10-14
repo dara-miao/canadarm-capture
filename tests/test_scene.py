@@ -148,3 +148,16 @@ def test_friction_and_fixture_mount_are_build_options():
     assert sprung.joint("fixture_mount").stiffness[0] == pytest.approx(2.0e4)
     with pytest.raises(ValueError):
         scene.build_model(meshes=False, fixture_stiffness=1.0e8)  # too stiff for the timestep
+
+
+def test_solver_settings_are_build_options():
+    default = scene.build_model(meshes=False)
+    assert (default.opt.solver, default.opt.cone, default.opt.iterations) == (
+        mujoco.mjtSolver.mjSOL_NEWTON, mujoco.mjtCone.mjCONE_PYRAMIDAL, 100,
+    )  # fmt: skip
+    changed = scene.build_model(meshes=False, solver="PGS", cone="elliptic", iterations=50)
+    assert (changed.opt.solver, changed.opt.cone, changed.opt.iterations) == (
+        mujoco.mjtSolver.mjSOL_PGS, mujoco.mjtCone.mjCONE_ELLIPTIC, 50,
+    )  # fmt: skip
+    with pytest.raises(AttributeError):
+        scene.build_model(meshes=False, solver="Jacobi")

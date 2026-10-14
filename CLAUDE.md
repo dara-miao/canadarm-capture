@@ -26,7 +26,7 @@ Do this as part of every piece of work, not at the end:
 - Tests: `.venv/bin/python -m pytest`
 - Batch of attempts: `.venv/bin/python -m capture.batch --n 100 --seed 0 --out results/name.csv` (results/ is git-ignored)
 - Renders: `.venv/bin/python scripts/render_scene.py`
-- Preview video (needs ffmpeg): `.venv/bin/python scripts/render_preview.py`, then remake `docs/media/preview.gif` from it for the README
+- Films (need ffmpeg, the 3D models, and the sky): `.venv/bin/python scripts/render_film.py capture` and `... rim`; `--fast --stills` for a quick contact sheet. Then remake the GIFs for the README with ffmpeg (see the commit that added them). The mp4 files are not in git
 - Plan diagram: `.venv/bin/python scripts/plan_diagram.py`
 - Fetch 3D models (git-ignored, needed for mesh renders): `.venv/bin/python scripts/fetch_assets.py`
 - Starry background (git-ignored, appearance only): `.venv/bin/python scripts/make_sky.py`
@@ -45,15 +45,16 @@ Do this as part of every piece of work, not at the end:
 - No `Co-Authored-By` line on commits, and no credit line for Claude Code in the README (Dara removed it on 2026-10-14).
 - Update `docs/PLAN.md`, `docs/DEVLOG.md`, and the plan diagram in the same commit as the milestone they describe.
 
-## Where things stand (updated 2026-10-12)
+## Where things stand (updated 2026-10-14)
 
 Read `README.md` (the write-up), `docs/PLAN.md` (question, experiments, decisions, assumptions), and `docs/DEVLOG.md` before doing anything. All three were trimmed on 2026-10-12; longer versions are in the git history.
 
-- The model is built and two experiments are run (`experiments/run_experiments.py`; tables in `docs/data/`): experiment 1 is collision geometry, experiment 2 is the physical unknowns. The checks in `capture/audit.py` are a guardrail, not an experiment. More than 10,000 attempts have been simulated in all. Of 240 attempts: noise floor 3 changed outcomes; sound representation changes at most 7; the old box-top rim 79; physical unknowns up to 180 (joint rate cap), 96 (friction at the rim), 68 (observation delay).
+- The model is built and two experiments are run (`experiments/run_experiments.py`; tables in `docs/data/`): experiment 1 is collision geometry and the solver, experiment 2 is the numbers not known exactly, physical and the controller's. The checks in `capture/audit.py` are a guardrail, not an experiment. More than 12,000 attempts have been simulated in all. Of 240 attempts: noise floor 3 changed outcomes; sound representation changes (shapes, time step, stiffness, solver, friction cone) at most 7; the old box-top rim 79; physical unknowns up to 180 (joint rate cap), 96 (friction at the rim), 68 (observation delay). The controller's reach threshold changes no capture; its time limit changes 3 above 180 s, and at 90 s mostly cuts grapple sequences short (a harness limitation, open).
+- Two films from `scripts/render_film.py`, both of harsh scenario 4: `capture` (clean, no text) and `rim` (the box-top rim failure beside the sphere-rim fix, captioned). GIFs of both are in the README. The time line of that attempt: the snare fires at 54.4 s, the plate meets the rim 7.0 s later at 11° of tilt; on box tops the force peaks at 14,600 kN and the vehicle leaves at 27 cm/s.
 - Every "lost" capture before 2026-10-11 was a numerical contact failure at the rim. The plate now seats on a ring of spheres (`scene._add_rim`; `rim="boxes"` rebuilds the old rim). Data files ending `_box_rim` are from before the fix.
 - `capture/audit.py` flags attempts that do not look like physics, in every batch. On the fixed model it still flags two things, both traced with `experiments/replay_flagged.py`: the end effector running into the hull during a failed approach (the arm's motors have no torque limit), and the pin's knob wedging between the rigid snare bars at low friction. Neither changes a capture count.
 - The README is the write-up, drafted 2026-10-12. `scripts/results_figure.py` draws its figure from the results table.
-- Open, for Dara to decide: a "collided" outcome for the hull contact, and a torque limit on the arm's joints (no sourced value). Do not change the model or run experiments unasked.
+- Open, for Dara to decide: a "collided" outcome for the hull contact, a torque limit on the arm's joints (no sourced value), and making the time limit apply to firing rather than to the whole attempt. Do not change the model or run experiments unasked.
 - A long run should go in Dara's terminal, since a background job is cut off at two hours.
 - `scripts/view.py` must clear `data.qfrc_applied` each step, as `run_trial` does. Any new stepping loop needs the same line or the latch force accumulates.
 - When investigating a failure, log contact forces and kinetic energy before explaining it.

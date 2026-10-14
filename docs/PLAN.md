@@ -1,7 +1,7 @@
 # Plan
 
 Living document. Updated whenever a milestone finishes or a decision changes. What is known about the real operation, and where each number comes from, is in the [research notes](RESEARCH.md).
-Last updated: 2026-10-11.
+Last updated: 2026-10-14.
 
 ![Project plan](media/plan.svg)
 
@@ -93,16 +93,18 @@ What is measured is where *this controller with this mechanism* reaches, snares,
 | Experiment 2: physical unknowns | Done (2026-10-12) |
 | Trace the attempts the checks still flag | Done (2026-10-12); fixes to decide |
 | Write-up | Drafted (2026-10-12): the README |
+| Extend both experiments: the solver and friction cone; when the controller gives up | Done (2026-10-14) |
+| Two films: a clean capture, and the rim failure beside the fix | Done (2026-10-14) |
 
 ## The experiments
 
-Run on 2026-10-11 and 12, and trimmed afterwards to the conditions that carry the answer. There are two experiments. Experiment 1 against experiment 2 is *what the result is sensitive to*. The guardrail is *how to tell* whether a result is physics; it is not an experiment, and ideally never fires. More than 10,000 simulated attempts have been run in all, about 7,000 of them here.
+Run on 2026-10-11 and 12, trimmed afterwards to the conditions that carry the answer, and extended on 2026-10-14 with the solver and the controller's limits. There are two experiments. Experiment 1 against experiment 2 is *what the result is sensitive to*. The guardrail is *how to tell* whether a result is physics; it is not an experiment, and ideally never fires. More than 12,000 simulated attempts have been run in all, about 8,700 of them here.
 
 **Set-up.** Every condition changes one thing and runs the same 240 attempts: a drift sweep at 4, 8, 12, and 16 cm/s, 30 scenarios each, two seeds, tumble up to 2 deg/s. Each is compared with the baseline attempt by attempt. The baseline captures 110 of 240.
 
 **The guardrail.** Every attempt in every batch is flagged if a step goes unstable, a contact force on the vehicle passes 150 kN, the vehicle leaves a contact faster than 1.5 times its fastest speed before, two shapes overlap by more than 1 cm, or a sliding joint goes 5 mm past its stop. Tested on the old rim, where 50 attempts are known artefacts: all 50 flagged.
 
-**Experiment 1: collision geometry.** The same object built from different shapes, with two simulator settings alongside.
+**Experiment 1: collision geometry.** The same object built from different shapes, with four simulator settings alongside.
 
 | What changes | Settings | Outcomes changed, of 240 |
 |---|---|---|
@@ -112,8 +114,10 @@ Run on 2026-10-11 and 12, and trimmed afterwards to the conditions that carry th
 | The cavity wall's collision shape | 8 or 32 boxes, against 16 | 5, 7 |
 | Time step | 0.5 ms, against 2 ms | 3 |
 | Contact stiffness | twice as stiff | 7 |
+| Constraint solver | CG or PGS, against Newton | 2, 2 |
+| Friction cone | elliptic, against pyramidal | 6 |
 
-**Experiment 2: physical numbers that are not known exactly.**
+**Experiment 2: numbers that are not known exactly.** The physical ones, and the two that decide when the controller gives up.
 
 | Number | In the model | Range tried | Captured at each end | Outcomes changed, of 240 |
 |---|---|---|---|---|
@@ -123,10 +127,12 @@ Run on 2026-10-11 and 12, and trimmed afterwards to the conditions that carry th
 | Joint back-drive friction | 200 N m | 100 to 400 | 111, 101 | 17 |
 | Friction where the snare holds the pin | 0.3 | 0.1 to 0.8 | 111, 108 | 8 |
 | Snare drive force (control: expected to do nothing) | 1,500 N | 750 to 3,000 | 108, 110 | 2 |
+| Reach threshold: the arm's conditioning at which the controller aborts | 0.15 | 0.075 to 0.3 | 110, 110 | 16, 17: failures relabelled between out of reach and timed out; no capture changed |
+| Time limit on an attempt | 180 s | 90 to 360 s | 86, 113 | 109, 17: at 90 s the limit cuts 18 grapple sequences short; at 360 s the attempts given more time mostly end out of reach |
 
 **Taken out after running once.** These made no difference worth keeping a condition for, and are recorded here so the result is not lost: pull-in force from 3,560 to 6,100 N (1 outcome changed), vehicle mass from 5,000 to 8,050 kg (8), a 1 ms time step (2), and friction changed everywhere at once (the same as changing it at the rim).
 
-**The answer, for this model.** Once the checks pass, a sound change of representation moves the result about as much as noise (at most 7 of 240), and the physical unknowns move it up to 180. One unsound representation, the box-top rim, moved it 79, and nothing but the checks showed that it was unsound.
+**The answer, for this model.** Once the checks pass, a sound change of representation, the solver included, moves the result about as much as noise (at most 7 of 240), and the physical unknowns move it up to 180. The controller's own limits decide how a failure is labelled far more than whether an attempt is captured: the reach threshold changed no capture, and a longer time limit gained 3. One unsound representation, the box-top rim, moved it 79, and nothing but the checks showed that it was unsound.
 
 ## Decisions
 
@@ -212,7 +218,7 @@ Full provenance is in the research notes. This table records only what the model
 - Which point the published 10 m is measured from; here it is the module surface under the arm's base.
 - Sensor update rate and noise levels. Velocities reach the controller delayed but without added error.
 - Tumble rates in free drift; batches use up to 0.5°/s by default.
-- Controller gains, 3 cm/s insertion speed, alignment tolerances, estimator gain of 0.2, abort threshold.
+- Controller gains, 3 cm/s insertion speed, alignment tolerances, estimator gain of 0.2, abort threshold of 0.15 on the arm's conditioning, and a 180 s time limit per attempt. Chang and Marquez give 2 to 3 minutes as a typical capture duration, not a limit. Both were swept on 2026-10-14; neither changes the capture count by more than 3 above the baseline.
 - Station model scale of 2.35 and the arm's mounting position on it.
 
 ## Risks
@@ -223,6 +229,7 @@ Full provenance is in the research notes. This table records only what the model
 - **Tilt is removed by a lever with unsourced dimensions.** Plate radius, rim radius, and pin length set the tilt at which the plate meets the rim, and the result depends on friction there.
 - **The original contact failure has a likely cause, not a proved one.** Other contacts between cylinders and overlapping boxes remain, the knob inside the cavity among them.
 - **Zero gravity is a timescale assumption.** Reasonable for a one-minute attempt; not shown to be negligible against centimetre tolerances.
+- **The time limit cuts the grapple sequence.** An attempt is stopped at the limit even if the snare has already fired, so at a short limit an attempt that would have been captured is called caught but not rigid. At 180 s this affects nothing (every baseline capture fired by 125 s); at 90 s it accounts for 18 of the 24 captures lost. The limit should apply to firing, not to the sequence. To decide.
 
 ## References
 

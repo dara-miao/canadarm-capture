@@ -126,13 +126,13 @@ def _add_stars(faces: np.ndarray, rng: np.random.Generator, n: int) -> None:
     t = np.choose(face, [-y, -y, z, -z, -y, -y]) / m
     px, py = (s + 1) / 2 * size - 0.5, (t + 1) / 2 * size - 0.5
     for f, cx, cy, b, c in zip(face, px, py, brightness, colour):
-        radius = 1 if b < 0.8 else (2 if b < 2.5 else 3)
+        radius = 2 if b < 2.5 else 3
         x0, y0 = int(round(cx)), int(round(cy))
         xs = np.arange(max(0, x0 - radius), min(size, x0 + radius + 1))
         ys = np.arange(max(0, y0 - radius), min(size, y0 + radius + 1))
         if not len(xs) or not len(ys):
             continue
-        spread = 0.38 + 0.12 * radius
+        spread = 0.6 + 0.12 * radius  # at least a pixel wide on screen, so stars do not sparkle
         spot = np.exp(-((xs[None, :] - cx) ** 2 + (ys[:, None] - cy) ** 2) / (2 * spread**2))
         faces[f, ys[:, None], xs[None, :]] += b * spot[..., None] * c
 

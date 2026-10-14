@@ -4,9 +4,9 @@ A MuJoCo simulation of a space station manipulator capturing a free-floating car
 
 **When a contact-rich simulation gives a result, how do you tell whether it is physics or an artefact of how contact was modelled, and which modelling choices is the result most sensitive to?**
 
-[![Preview of the simulation: the station, the approach, the snare closing, and the vehicle held](docs/media/preview.gif)](docs/media/preview.mp4)
+[![Preview of the simulation: the station, the approach, the snare closing, and the vehicle held](docs/media/capture.gif)](docs/media/capture.mp4)
 
-A simulated capture at four times real speed. Click for the full-size video.
+One simulated capture, with an x-ray view of the snare closing and the fixture being pulled in. Click for the full video.
 
 ## Why this project
 
@@ -51,17 +51,21 @@ Logging contact forces showed the cause. The vehicle keeps tumbling after the sn
 
 *Figure 1. One attempt with the rim's collision geometry built two ways. Nothing else differs.*
 
+[![The same attempt rendered in the collision-shape view: the fixture plate lands on the box-top rim and the vehicle is thrown off; on the sphere rim it seats](docs/media/rim_contact.gif)](docs/media/rim_contact.mp4)
+
+*The same attempt as a film, in the view the solver sees. Click for the full video, which shows both rims.*
+
 Replacing that one surface with a ring of spheres, each giving a single contact with a single normal, took captures from 3 of 30 to 30 of 30. It also reversed an earlier sensitivity result: a controller change that had appeared to double the failure threshold turned out to have no effect at all.
 
 The mistake is an easy one to make. Overlapping the pieces of a compound to close gaps is the natural thing to do. But the issue is that a surface built for one purpose ends up carrying a load it wasn't made for.
 
 ## Experiments
 
-Two experiments on the corrected model. Each condition changes one factor and reruns the same 240 attempts (four drift speeds, 30 scenarios each, two seeds), so outcomes are compared attempt by attempt. Including pilots, the project has run more than 10,000 simulated capture attempts.
+Two experiments on the corrected model. Each condition changes one factor and reruns the same 240 attempts (four drift speeds, 30 scenarios each, two seeds), so outcomes are compared attempt by attempt. The drift speeds run from 4 to 16 cm/s, up to five times the 3.1 cm/s the Shuttle end effector was required to capture at, so that failures occur. The baseline captures 110 of 240, and nearly all of the rest end with the arm unable to reach a receding vehicle before the controller gives up. Including pilots, the project has run more than 12,000 simulated capture attempts.
 
-**Experiment 1: collision geometry.** The same object with different collision geometry: the rim as box tops, or as 16, 32, or 64 spheres; the cavity wall as 8, 16, or 32 boxes. Two numerical settings were varied alongside: a time step four times finer, and doubled contact stiffness.
+**Experiment 1: collision geometry and the solver.** The same object with different collision geometry: the rim as box tops, or as 16, 32, or 64 spheres; the cavity wall as 8, 16, or 32 boxes. Four numerical settings were varied alongside: a time step four times finer, doubled contact stiffness, the constraint solver (Newton, CG, or PGS), and the friction cone (pyramidal or elliptic).
 
-**Experiment 2: uncertain physical parameters.** Each parameter without a reliable source was treated as a measurement with an uncertainty and moved across a plausible range: the friction coefficient at two separate contacts (0.1 to 0.8), the joint rate limit, joint back-drive friction, and observation delay.
+**Experiment 2: numbers not known exactly.** Each parameter without a reliable source was treated as a measurement with an uncertainty and moved across a plausible range: the friction coefficient at two separate contacts (0.1 to 0.8), the joint rate limit, joint back-drive friction, observation delay, and the two numbers that decide when the controller gives up, its reach threshold and its time limit.
 
 **Guardrail:** a set of checks that runs on every attempt and flags anything non-physical. An unstable step, a contact force above anything the actuators can apply, a vehicle leaving a contact faster than it arrived, interpenetration beyond 1 cm, a joint driven past its limit. Ideally it never fires. Validated against the original rim, where 50 attempts were known artefacts, it flagged all 50.
 
@@ -76,11 +80,12 @@ Two conditions calibrate the method. A perturbation with no physical meaning, mo
 
 ## Results
 
-1. **With sound collision geometry, the exact choice barely matters.** Sphere count, box count, time step, and contact stiffness each changed at most 7 outcomes of 240, close to the noise floor of 3.
+1. **With sound collision geometry, the exact choice barely matters.** Sphere count, box count, time step, contact stiffness, constraint solver, and friction cone each changed at most 7 outcomes of 240, close to the noise floor of 3.
 2. **The uncertain physical parameters matter far more.** The joint rate limit changed 180 outcomes; friction where the fixture seats on the rim, 96; observation delay, 68.
 3. **One unsound collision geometry mattered as much as real physics.** The original rim changed 79 outcomes, more than all but two of the physical parameters. From the outcome counts alone it was indistinguishable from a real effect. Only the guardrail separated them.
 4. **The most influential parameter is an assumed one.** No source gives the joint rate limit. The best-sourced parameter in the model, the rigidizing force, had no effect across its range.
 5. **Friction matters at one contact only:** where the tilted fixture plate has to slide flat on the rim, not where the snare holds the pin.
+6. **When the controller gives up decides labels, not captures.** Halving or doubling its reach threshold changed 17 outcomes but not one capture: only which failure an attempt was called. Doubling the time limit to 360 s gained 3 captures, because the attempts that run out of time are ones where the vehicle leaves the arm's reach. Halving it to 90 s lost 24, 18 of them attempts that the limit itself cut off in the middle of the grapple sequence.
 
 ## What transfers to other simulations
 

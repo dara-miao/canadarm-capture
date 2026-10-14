@@ -173,6 +173,25 @@ The fixed model is not clean. The checks flag 17 of the 240 baseline attempts, a
 
 Neither changes a capture count, so the results above stand. Both come from assumptions the plan had listed all along: no torque limits, and rigid bars for cables. Listing an assumption is not the same as knowing what it does.
 
+## 2026-10-14 · The solver, and when the controller gives up
+
+Two things the experiments had left out. The solver itself had never been varied, although it is a modelling choice in the same sense as the time step. And 127 of the baseline's 130 failures end because the controller gives up, on two numbers that are the model's own: it aborts when the arm's conditioning falls below 0.15, and an attempt is stopped at 180 s. Both had been listed as assumptions and neither had been swept. Seven conditions, the same 240 attempts each.
+
+| What changes | Captured, of 240 | Outcomes changed |
+|---|---|---|
+| Baseline | 110 | |
+| Solver: CG, PGS (against Newton) | 111, 110 | 2, 2 |
+| Friction cone: elliptic (against pyramidal) | 109 | 6 |
+| Reach threshold 0.075, 0.3 (against 0.15) | 110, 110 | 16, 17 |
+| Time limit 90 s, 360 s (against 180 s) | 86, 113 | 109, 17 |
+
+- The solver and the friction cone sit with the other sound changes of representation: within a few attempts of the noise floor of 3.
+- The reach threshold changed no capture at either end. It only decides whether a failing attempt is called out of reach or timed out: at 0.075, 16 attempts that had aborted ran on and timed out; at 0.3, 16 that had timed out aborted first.
+- Doubling the time limit gained 3 captures, all at the two slowest drifts. Of the baseline's 23 timed-out attempts, 14 became out of reach given more time: the vehicle leaves the arm's workspace, and waiting does not help. So the out-of-reach failures are the arm's reach against the vehicle's drift, not the limit.
+- Halving the time limit lost 24 captures, but 18 of those were attempts whose snare fired after 65 s and which the limit stopped in the middle of the 25 s grapple sequence. That is the harness, not the capture: the limit applies to the whole attempt rather than to firing. At 180 s it changes nothing, since every baseline capture fired by 125 s. Whether to change it is open.
+
+The ranking stands. The three numbers that move the result most are still the joint rate cap, friction at the rim, and observation delay. The time limit's 109 changed outcomes are mostly relabelled failures and cut-off sequences, not captures.
+
 ## What limits all of this
 
 - Results describe this model. Nothing here has been compared with flight data or hardware.
@@ -185,4 +204,5 @@ Neither changes a capture count, so the results above stand. Both come from assu
 
 - A "collided" outcome for when the end effector touches the hull before firing.
 - A torque limit on the arm's joints. No sourced value.
+- The time limit should apply to firing, not to the grapple sequence (2026-10-14).
 - The write-up.

@@ -50,6 +50,7 @@ SWEEP = batch.Ranges(tumble=np.radians(2.0))
 NUDGE = 1e-6  # [m]; a change with no physical meaning, to see how many outcomes flip anyway
 
 # experiment, name, build options, controller options, scenario fields to override
+# (plus "max_time", the simulated time allowed for an attempt, which is not a scenario field)
 CONDITIONS = [
     ("1", "baseline", {}, {}, {}),
     ("1", "noise floor: start nudged 0.001 mm", {}, {}, {"nudge": NUDGE}),
@@ -60,6 +61,10 @@ CONDITIONS = [
     ("1", "wall: 32 boxes", {"wall_segments": 32}, {}, {}),
     ("1", "time step 0.5 ms", {"timestep": 0.0005}, {}, {}),
     ("1", "contact twice as stiff", {"contact_time": 0.01}, {}, {}),
+    # The solver itself: MuJoCo's default is Newton with a pyramidal friction cone.
+    ("1", "solver: CG", {"solver": "CG"}, {}, {}),
+    ("1", "solver: PGS", {"solver": "PGS"}, {}, {}),
+    ("1", "friction cone: elliptic", {"cone": "elliptic"}, {}, {}),
     ("2", "friction at the pin 0.1", {"friction_pin": 0.1}, {}, {}),
     ("2", "friction at the pin 0.8", {"friction_pin": 0.8}, {}, {}),
     ("2", "friction at the rim 0.1", {"friction_rim": 0.1}, {}, {}),
@@ -72,12 +77,21 @@ CONDITIONS = [
     ("2", "observation delay 1.0 s", {}, {}, {"sensor_delay": 1.0}),
     ("2", "snare drive 750 N", {"snare_force": 750.0}, {}, {}),
     ("2", "snare drive 3,000 N", {"snare_force": 3000.0}, {}, {}),
+    # When the controller gives up: both numbers are this model's, and between them they
+    # end most of the baseline's failures (104 out of reach and 23 timed out, of 240).
+    ("2", "abort threshold 0.075", {}, {"min_conditioning": 0.075}, {}),
+    ("2", "abort threshold 0.3", {}, {"min_conditioning": 0.3}, {}),
+    ("2", "time limit 90 s", {}, {}, {"max_time": 90.0}),
+    ("2", "time limit 360 s", {}, {}, {"max_time": 360.0}),
     # The guardrail's test: the harsh pilot batch, where the box-top rim is known to fail.
     ("guard", "harsh, box-top rim", {"rim": "boxes"}, {}, {}),
     ("guard", "harsh, box-top rim, limp arm", {"rim": "boxes"}, {"limp_from_snare_close": True}, {}),
     ("guard", "harsh, sphere rim", {}, {}, {}),
     ("guard", "harsh, sphere rim, limp arm", {}, {"limp_from_snare_close": True}, {}),
 ]
+
+
+MAX_TIME = 180.0  # [s]; the time allowed for an attempt. Not sourced: see docs/PLAN.md
 
 
 def scenarios(experiment: str, override: dict) -> list[batch.Scenario]:
@@ -88,7 +102,7 @@ def scenarios(experiment: str, override: dict) -> list[batch.Scenario]:
     for field, value in override.items():
         if field == "nudge":
             out = [replace(s, lateral_x=s.lateral_x + value) for s in out]
-        else:
+        elif field != "max_time":
             out = [batch.with_value(s, field, value) for s in out]
     return out
 
@@ -104,7 +118,9 @@ def run(only: str | None) -> None:
         if (only and experiment != only) or path.exists():
             continue
         start = time.perf_counter()
-        rows = batch.run_batch(scenarios(experiment, override), build=build, config=config)
+        rows = batch.run_batch(
+            scenarios(experiment, override), build=build, config=config, max_time=override.get("max_time", MAX_TIME)
+        )
         batch.write_csv(rows, path)
         counts = Counter(r["outcome"] for r in rows)
         print(f"{experiment} | {name}: {dict(counts)}  {time.perf_counter() - start:.0f} s", flush=True)

@@ -167,17 +167,19 @@ def run_scenario(
 
 _model: mujoco.MjModel | None = None
 _config: ControllerConfig | None = None
+_max_time: float = 180.0
 
 
-def _init_worker(build: dict, config: dict) -> None:
-    global _model, _config
+def _init_worker(build: dict, config: dict, max_time: float) -> None:
+    global _model, _config, _max_time
     # appearance is irrelevant here, and the model loads faster without meshes
     _model = scene.build_model(meshes=False, **build)
     _config = ControllerConfig(**config)
+    _max_time = max_time
 
 
 def _work(s: Scenario) -> dict:
-    return run_scenario(_model, s, config=_config)
+    return run_scenario(_model, s, max_time=_max_time, config=_config)
 
 
 def run_batch(
@@ -185,18 +187,20 @@ def run_batch(
     workers: int | None = None,
     build: dict | None = None,
     config: dict | None = None,
+    max_time: float = 180.0,
 ) -> list[dict]:
     """Run scenarios across processes. Results come back in the order given.
 
-    build:  keyword arguments for scene.build_model, such as friction or snare_force.
-    config: fields of ControllerConfig to change, such as max_joint_rate.
+    build:    keyword arguments for scene.build_model, such as friction or snare_force.
+    config:   fields of ControllerConfig to change, such as max_joint_rate.
+    max_time: simulated time allowed for each attempt before it is called timed out [s].
     """
     build, config = build or {}, config or {}
     workers = workers or max(1, (os.cpu_count() or 2) - 2)
     if workers == 1:
-        _init_worker(build, config)
+        _init_worker(build, config, max_time)
         return [_work(s) for s in scenarios]
-    with mp.get_context("spawn").Pool(workers, initializer=_init_worker, initargs=(build, config)) as pool:
+    with mp.get_context("spawn").Pool(workers, initializer=_init_worker, initargs=(build, config, max_time)) as pool:
         return pool.map(_work, scenarios, chunksize=1)
 
 

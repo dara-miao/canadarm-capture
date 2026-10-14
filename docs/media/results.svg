@@ -1,26 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 710" font-family="-apple-system, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" role="img" aria-label="Bar chart. Sound changes to how contact is represented changed at most 7 of 240 outcomes, near a noise floor of 3. The old box-top rim changed 79. Physical unknowns changed up to 180.">
-<title>Physical unknowns moved the result far more than how contact was represented</title><desc>Bar chart. Sound changes to how contact is represented changed at most 7 of 240 outcomes, near a noise floor of 3. The old box-top rim changed 79. Physical unknowns changed up to 180.</desc>
-<rect width="1000" height="710" rx="14" fill="#fcfcfb"/>
-<text x="32.0" y="44.0" fill="#0b0b0b" font-size="20" font-weight="700" text-anchor="start">Physical unknowns moved the result far more than how contact was represented</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 838" font-family="-apple-system, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" role="img" aria-label="Bar chart. Sound changes to how contact is represented changed at most 7 of 240 outcomes, near a noise floor of 3. The old box-top rim changed 79. Numbers not known exactly changed up to 180.">
+<title>Numbers not known exactly moved the result far more than how contact was represented</title><desc>Bar chart. Sound changes to how contact is represented changed at most 7 of 240 outcomes, near a noise floor of 3. The old box-top rim changed 79. Numbers not known exactly changed up to 180.</desc>
+<rect width="1000" height="838" rx="14" fill="#fcfcfb"/>
+<text x="32.0" y="44.0" fill="#0b0b0b" font-size="20" font-weight="700" text-anchor="start">Numbers not known exactly moved the result far more than how contact was represented</text>
 <text x="32.0" y="70.0" fill="#52514e" font-size="14" font-weight="400" text-anchor="start">Attempts, out of 240, that ended differently from the baseline when one thing was changed</text>
 <rect x="32" y="93" width="12" height="12" rx="2" fill="#2a78d6"/>
 <text x="51.0" y="104.0" fill="#52514e" font-size="13" font-weight="400" text-anchor="start">How contact is represented</text>
 <rect x="261.6" y="93" width="12" height="12" rx="2" fill="#eb6834"/>
-<text x="280.6" y="104.0" fill="#52514e" font-size="13" font-weight="400" text-anchor="start">Physical numbers not known exactly</text>
-<rect x="548.0" y="93" width="12" height="12" fill="#8a8983" opacity="0.4"/>
-<text x="567.0" y="104.0" fill="#52514e" font-size="13" font-weight="400" text-anchor="start">Noise floor: 3 outcomes change when nothing meaningful does</text>
-<line x1="372.0" y1="150" x2="372.0" y2="592" stroke="#e4e3df" stroke-width="1"/>
-<text x="372.0" y="612.0" fill="#52514e" font-size="13" font-weight="400" text-anchor="middle" style="font-variant-numeric: tabular-nums">0</text>
-<line x1="514.0" y1="150" x2="514.0" y2="592" stroke="#e4e3df" stroke-width="1"/>
-<text x="514.0" y="612.0" fill="#52514e" font-size="13" font-weight="400" text-anchor="middle" style="font-variant-numeric: tabular-nums">50</text>
-<line x1="656.0" y1="150" x2="656.0" y2="592" stroke="#e4e3df" stroke-width="1"/>
-<text x="656.0" y="612.0" fill="#52514e" font-size="13" font-weight="400" text-anchor="middle" style="font-variant-numeric: tabular-nums">100</text>
-<line x1="798.0" y1="150" x2="798.0" y2="592" stroke="#e4e3df" stroke-width="1"/>
-<text x="798.0" y="612.0" fill="#52514e" font-size="13" font-weight="400" text-anchor="middle" style="font-variant-numeric: tabular-nums">150</text>
-<line x1="940.0" y1="150" x2="940.0" y2="592" stroke="#e4e3df" stroke-width="1"/>
-<text x="940.0" y="612.0" fill="#52514e" font-size="13" font-weight="400" text-anchor="middle" style="font-variant-numeric: tabular-nums">200</text>
-<rect x="372" y="150" width="8.5" height="442" fill="#8a8983" opacity="0.4"/>
-<text x="656.0" y="636.0" fill="#52514e" font-size="13" font-weight="400" text-anchor="middle">Attempts whose outcome changed, of 240</text>
+<text x="280.6" y="104.0" fill="#52514e" font-size="13" font-weight="400" text-anchor="start">Numbers not known exactly</text>
+<rect x="484.1" y="93" width="12" height="12" fill="#8a8983" opacity="0.4"/>
+<text x="503.1" y="104.0" fill="#52514e" font-size="13" font-weight="400" text-anchor="start">Noise floor: 3 outcomes change when nothing meaningful does</text>
+<line x1="372.0" y1="150" x2="372.0" y2="720" stroke="#e4e3df" stroke-width="1"/>
+<text x="372.0" y="740.0" fill="#52514e" font-size="13" font-weight="400" text-anchor="middle" style="font-variant-numeric: tabular-nums">0</text>
+<line x1="514.0" y1="150" x2="514.0" y2="720" stroke="#e4e3df" stroke-width="1"/>
+<text x="514.0" y="740.0" fill="#52514e" font-size="13" font-weight="400" text-anchor="middle" style="font-variant-numeric: tabular-nums">50</text>
+<line x1="656.0" y1="150" x2="656.0" y2="720" stroke="#e4e3df" stroke-width="1"/>
+<text x="656.0" y="740.0" fill="#52514e" font-size="13" font-weight="400" text-anchor="middle" style="font-variant-numeric: tabular-nums">100</text>
+<line x1="798.0" y1="150" x2="798.0" y2="720" stroke="#e4e3df" stroke-width="1"/>
+<text x="798.0" y="740.0" fill="#52514e" font-size="13" font-weight="400" text-anchor="middle" style="font-variant-numeric: tabular-nums">150</text>
+<line x1="940.0" y1="150" x2="940.0" y2="720" stroke="#e4e3df" stroke-width="1"/>
+<text x="940.0" y="740.0" fill="#52514e" font-size="13" font-weight="400" text-anchor="middle" style="font-variant-numeric: tabular-nums">200</text>
+<rect x="372" y="150" width="8.5" height="570" fill="#8a8983" opacity="0.4"/>
+<text x="656.0" y="764.0" fill="#52514e" font-size="13" font-weight="400" text-anchor="middle">Attempts whose outcome changed, of 240</text>
 <text x="32.0" y="178.0" fill="#0b0b0b" font-size="14" font-weight="700" text-anchor="start">How contact is represented</text>
 <text x="358.0" y="213.0" fill="#0b0b0b" font-size="14" font-weight="400" text-anchor="end">Rim: 16 or 64 spheres instead of 32</text>
 <path d="M372,200.0 h1.7 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-1.7 z" fill="#2a78d6"><title>Rim: 16 or 64 spheres instead of 32: 2 of 240</title></path>
@@ -34,29 +34,42 @@
 <text x="358.0" y="309.0" fill="#0b0b0b" font-size="14" font-weight="400" text-anchor="end">Contact twice as stiff</text>
 <path d="M372,296.0 h15.9 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-15.9 z" fill="#2a78d6"><title>Contact twice as stiff: 7 of 240</title></path>
 <text x="399.9" y="309.0" fill="#0b0b0b" font-size="14" font-weight="600" text-anchor="start">7</text>
-<text x="358.0" y="341.0" fill="#0b0b0b" font-size="14" font-weight="400" text-anchor="end">Rim: the tops of the wall boxes</text>
-<path d="M372,328.0 h220.4 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-220.4 z" fill="#2a78d6"><title>Rim: the tops of the wall boxes: 79 of 240</title></path>
-<text x="604.4" y="341.0" fill="#0b0b0b" font-size="14" font-weight="600" text-anchor="start">79</text>
-<text x="638.4" y="341.0" fill="#52514e" font-size="13" font-weight="400" text-anchor="start">broke the solver; caught only by the checks</text>
-<text x="32.0" y="380.0" fill="#0b0b0b" font-size="14" font-weight="700" text-anchor="start">Physical numbers not known exactly</text>
-<text x="358.0" y="415.0" fill="#0b0b0b" font-size="14" font-weight="400" text-anchor="end">Snare drive force (control)</text>
-<path d="M372,402.0 h1.7 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-1.7 z" fill="#eb6834"><title>Snare drive force (control): 2 of 240</title></path>
-<text x="385.7" y="415.0" fill="#0b0b0b" font-size="14" font-weight="600" text-anchor="start">2</text>
-<text x="358.0" y="447.0" fill="#0b0b0b" font-size="14" font-weight="400" text-anchor="end">Friction where the snare holds the pin</text>
-<path d="M372,434.0 h18.7 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-18.7 z" fill="#eb6834"><title>Friction where the snare holds the pin: 8 of 240</title></path>
-<text x="402.7" y="447.0" fill="#0b0b0b" font-size="14" font-weight="600" text-anchor="start">8</text>
-<text x="358.0" y="479.0" fill="#0b0b0b" font-size="14" font-weight="400" text-anchor="end">Joint back-drive friction</text>
-<path d="M372,466.0 h44.3 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-44.3 z" fill="#eb6834"><title>Joint back-drive friction: 17 of 240</title></path>
-<text x="428.3" y="479.0" fill="#0b0b0b" font-size="14" font-weight="600" text-anchor="start">17</text>
-<text x="358.0" y="511.0" fill="#0b0b0b" font-size="14" font-weight="400" text-anchor="end">Observation delay</text>
-<path d="M372,498.0 h189.1 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-189.1 z" fill="#eb6834"><title>Observation delay: 68 of 240</title></path>
-<text x="573.1" y="511.0" fill="#0b0b0b" font-size="14" font-weight="600" text-anchor="start">68</text>
-<text x="358.0" y="543.0" fill="#0b0b0b" font-size="14" font-weight="400" text-anchor="end">Friction where the fixture seats on the rim</text>
-<path d="M372,530.0 h268.6 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-268.6 z" fill="#eb6834"><title>Friction where the fixture seats on the rim: 96 of 240</title></path>
-<text x="652.6" y="543.0" fill="#0b0b0b" font-size="14" font-weight="600" text-anchor="start">96</text>
-<text x="358.0" y="575.0" fill="#0b0b0b" font-size="14" font-weight="400" text-anchor="end">How fast the arm's joints may turn</text>
-<path d="M372,562.0 h507.2 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-507.2 z" fill="#eb6834"><title>How fast the arm's joints may turn: 180 of 240</title></path>
-<text x="891.2" y="575.0" fill="#0b0b0b" font-size="14" font-weight="600" text-anchor="start">180</text>
-<text x="32.0" y="670.0" fill="#52514e" font-size="12" font-weight="400" text-anchor="start">Each bar is the larger effect of the settings tried for that item. 240 simulated attempts per condition:</text>
-<text x="32.0" y="688.0" fill="#52514e" font-size="12" font-weight="400" text-anchor="start">4 drift speeds × 30 scenarios × 2 random seeds, compared attempt by attempt with the baseline. Simulation only.</text>
+<text x="358.0" y="341.0" fill="#0b0b0b" font-size="14" font-weight="400" text-anchor="end">Constraint solver: CG or PGS instead of Newton</text>
+<path d="M372,328.0 h1.7 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-1.7 z" fill="#2a78d6"><title>Constraint solver: CG or PGS instead of Newton: 2 of 240</title></path>
+<text x="385.7" y="341.0" fill="#0b0b0b" font-size="14" font-weight="600" text-anchor="start">2</text>
+<text x="358.0" y="373.0" fill="#0b0b0b" font-size="14" font-weight="400" text-anchor="end">Friction cone: elliptic instead of pyramidal</text>
+<path d="M372,360.0 h13.0 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-13.0 z" fill="#2a78d6"><title>Friction cone: elliptic instead of pyramidal: 6 of 240</title></path>
+<text x="397.0" y="373.0" fill="#0b0b0b" font-size="14" font-weight="600" text-anchor="start">6</text>
+<text x="358.0" y="405.0" fill="#0b0b0b" font-size="14" font-weight="400" text-anchor="end">Rim: the tops of the wall boxes</text>
+<path d="M372,392.0 h220.4 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-220.4 z" fill="#2a78d6"><title>Rim: the tops of the wall boxes: 79 of 240</title></path>
+<text x="604.4" y="405.0" fill="#0b0b0b" font-size="14" font-weight="600" text-anchor="start">79</text>
+<text x="638.4" y="405.0" fill="#52514e" font-size="13" font-weight="400" text-anchor="start">broke the solver; caught only by the checks</text>
+<text x="32.0" y="444.0" fill="#0b0b0b" font-size="14" font-weight="700" text-anchor="start">Numbers not known exactly: physical, and the controller's</text>
+<text x="358.0" y="479.0" fill="#0b0b0b" font-size="14" font-weight="400" text-anchor="end">Snare drive force (control)</text>
+<path d="M372,466.0 h1.7 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-1.7 z" fill="#eb6834"><title>Snare drive force (control): 2 of 240</title></path>
+<text x="385.7" y="479.0" fill="#0b0b0b" font-size="14" font-weight="600" text-anchor="start">2</text>
+<text x="358.0" y="511.0" fill="#0b0b0b" font-size="14" font-weight="400" text-anchor="end">Friction where the snare holds the pin</text>
+<path d="M372,498.0 h18.7 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-18.7 z" fill="#eb6834"><title>Friction where the snare holds the pin: 8 of 240</title></path>
+<text x="402.7" y="511.0" fill="#0b0b0b" font-size="14" font-weight="600" text-anchor="start">8</text>
+<text x="358.0" y="543.0" fill="#0b0b0b" font-size="14" font-weight="400" text-anchor="end">Joint back-drive friction</text>
+<path d="M372,530.0 h44.3 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-44.3 z" fill="#eb6834"><title>Joint back-drive friction: 17 of 240</title></path>
+<text x="428.3" y="543.0" fill="#0b0b0b" font-size="14" font-weight="600" text-anchor="start">17</text>
+<text x="358.0" y="575.0" fill="#0b0b0b" font-size="14" font-weight="400" text-anchor="end">Observation delay</text>
+<path d="M372,562.0 h189.1 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-189.1 z" fill="#eb6834"><title>Observation delay: 68 of 240</title></path>
+<text x="573.1" y="575.0" fill="#0b0b0b" font-size="14" font-weight="600" text-anchor="start">68</text>
+<text x="358.0" y="607.0" fill="#0b0b0b" font-size="14" font-weight="400" text-anchor="end">When the controller gives up: reach threshold</text>
+<path d="M372,594.0 h44.3 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-44.3 z" fill="#eb6834"><title>When the controller gives up: reach threshold: 17 of 240</title></path>
+<text x="428.3" y="607.0" fill="#0b0b0b" font-size="14" font-weight="600" text-anchor="start">17</text>
+<text x="358.0" y="639.0" fill="#0b0b0b" font-size="14" font-weight="400" text-anchor="end">When the controller gives up: time limit</text>
+<path d="M372,626.0 h305.6 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-305.6 z" fill="#eb6834"><title>When the controller gives up: time limit: 109 of 240</title></path>
+<text x="689.6" y="639.0" fill="#0b0b0b" font-size="14" font-weight="600" text-anchor="start">109</text>
+<text x="723.6" y="639.0" fill="#52514e" font-size="13" font-weight="400" text-anchor="start">at 90 s the limit cuts the grapple sequence itself</text>
+<text x="358.0" y="671.0" fill="#0b0b0b" font-size="14" font-weight="400" text-anchor="end">Friction where the fixture seats on the rim</text>
+<path d="M372,658.0 h268.6 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-268.6 z" fill="#eb6834"><title>Friction where the fixture seats on the rim: 96 of 240</title></path>
+<text x="652.6" y="671.0" fill="#0b0b0b" font-size="14" font-weight="600" text-anchor="start">96</text>
+<text x="358.0" y="703.0" fill="#0b0b0b" font-size="14" font-weight="400" text-anchor="end">How fast the arm's joints may turn</text>
+<path d="M372,690.0 h507.2 a4,4 0 0 1 4,4 v8 a4,4 0 0 1 -4,4 h-507.2 z" fill="#eb6834"><title>How fast the arm's joints may turn: 180 of 240</title></path>
+<text x="891.2" y="703.0" fill="#0b0b0b" font-size="14" font-weight="600" text-anchor="start">180</text>
+<text x="32.0" y="798.0" fill="#52514e" font-size="12" font-weight="400" text-anchor="start">Each bar is the larger effect of the settings tried for that item. 240 simulated attempts per condition:</text>
+<text x="32.0" y="816.0" fill="#52514e" font-size="12" font-weight="400" text-anchor="start">4 drift speeds × 30 scenarios × 2 random seeds, compared attempt by attempt with the baseline. Simulation only.</text>
 </svg>

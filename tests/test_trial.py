@@ -185,3 +185,9 @@ def test_a_tilting_fixture_plate_is_levered_straight_not_thrown_off(model):
     assert np.degrees(max(tilt)) > 10  # the plate did tilt onto the rim
     assert max(speed) < 1.5 * speed[0]  # and nothing added energy to the vehicle
     assert result.outcome is Outcome.CAPTURED
+
+
+def test_batch_time_limit_is_an_option():
+    rows = batch.run_batch([Scenario()], workers=1, max_time=5.0)
+    assert rows[0]["outcome"] == Outcome.TIMED_OUT.value
+    assert rows[0]["duration"] == pytest.approx(5.0, abs=0.01)
