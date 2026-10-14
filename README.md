@@ -141,3 +141,7 @@ Runs on CPU. Developed on an Apple Silicon Mac with MuJoCo 3.15.
 ## Credits
 
 3D models of Canadarm2 and Cygnus: Canadian Space Agency. 3D model of the International Space Station: NASA. They are downloaded from the agencies' own sites, not stored here, and used for non-commercial purposes. This project is not associated with or endorsed by the Canadian Space Agency or NASA.
+
+## License
+
+The code and documentation in this repository are under the [MIT License](LICENSE). The downloaded 3D models are not covered by it; they remain under the Canadian Space Agency's and NASA's own terms.
