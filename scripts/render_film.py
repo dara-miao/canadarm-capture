@@ -2,6 +2,7 @@
 
     python scripts/render_film.py capture      # a clean capture, no text: capture.mp4
     python scripts/render_film.py rim          # the rim failure and the fix, captioned: rim_contact.mp4
+    python scripts/render_film.py shapes       # the capture with the collision-shape view, captioned, quick: capture_shapes.mp4
     python scripts/render_film.py rim --fast   # a quick low-resolution check
     python scripts/render_film.py rim --stills # a contact sheet instead of a film
 
@@ -71,6 +72,7 @@ class Film:
     captions: list = field(default_factory=list)  # (t0, t1, text)
     readout: list = field(default_factory=list)  # (t0, t1): show the force and speed readout
     track: list = field(default_factory=list)  # (t0, t1, from, to): point of interest, the mouth (0) to the pin tip (1)
+    subframes: int = SUBFRAMES  # moments blended into each frame
 
 
 FILMS = {
@@ -139,6 +141,36 @@ FILMS = {
         ],
         readout=[(16.0, 31.0), (32.0, 44.0)],
         track=[(27.0, 31.0, 0.0, 0.55)],
+    ),
+    "shapes": Film(
+        name="capture_shapes",
+        duration=22.0,
+        subframes=6,
+        pace=[
+            (0.0, "spheres", -46.0), (2.0, "spheres", -34.0), (5.0, "spheres", -8.0), (8.0, "spheres", 2.5),
+            (9.5, "spheres", 5.0), (16.0, "spheres", 21.0), (22.0, "spheres", 38.0),
+        ],
+        moves=[
+            (0.0, 150.0, 10.0, -20.0, 0.0, 0.0, 0.0),
+            (2.0, 110.0, 18.0, -16.0, 0.0, 0.15, 0.0),
+            (5.0, 9.0, 40.0, -8.0, 0.8, 1.0, 0.0),
+            (8.0, 3.6, 70.0, 0.0, 0.0, 1.0, 1.0),
+            (11.0, 2.8, 90.0, 0.0, -0.1, 1.0, 1.0),
+            (16.0, 2.8, 125.0, 0.0, -0.15, 1.0, 1.0),
+            (18.0, 14.0, 140.0, 0.0, -0.1, 1.0, 1.0),  # straight back first, clear of the hull
+            (20.0, 40.0, 152.0, -10.0, -3.0, 0.8, 0.3),
+            (22.0, 150.0, 185.0, -22.0, 0.0, 0.5, 0.0),
+        ],
+        shell=[(5.0, 6.0, 1.0, 0.22), (17.0, 18.0, 0.22, 1.0)],
+        shapes=[(9.0, 10.0, 0.0, 1.0), (16.5, 17.5, 1.0, 0.0)],
+        contacts=[(10.0, 10.5, 0.0, 1.0), (16.0, 16.5, 1.0, 0.0)],
+        captions=[
+            (0.6, 3.5, "Canadarm2 capturing a drifting Cygnus, simulated in MuJoCo"),
+            (5.5, 8.5, "The snare closes on the grapple pin"),
+            (10.2, 13.2, "The collision shapes the solver uses: the rim is a ring of spheres"),
+            (13.2, 16.2, "The tilted plate seats, pull-in levers it flat, the latches clamp"),
+        ],
+        readout=[(10.5, 16.3)],
     ),
 }
 
@@ -391,7 +423,7 @@ def main() -> None:
         sys.exit(f"usage: render_film.py {{{'|'.join(FILMS)}}} [--fast] [--stills]")
     film = FILMS[which]
     fast, stills = "--fast" in sys.argv, "--stills" in sys.argv
-    width, height, fps, subframes, supersample = (640, 360, 30, 1, 1.0) if fast else (WIDTH, HEIGHT, FPS, SUBFRAMES, SUPERSAMPLE)
+    width, height, fps, subframes, supersample = (640, 360, 30, 1, 1.0) if fast else (WIDTH, HEIGHT, FPS, film.subframes, SUPERSAMPLE)
     big = (round(width * supersample), round(height * supersample))
     out = OUT / f"{film.name}{'_fast' if fast else ''}.mp4"
 
@@ -421,7 +453,7 @@ def main() -> None:
     if not stills:
         ffmpeg = subprocess.Popen(
             ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{width}x{height}",
-             "-r", str(fps), "-i", "-", "-c:v", "libx264", "-preset", "slow", "-crf", "17", "-pix_fmt", "yuv420p",
+             "-r", str(fps), "-i", "-", "-c:v", "libx264", "-preset", "slow", "-crf", "20", "-pix_fmt", "yuv420p",
              "-movflags", "+faststart", str(out)],
             stdin=subprocess.PIPE,
         )  # fmt: skip
