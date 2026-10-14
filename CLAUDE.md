@@ -26,7 +26,7 @@ Do this as part of every piece of work, not at the end:
 - Tests: `.venv/bin/python -m pytest`
 - Batch of attempts: `.venv/bin/python -m capture.batch --n 100 --seed 0 --out results/name.csv` (results/ is git-ignored)
 - Renders: `.venv/bin/python scripts/render_scene.py`
-- Films (need ffmpeg, the 3D models, and the sky): `.venv/bin/python scripts/render_film.py capture` and `... rim`; `--fast --stills` for a quick contact sheet. Then remake the GIFs for the README with ffmpeg (see the commit that added them). The mp4 files are tracked in git (about 45 MB together), so re-render only when something in them changes
+- Films (need ffmpeg, the 3D models, and the sky): `.venv/bin/python scripts/render_film.py capture` and `... rim`; `--fast --stills` for a quick contact sheet. Then remake the GIFs for the README with ffmpeg (see the commit that added them). The mp4 files are tracked in git, saved at 720p so each stays under 10 MB and GitHub plays it in the browser
 - Plan diagram: `.venv/bin/python scripts/plan_diagram.py`
 - Fetch 3D models (git-ignored, needed for mesh renders): `.venv/bin/python scripts/fetch_assets.py`
 - Starry background (git-ignored, appearance only): `.venv/bin/python scripts/make_sky.py`

@@ -14,8 +14,9 @@ fixture plate meets the end effector's rim: first with the rim as the tops of th
 boxes, where the solver fails and the vehicle is thrown off, then with the rim as a ring
 of spheres, where it seats. The two runs are identical until that moment.
 
-1920x1080 at 60 fps. The camera moves on smooth curves through its keys, and each
-frame blends several moments for a light motion blur. Needs the 3D models, the sky
+Rendered at 1920x1080 and 60 fps, and saved at 1280x720 so that each file stays under
+about 10 MB, which is what GitHub will play in the browser. The camera moves on smooth
+curves through its keys, and each frame blends several moments for a light motion blur. Needs the 3D models, the sky
 (scripts/make_sky.py), and ffmpeg. --stills writes to $FILM_STILLS or results/, one frame
 every $FILM_STILL_STEP seconds (default 2) within $FILM_STILL_RANGE ("from,to" seconds).
 """
@@ -42,6 +43,7 @@ from pilot_lost import HARSH  # noqa: E402
 
 OUT = ROOT / "docs" / "media"
 WIDTH, HEIGHT, FPS = 1920, 1080, 60
+SAVE_WIDTH = 1280  # the saved file is scaled down to this width
 SUPERSAMPLE = 1.25  # render larger and scale down, which steadies the star texture
 SUBFRAMES = 4  # moments blended into each frame: motion blur, and it calms the stars
 SKY_SPEED = 8.0  # times the real orbital rate
@@ -453,8 +455,8 @@ def main() -> None:
     if not stills:
         ffmpeg = subprocess.Popen(
             ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{width}x{height}",
-             "-r", str(fps), "-i", "-", "-c:v", "libx264", "-preset", "slow", "-crf", "20", "-pix_fmt", "yuv420p",
-             "-movflags", "+faststart", str(out)],
+             "-r", str(fps), "-i", "-", "-vf", f"scale={SAVE_WIDTH}:-2:flags=lanczos", "-c:v", "libx264", "-preset", "slow",
+             "-crf", "23", "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(out)],
             stdin=subprocess.PIPE,
         )  # fmt: skip
     cam = mujoco.MjvCamera()
