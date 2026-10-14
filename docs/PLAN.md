@@ -94,7 +94,7 @@ What is measured is where *this controller with this mechanism* reaches, snares,
 | Trace the attempts the checks still flag | Done (2026-10-12); fixes to decide |
 | Write-up | Drafted (2026-10-12): the README |
 | Extend both experiments: the solver and friction cone; when the controller gives up | Done (2026-10-14) |
-| Two films: a clean capture, and the rim failure beside the fix | Done (2026-10-14) |
+| Films: a clean capture, the rim failure beside the fix, and a 14 s cut with the collision-shape view | Done (2026-10-14) |
 
 ## The experiments
 

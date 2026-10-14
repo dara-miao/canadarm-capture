@@ -4,9 +4,9 @@ A MuJoCo simulation of a space station manipulator capturing a free-floating car
 
 **When a contact-rich simulation gives a result, how do you tell whether it is physics or an artefact of how contact was modelled, and which modelling choices is the result most sensitive to?**
 
-[![Preview of the simulation: the station, the approach, the snare closing, and the vehicle held](docs/media/capture.gif)](docs/media/capture.mp4)
+[![The station, the approach, an x-ray view of the snare closing, then the collision shapes the solver uses as the fixture is pulled in and latched](docs/media/capture_shapes.gif)](docs/media/capture_shapes.mp4)
 
-One simulated capture, with an x-ray view of the snare closing and the fixture being pulled in. Click for the full video.
+One simulated capture in 14 seconds: the approach, an x-ray view of the snare closing, then the collision shapes the solver actually uses while the fixture is pulled in and latched. Click for the full video.
 
 ## Why this project
 
@@ -27,6 +27,10 @@ Every parameter is recorded as sourced, borrowed, or assumed. The [plan](docs/PL
 ![The station, the arm reaching out from the forward node, and Cygnus holding at the capture point](docs/media/scene_station.png)
 
 *The scene: the station, the manipulator, and Cygnus at the capture point, 10 m out.*
+
+[![The same capture at a slower pace, without the collision-shape view](docs/media/capture.gif)](docs/media/capture.mp4)
+
+*The same attempt at a slower pace, in the detailed models throughout. Click for the full video.*
 
 ## Collision geometry
 
